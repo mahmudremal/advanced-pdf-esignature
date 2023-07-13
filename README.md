@@ -1,33 +1,66 @@
-# Gravityforms Flutterwave Payment Addons
-Introducing Gravityforms Flutterwave Payment Addons, the ultimate solution for seamlessly integrating Flutterwave's secure payment gateway with your Gravity Forms-powered website. With this powerful plugin, you can effortlessly collect payments from your customers while providing them with a smooth and secure transaction experience.
+# WordPress eSignature Plugin with Drag & Drop Feature
 
-Enhance your online business by offering multiple payment options and boosting your conversion rates. Gravityforms Flutterwave Payment Addons empowers you to accept payments from various sources, including credit cards, bank transfers, and mobile money, ensuring a convenient and flexible payment process for your customers.
+## Description
+This WordPress plugin allows users to electronically sign PDF documents within their WordPress environment. It provides a convenient drag and drop feature for placing signatures on PDF files and facilitates seamless contract requests between WordPress user accounts.
 
-Key Features:
+## Installation
 
-Seamless Integration: Integrate Flutterwave's robust payment gateway seamlessly into your Gravity Forms-powered website, eliminating any hassle or compatibility issues.
+1. Download the plugin files and extract them.
+2. Upload the plugin folder to the `/wp-content/plugins/` directory.
+3. Activate the plugin through the 'Plugins' menu in WordPress.
+4. Ensure that you have a PDF library installed on your server, such as TCPDF or FPDF. This plugin relies on these libraries to manipulate PDF documents.
 
-Multiple Payment Methods: Offer your customers a wide range of payment options, including credit cards, bank transfers, and mobile money, to cater to their preferences and increase your sales.
+## Usage
 
-Secure and Reliable: Rest assured knowing that your customers' sensitive payment information is protected through Flutterwave's state-of-the-art security measures, ensuring a secure transaction environment.
+1. After activating the plugin, navigate to the settings page (`Settings -> eSignature`) to configure the plugin.
+2. Specify the PDF library path on the settings page. This path should point to the location of the PDF library on your server.
+3. Save the settings.
 
-Real-time Transaction Tracking: Keep track of all transactions in real-time, allowing you to monitor payment statuses, view transaction details, and ensure a smooth payment flow.
+### Adding eSignature to a PDF Document
 
-Customizable Payment Experience: Personalize the payment process to match your website's branding by customizing payment forms, colors, and labels, providing a seamless user experience.
+1. Create or upload a PDF document to your WordPress media library.
+2. Edit the post or page where you want to add the eSignature feature.
+3. Click on the "Add Media" button above the post editor.
+4. Select the PDF document you want to add an eSignature to and click the "Insert into post" button.
+5. A shortcode will be inserted into your post or page content, representing the PDF document. For example: `[esignature id="123"]`.
 
-Automatic Notifications: Stay informed about every transaction by receiving automated notifications whenever a payment is completed, enabling you to stay on top of your business operations.
+### Requesting a Contract
 
-Easy Setup and Configuration: With a user-friendly interface and intuitive settings, getting your payment gateway up and running is a breeze, even for non-technical users.
+1. Ensure that you have at least two user accounts set up in WordPress, one for the contract sender and another for the recipient.
+2. As the sender, navigate to the page or post where you added the eSignature to the PDF document.
+3. Fill out any necessary contract details or instructions.
+4. Submit the form or send the contract request.
 
-Whether you're running an e-commerce store, accepting donations, or offering online services, Gravityforms Flutterwave Payment Addons is the perfect tool to streamline your payment collection process and ensure a secure and seamless experience for both you and your customers.
+### Reviewing and Signing the Contract
 
-Take your online business to new heights with Gravityforms Flutterwave Payment Addons. Download and install the plugin today and witness the power of effortless payments right at your fingertips.
+1. As the recipient, log in to your WordPress account and navigate to the contract request.
+2. Review the contract details and click on the eSignature field to initiate the drag and drop signature feature.
+3. Drag and drop your signature onto the designated signature field.
+4. Save the signed contract.
+
+## Support
+
+For any issues, questions, or feature requests, please contact our support team at [mahmudremal@yahoo.com](mailto:mahmudremal@yahoo.com).
+
+## Contributions
+
+We welcome contributions from the community. If you have any ideas, bug fixes, or enhancements, please submit a pull request on the project's GitHub repository.
+
+## License
+
+This plugin is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+
+## Acknowledgments
+
+We would like to thank the developers of the TCPDF and FPDF libraries, which are essential components of this plugin.
+
+---
 
 <!-- <img src="!/assets/img/popup" alt="YouTube"> -->
 ### Hi, I'm Remal Mahmud, currently working on something freelance projects 😉
 ### Connect with me:
 
-[<img src="https://img.shields.io/badge/Upwork-14a800?&style=for-the-badge&logo=upwork&logoColor=white" height="25" alt="Remal Mahmud">](https://www.upwork.com/freelancers/~01e8b599b6a5efc0f7?s=general)
+[<img src="https://img.shields.io/badge/Upwork-14a800?&style=for-the-badge&logo=upwork&logoColor=white" height="25" alt="Remal Mahmud">](https://www.upwork.com/freelancers/~01446594f65128aede?s=general)
 [<img src="https://img.shields.io/badge/Fiverr-1dbf73?&style=for-the-badge&logo=fiverr&logoColor=white" height="25" alt="Remal Mahmud">](https://www.fiverr.com/mahmud_remal)
 [<img src="https://img.shields.io/badge/Twitter-1d9bf0?&style=for-the-badge&logo=twitter&logoColor=white" height="25" alt="Remal Mahmud">](https://twitter.com/mahmud_remal/)
 [<img src="https://img.shields.io/badge/Linkedin-0b66c3?&style=for-the-badge&logo=linkedin&logoColor=white" height="25" alt="Remal Mahmud">](https://www.linkedin.com/in/mahmudremal/)
