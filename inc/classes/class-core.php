@@ -13,32 +13,32 @@ class Core {
 		$this->setup_hooks();
 	}
 	protected function setup_hooks() {
-		add_action( 'admin_post_gravityformsflutterwaveaddons/project/action/dashboard', [ $this, 'requestDashboard' ], 10, 0 );
-		add_action( 'wp_ajax_gravityformsflutterwaveaddons/project/action/cancelsubscription', [ $this, 'cancelSubscription' ], 10, 0 );
-		add_action( 'admin_post_gravityformsflutterwaveaddons/project/action/editsubscriber', [ $this, 'editSubscriber' ], 10, 0 );
-		add_action( 'wp_ajax_gravityformsflutterwaveaddons/project/database/contents', [ $this, 'contentLibraries' ], 10, 0 );
-		add_action( 'wp_ajax_gravityformsflutterwaveaddons/project/action/singlefield', [ $this, 'singleField' ], 10, 0 );
-		add_action( 'wp_ajax_nopriv_gravityformsflutterwaveaddons/project/action/selecttoregister', [ $this, 'selectToRegister' ], 10, 0 );
-		add_action( 'wp_ajax_gravityformsflutterwaveaddons/project/action/switchleadstatus', [ $this, 'switchLeadStatus' ], 10, 0 );
-		add_action( 'wp_ajax_gravityformsflutterwaveaddons/project/action/deleteleadaccount', [ $this, 'deleteLeadAccount' ], 10, 0 );
-		add_action( 'wp_ajax_gravityformsflutterwaveaddons/project/action/deletepayment', [ $this, 'deletePayment' ], 10, 0 );
-		add_action( 'wp_ajax_gravityformsflutterwaveaddons/project/action/deletenotices', [ $this, 'deleteNotices' ], 10, 0 );
-		add_action( 'wp_ajax_gravityformsflutterwaveaddons/project/action/sendregistration', [ $this, 'sendRegistration' ], 10, 0 );
-		add_action( 'wp_ajax_gravityformsflutterwaveaddons/project/action/sendpasswordreset', [ $this, 'sendPasswordReset' ], 10, 0 );
-		add_action( 'wp_ajax_gravityformsflutterwaveaddons/project/action/registerexisting', [ $this, 'registerExisting' ], 10, 0 );
-		add_action( 'wp_ajax_gravityformsflutterwaveaddons/project/action/switchpayementcard', [ $this, 'switchPayementCard' ], 10, 0 );
-		add_action( 'admin_post_gravityformsflutterwaveaddons/project/action/changepassword', [ $this, 'changePassword' ], 10, 0 );
-		// add_action( 'wp_ajax_gravityformsflutterwaveaddons/project/action/test', [ $this, 'testAjax' ], 10, 0 );
-		add_filter( 'gravityformsflutterwaveaddons/project/action/statuses', [ $this, 'actionStatuses' ], 10, 2 );
-		add_filter( 'gravityformsflutterwaveaddons/project/rewrite/rules', [ $this, 'rewriteRules' ], 10, 1 );
+		add_action( 'admin_post_esign/project/action/dashboard', [ $this, 'requestDashboard' ], 10, 0 );
+		add_action( 'wp_ajax_esign/project/action/cancelsubscription', [ $this, 'cancelSubscription' ], 10, 0 );
+		add_action( 'admin_post_esign/project/action/editsubscriber', [ $this, 'editSubscriber' ], 10, 0 );
+		add_action( 'wp_ajax_esign/project/database/contents', [ $this, 'contentLibraries' ], 10, 0 );
+		add_action( 'wp_ajax_esign/project/action/singlefield', [ $this, 'singleField' ], 10, 0 );
+		add_action( 'wp_ajax_nopriv_esign/project/action/selecttoregister', [ $this, 'selectToRegister' ], 10, 0 );
+		add_action( 'wp_ajax_esign/project/action/switchleadstatus', [ $this, 'switchLeadStatus' ], 10, 0 );
+		add_action( 'wp_ajax_esign/project/action/deleteleadaccount', [ $this, 'deleteLeadAccount' ], 10, 0 );
+		add_action( 'wp_ajax_esign/project/action/deletepayment', [ $this, 'deletePayment' ], 10, 0 );
+		add_action( 'wp_ajax_esign/project/action/deletenotices', [ $this, 'deleteNotices' ], 10, 0 );
+		add_action( 'wp_ajax_esign/project/action/sendregistration', [ $this, 'sendRegistration' ], 10, 0 );
+		add_action( 'wp_ajax_esign/project/action/sendpasswordreset', [ $this, 'sendPasswordReset' ], 10, 0 );
+		add_action( 'wp_ajax_esign/project/action/registerexisting', [ $this, 'registerExisting' ], 10, 0 );
+		add_action( 'wp_ajax_esign/project/action/switchpayementcard', [ $this, 'switchPayementCard' ], 10, 0 );
+		add_action( 'admin_post_esign/project/action/changepassword', [ $this, 'changePassword' ], 10, 0 );
+		// add_action( 'wp_ajax_esign/project/action/test', [ $this, 'testAjax' ], 10, 0 );
+		add_filter( 'esign/project/action/statuses', [ $this, 'actionStatuses' ], 10, 2 );
+		add_filter( 'esign/project/rewrite/rules', [ $this, 'rewriteRules' ], 10, 1 );
 		add_filter( 'template_include', [ $this, 'template_include' ], 10, 1 );
 	}
 	public function requestDashboard() {
 		// print_r( $_POST );
-		if( ! wp_verify_nonce( $_POST['_nonce'], 'gravityformsflutterwaveaddons/project/nonce/dashboard' ) ) {
+		if( ! wp_verify_nonce( $_POST['_nonce'], 'esign/project/nonce/dashboard' ) ) {
 			wp_die( __( 'Nonce doesn\'t matched from your request. if you requested from an expired form, please do a re-submit', 'esignbinding' ), __( 'Security verification mismatched.', 'esignbinding' ) );
 		}
-		set_transient( 'gravityformsflutterwaveaddons/project/transiant/admin/' . get_current_user_id(), [
+		set_transient( 'esign/project/transiant/admin/' . get_current_user_id(), [
 			'type'					=> 'warning', // primary | danger | success | warning | info
 			'message'				=> __( 'Request detected but is staging mode.', 'esignbinding' )
 		], 200 );
@@ -49,11 +49,11 @@ class Core {
 		wp_send_json_success( [], 200, $json );
 	}
 	public function singleField() {
-		if( ! isset( $_POST[ 'field' ] ) || ! isset( $_POST[ 'value' ] ) || ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'gravityformsflutterwaveaddons/project/verify/nonce' ) ) {
+		if( ! isset( $_POST[ 'field' ] ) || ! isset( $_POST[ 'value' ] ) || ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'esign/project/verify/nonce' ) ) {
 			wp_send_json_error( __( 'We\'ve detected you\'re requesting with an invalid security token or something went wrong with you', 'esignbinding' ), 200 );
 		}
 		$field = $_POST[ 'field' ];$value = $_POST[ 'value' ];$type = ( substr( $field, 0, 5 ) == 'meta-' ) ? 'meta' : 'data';
-		$userMeta = apply_filters( 'gravityformsflutterwaveaddons/project/usermeta/defaults', [] );
+		$userMeta = apply_filters( 'esign/project/usermeta/defaults', [] );
 		if( ! empty( $field ) && isset( $_POST[ 'userid' ] ) ) {
 			$field = substr( $field, 5 );
 			$user_id = ( ! is_admin() ) ? get_current_user_id() : $_POST[ 'userid' ];
@@ -83,7 +83,7 @@ class Core {
 		}
 	}
 	public function selectToRegister() {
-		if( ! isset( $_POST[ 'field' ] ) || ! isset( $_POST[ 'value' ] ) || ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'gravityformsflutterwaveaddons/project/verify/nonce' ) ) {
+		if( ! isset( $_POST[ 'field' ] ) || ! isset( $_POST[ 'value' ] ) || ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'esign/project/verify/nonce' ) ) {
 			wp_send_json_error( __( 'We\'ve detected you\'re requesting with an invalid security token or something went wrong with you', 'esignbinding' ), 200 );
 		}
 		$user_id		= isset( $_POST[ 'userid' ] ) ? $_POST[ 'userid' ] : false;
@@ -118,7 +118,7 @@ class Core {
 		return ( $specific ) ? ( isset( $actions[ $specific ] ) ? $actions[ $specific ] : '' ) : $actions;
 	}
 	public function editSubscriber() {
-		if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'gravityformsflutterwaveaddons/project/nonce/editsubscriber' ) ) {
+		if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'esign/project/nonce/editsubscriber' ) ) {
 			wp_die( __( 'We\'ve detected you\'re requesting with an invalid security token or something went wrong with you', 'esignbinding' ), __( 'Security mismatched', 'esignbinding' ) );
 		}
 		$user_id = $_POST[ 'userid' ];$is_edit_profile = ( $user_id != 'new' );
@@ -158,13 +158,13 @@ class Core {
 					'message'				=> ( empty( $errormessage ) ) ? __( 'Failed to update user information.', 'esignbinding' ) : $errormessage
 				];
 			}
-			set_transient( 'gravityformsflutterwaveaddons/project/transiant/admin/' . get_current_user_id(), $msg, 200 );
+			set_transient( 'esign/project/transiant/admin/' . get_current_user_id(), $msg, 200 );
 		}
 		// print_r( [ $args, $is_created, $msg ] );wp_die();
 		wp_redirect( wp_get_referer() );
 	}
 	public function switchLeadStatus() {
-		if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'gravityformsflutterwaveaddons/project/verify/nonce' ) ) {
+		if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'esign/project/verify/nonce' ) ) {
 			wp_send_json_error( __( 'We\'ve detected you\'re requesting with an invalid security token or something went wrong with you', 'esignbinding' ), 200 );
 		}
 		if( empty( $this->actionStatuses( [], $_POST[ 'value' ] ) ) ) {
@@ -178,7 +178,7 @@ class Core {
 		}
 	}
 	public function deleteLeadAccount() {
-		if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'gravityformsflutterwaveaddons/project/verify/nonce' ) ) {
+		if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'esign/project/verify/nonce' ) ) {
 			wp_send_json_error( __( 'We\'ve detected you\'re requesting with an invalid security token or something went wrong with you', 'esignbinding' ), 200 );
 		}
 		if( isset( $_POST[ 'lead' ] ) && ! empty( $_POST[ 'lead' ] ) ) {
@@ -189,7 +189,7 @@ class Core {
 		}
 	}
 	public function deletePayment() {
-		if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'gravityformsflutterwaveaddons/project/verify/nonce' ) ) {
+		if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'esign/project/verify/nonce' ) ) {
 			wp_send_json_error( __( 'We\'ve detected you\'re requesting with an invalid security token or something went wrong with you', 'esignbinding' ), 200 );
 		}
 		if( isset( $_POST[ 'id' ] ) && ! empty( $_POST[ 'id' ] ) ) {global $wpdb;
@@ -204,7 +204,7 @@ class Core {
 		}
 	}
 	public function deleteNotices() {
-		if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'gravityformsflutterwaveaddons/project/verify/nonce' ) ) {
+		if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'esign/project/verify/nonce' ) ) {
 			wp_send_json_error( __( 'We\'ve detected you\'re requesting with an invalid security token or something went wrong with you', 'esignbinding' ), 200 );
 		}
 		if( isset( $_POST[ 'delete' ] ) && ! empty( $_POST[ 'delete' ] ) ) {
@@ -232,13 +232,13 @@ class Core {
 		}
 	}
 	public function sendRegistration() {
-		if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'gravityformsflutterwaveaddons/project/verify/nonce' ) ) {
+		if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'esign/project/verify/nonce' ) ) {
 			wp_send_json_error( __( 'We\'ve detected you\'re requesting with an invalid security token or something went wrong with you', 'esignbinding' ), 200 );
 		}
 		if( isset( $_POST[ 'lead' ] ) && ! empty( $_POST[ 'lead' ] ) ) {
 			$userInfo = get_user_by( 'id', $_POST[ 'lead' ] );
 			$userMeta = array_map( function( $a ){ return $a[0]; }, (array) get_user_meta( $userInfo->ID ) );
-			$userInfo = (object) wp_parse_args( $userInfo, [ 'id' => '', 'meta' => (object) wp_parse_args( $userMeta, apply_filters( 'gravityformsflutterwaveaddons/project/usermeta/defaults', (array) $userMeta ) ) ] );
+			$userInfo = (object) wp_parse_args( $userInfo, [ 'id' => '', 'meta' => (object) wp_parse_args( $userMeta, apply_filters( 'esign/project/usermeta/defaults', (array) $userMeta ) ) ] );
 			$args = ['id' => 0, 'to' => empty( $userInfo->data->user_email ) ? $userInfo->meta->email : $userInfo->data->user_email, 'name' => get_option( 'blogname' ), 'email' => get_option( 'admin_email' ), 'subject' => '', 'message' => ''];
 			
 			if( $userInfo->meta->monthly_retainer <= 0 ) {
@@ -253,17 +253,17 @@ class Core {
 			];
 			 $replace = [
 				empty( $userInfo->meta->first_name . $userInfo->meta->last_name ) ? $userInfo->data->display_name : $userInfo->meta->first_name . ' ' . $userInfo->meta->last_name,
-			! empty( $userInfo->meta->address1 ) ? $userInfo->meta->address1 : ( ! empty( $userInfo->meta->address2 ) ? $userInfo->meta->address2 : apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'signature-addressplaceholder', '' ) ),
-			wp_date( apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'signature-dateformat', '' ), strtotime( date( 'Y-M-d' ) ) ),
-			! empty( $userInfo->meta->monthly_retainer ) ? $userInfo->meta->monthly_retainer : apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'signature-emptyrrtainer', '' ),
+			! empty( $userInfo->meta->address1 ) ? $userInfo->meta->address1 : ( ! empty( $userInfo->meta->address2 ) ? $userInfo->meta->address2 : apply_filters( 'esign/project/system/getoption', 'signature-addressplaceholder', '' ) ),
+			wp_date( apply_filters( 'esign/project/system/getoption', 'signature-dateformat', '' ), strtotime( date( 'Y-M-d' ) ) ),
+			! empty( $userInfo->meta->monthly_retainer ) ? $userInfo->meta->monthly_retainer : apply_filters( 'esign/project/system/getoption', 'signature-emptyrrtainer', '' ),
 			site_url( 'lead-registration/source-email/' . bin2hex( $userInfo->ID ) . '/' )
 			];
 			
-			$args[ 'subject' ] = str_replace( $instead, $replace, apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'email-registationsubject', 'Invitation to Register for ' . get_option( 'blogname', site_url() ) ) );
-			$args[ 'message' ] = str_replace( $instead, $replace, apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'email-registationbody', 'Email not set. Sorry for inturrupt.' ) );
+			$args[ 'subject' ] = str_replace( $instead, $replace, apply_filters( 'esign/project/system/getoption', 'email-registationsubject', 'Invitation to Register for ' . get_option( 'blogname', site_url() ) ) );
+			$args[ 'message' ] = str_replace( $instead, $replace, apply_filters( 'esign/project/system/getoption', 'email-registationbody', 'Email not set. Sorry for inturrupt.' ) );
 			$args[ 'type' ] = 'text/html';
 			
-			if( apply_filters( 'gravityformsflutterwaveaddons/project/mailsystem/sendmail', $args ) ) {
+			if( apply_filters( 'esign/project/mailsystem/sendmail', $args ) ) {
 				wp_send_json_success( [ 'message' => __( 'Registration Link sent successfully!', 'esignbinding' ), 'hooks' => [ 'sent-registration-' . $_POST[ 'lead' ] ] ], 200 );
 			} else {
 				wp_send_json_error( __( 'Mail not sent.', 'esignbinding' ), 200 );
@@ -274,7 +274,7 @@ class Core {
 	public function sendPasswordReset() {
 		$user = $userInfo = get_user_by( 'id', $_POST[ 'lead' ] );
 		$userMeta = array_map( function( $a ){ return $a[0]; }, (array) get_user_meta( $userInfo->ID ) );
-		$userInfo = (object) wp_parse_args( $userInfo, [ 'id' => '', 'meta' => (object) wp_parse_args( $userMeta, apply_filters( 'gravityformsflutterwaveaddons/project/usermeta/defaults', (array) $userMeta ) ) ] );
+		$userInfo = (object) wp_parse_args( $userInfo, [ 'id' => '', 'meta' => (object) wp_parse_args( $userMeta, apply_filters( 'esign/project/usermeta/defaults', (array) $userMeta ) ) ] );
 		if ( ! $userInfo ) {wp_send_json_error( __( 'User doesn\'t identified.', 'esignbinding' ), 200 );}
 		$key = get_password_reset_key( $user );
 		$reset_password_link = network_site_url( "wp-login.php?action=rp&key={$key}&login=" . rawurlencode($user->user_login), 'login' );
@@ -290,19 +290,19 @@ class Core {
 		];
 		 $replace = [
 			empty( $userInfo->meta->first_name . $userInfo->meta->last_name ) ? $userInfo->data->display_name : $userInfo->meta->first_name . ' ' . $userInfo->meta->last_name,
-			! empty( $userInfo->meta->address1 ) ? $userInfo->meta->address1 : ( ! empty( $userInfo->meta->address2 ) ? $userInfo->meta->address2 : apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'signature-addressplaceholder', '' ) ),
-			wp_date( apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'signature-dateformat', '' ), strtotime( date( 'Y-M-d' ) ) ),
-			! empty( $userInfo->meta->monthly_retainer ) ? $userInfo->meta->monthly_retainer : apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'signature-emptyrrtainer', '' ),
+			! empty( $userInfo->meta->address1 ) ? $userInfo->meta->address1 : ( ! empty( $userInfo->meta->address2 ) ? $userInfo->meta->address2 : apply_filters( 'esign/project/system/getoption', 'signature-addressplaceholder', '' ) ),
+			wp_date( apply_filters( 'esign/project/system/getoption', 'signature-dateformat', '' ), strtotime( date( 'Y-M-d' ) ) ),
+			! empty( $userInfo->meta->monthly_retainer ) ? $userInfo->meta->monthly_retainer : apply_filters( 'esign/project/system/getoption', 'signature-emptyrrtainer', '' ),
 			site_url( 'lead-registration/source-email/' . base64_encode( $userInfo->ID ) . '/' ),
 			get_option( 'blogname', 'We Make Content' ),
 			$reset_password_link
 		];
 		
 		$args = [ 'id' => 0, 'to' => empty( $userInfo->data->user_email ) ? $userInfo->meta->email : $userInfo->data->user_email, 'name' => get_option( 'blogname' ), 'email' => get_option( 'admin_email' ), 'subject' => '', 'message' => $message ];
-		$args[ 'subject' ] = str_replace( $instead, $replace, apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'email-passresetsubject', 'Passwird Reset link for ' . get_option( 'blogname', site_url() ) ) );
-		$args[ 'message' ] = str_replace( $instead, $replace, apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'email-passresetbody', 'Email not set. Sorry for inturrupt.' ) );
+		$args[ 'subject' ] = str_replace( $instead, $replace, apply_filters( 'esign/project/system/getoption', 'email-passresetsubject', 'Passwird Reset link for ' . get_option( 'blogname', site_url() ) ) );
+		$args[ 'message' ] = str_replace( $instead, $replace, apply_filters( 'esign/project/system/getoption', 'email-passresetbody', 'Email not set. Sorry for inturrupt.' ) );
 		// print_r( [ $args, $userInfo ] );
-		if ( apply_filters( 'gravityformsflutterwaveaddons/project/mailsystem/sendmail', $args ) ) {
+		if ( apply_filters( 'esign/project/mailsystem/sendmail', $args ) ) {
 			wp_send_json_success( [ 'message' => __( 'Reset Link sent successfully!', 'esignbinding' ), 'hooks' => [ 'sent-passreset-' . $_POST[ 'lead' ] ] ], 200 );
 		} else {
 			wp_send_json_error( __( 'Unexpected respond from backend.', 'esignbinding' ), 200 );
@@ -310,14 +310,14 @@ class Core {
 	}
 	public function toggleSubscption( $user_id, $meta_key, $meta_value ) {
 		$userInfo = get_user_by( 'id', $user_id );
-		if( $meta_value == 'off' && ! apply_filters( 'gravityformsflutterwaveaddons/project/payment/stripe/allowswitchpause', true, 'pause', $userInfo->ID ) ) {
+		if( $meta_value == 'off' && ! apply_filters( 'esign/project/payment/stripe/allowswitchpause', true, 'pause', $userInfo->ID ) ) {
 			wp_send_json_success( [ 'message' => __( 'You can\'t change now. You can only pause you retainer once every 60 days. Please wait until it release.', 'esignbinding' ), 'hooks' => [] ], 200 );
 		} else {
 			$status = ( $meta_value == 'off' ) ? 'pause' : 'unpause';
-			if( apply_filters( 'gravityformsflutterwaveaddons/project/payment/stripe/subscriptionToggle', $status, ( ! empty( $userInfo->data->user_email ) ? $userInfo->data->user_email : get_user_meta( $user_id, 'email', true ) ), $user_id ) ) {
+			if( apply_filters( 'esign/project/payment/stripe/subscriptionToggle', $status, ( ! empty( $userInfo->data->user_email ) ? $userInfo->data->user_email : get_user_meta( $user_id, 'email', true ) ), $user_id ) ) {
 				update_user_meta( $user_id, 'subscription_last_changed', time() );
 				update_user_meta( $user_id, $meta_key, $meta_value );
-				$notice = apply_filters( 'gravityformsflutterwaveaddons/project/notices/manager', 'add', 'cancelSubscription', [
+				$notice = apply_filters( 'esign/project/notices/manager', 'add', 'cancelSubscription', [
 					'type'						=> 'warn',
 					'message'					=> sprintf( __( '%s %s his Subscription', 'esignbinding' ), '<a href="' . admin_url( 'admin.php?page=crm_dashboard&path=leads/edit/' . $userInfo->ID . '/' ) . '" target="_blank">' . get_user_meta( $userInfo->ID, 'first_name', true ) . ' ' . get_user_meta( $userInfo->ID, 'last_name', true ) . '</a>', strtoupper( $status ) ),
 					'data'						=> [
@@ -335,13 +335,13 @@ class Core {
 		// wp_send_json_error( 'failed', 200 );
 	}
 	public function cancelSubscription() {
-		if( ! apply_filters( 'gravityformsflutterwaveaddons/project/system/isactive', 'stripe-cancelsubscription' ) ) {
+		if( ! apply_filters( 'esign/project/system/isactive', 'stripe-cancelsubscription' ) ) {
 			wp_send_json_error( __( 'Subscription calcelletion is not allowed from administrative. Please contract with them manually.', 'esignbinding' ), 200 );
 		}
 		$userInfo = get_user_by( 'id', ( isset( $_GET[ 'userid' ] ) ? $_GET[ 'userid' ] : 0 ) );
-		if( $userInfo && apply_filters( 'gravityformsflutterwaveaddons/project/payment/stripe/subscriptionCancel', 'cancel', ( ! empty( $userInfo->data->user_email ) ? $userInfo->data->user_email : get_user_meta( $userInfo->ID, 'email', true ) ), $userInfo->ID ) ) {
+		if( $userInfo && apply_filters( 'esign/project/payment/stripe/subscriptionCancel', 'cancel', ( ! empty( $userInfo->data->user_email ) ? $userInfo->data->user_email : get_user_meta( $userInfo->ID, 'email', true ) ), $userInfo->ID ) ) {
 			update_user_meta( $userInfo->ID, 'subscribe', false );
-			$notice = apply_filters( 'gravityformsflutterwaveaddons/project/notices/manager', 'add', 'cancelSubscription', [
+			$notice = apply_filters( 'esign/project/notices/manager', 'add', 'cancelSubscription', [
 				'type'						=> 'alert',
 				'message'					=> sprintf( __( 'An User (%s) cancelled Subscription on %s', 'esignbinding' ), '<a href="' . admin_url( 'admin.php?page=crm_dashboard&path=leads/edit/' . $userInfo->ID . '/' ) . '" target="_blank">' . get_user_meta( $userInfo->ID, 'first_name', true ) . ' ' . get_user_meta( $userInfo->ID, 'last_name', true ) . '</a>', wp_date( 'M, d H;i' ) ),
 				'data'						=> [
@@ -355,13 +355,13 @@ class Core {
 		}
 	}
 	public function switchPayementCard() {
-		if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'gravityformsflutterwaveaddons/project/verify/nonce' ) ) {
+		if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'esign/project/verify/nonce' ) ) {
 			wp_send_json_error( __( 'We\'ve detected you\'re requesting with an invalid security token.', 'esignbinding' ), 200 );
 		}
 		if( ! isset( $_POST[ 'card' ] ) || ! isset( $_POST[ 'card' ][ 'number' ] ) || ! isset( $_POST[ 'card' ][ 'exp_month' ] ) || ! isset( $_POST[ 'card' ][ 'exp_year' ] ) || ! isset( $_POST[ 'card' ][ 'cvc' ] ) ) {wp_send_json_error( __( 'Some required fields are missing. If you belive it should not to be, please contact to the administrative.',   'esignbinding' ), 200 );}
 		$userInfo = get_user_by( 'id', is_admin() ? $_POST[ 'userid' ] : get_current_user_id() );
 		$userMeta = array_map( function( $a ){ return $a[0]; }, (array) get_user_meta( $userInfo->ID ) );
-		$userInfo = (object) wp_parse_args( $userInfo, [ 'id' => '', 'meta' => (object) wp_parse_args( $userMeta, apply_filters( 'gravityformsflutterwaveaddons/project/usermeta/defaults', (array) $userMeta ) ) ] );
+		$userInfo = (object) wp_parse_args( $userInfo, [ 'id' => '', 'meta' => (object) wp_parse_args( $userMeta, apply_filters( 'esign/project/usermeta/defaults', (array) $userMeta ) ) ] );
 			
 		$card = $_POST[ 'card' ];
 		$args = [
@@ -371,14 +371,14 @@ class Core {
 			'card_year'			=> $card[ 'exp_year' ],
 			'card_cvc'			=> $card[ 'cvc' ]
 		];
-		if( apply_filters( 'gravityformsflutterwaveaddons/project/payment/stripe/switchpaymentcard', false, $args ) ) {
+		if( apply_filters( 'esign/project/payment/stripe/switchpaymentcard', false, $args ) ) {
 			wp_send_json_success( __( 'Added Payment Card and is now activated for subscription.', 'esignbinding' ), 200 );
 		} else {
 			wp_send_json_error( __( 'Something went wrong while trying to update stripe.', 'esignbinding' ) );
 		}
 	}
 	public function registerExisting() {
-		// if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'gravityformsflutterwaveaddons/project/verify/registerexisting' ) ) {
+		// if( ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'esign/project/verify/registerexisting' ) ) {
 		// 	wp_send_json_error( __( 'We\'ve detected you\'re requesting with an invalid security token or something went wrong with you', 'esignbinding' ), 200 );
 		// }
 		if( ! isset( $_POST[ 'userid' ] ) || ! isset( $_POST[ 'password' ] ) || ! isset( $_POST[ 'metadata' ] ) ) {wp_send_json_error( __( 'Something went wrong.',   'esignbinding' ), 200 );}
@@ -404,27 +404,27 @@ class Core {
 			if( is_wp_error( $response ) ) {
 				wp_send_json_error( $response->get_error_message(), 200 );
 			}
-			if( isset( $_FILES[ 'profile-image' ] ) && $avater = apply_filters( 'gravityformsflutterwaveaddons/project/filesystem/set_avater', false, $_FILES[ 'profile-image' ] ) && ! isset( $avater[ 'error' ] ) ) {}
-			// $redirect = esc_url( apply_filters( 'gravityformsflutterwaveaddons/project/user/dashboardpermalink', $userid, $userInfo->data->user_nicename ) );
+			if( isset( $_FILES[ 'profile-image' ] ) && $avater = apply_filters( 'esign/project/filesystem/set_avater', false, $_FILES[ 'profile-image' ] ) && ! isset( $avater[ 'error' ] ) ) {}
+			// $redirect = esc_url( apply_filters( 'esign/project/user/dashboardpermalink', $userid, $userInfo->data->user_nicename ) );
 			$redirect = site_url( 'pay_retainer/' . bin2hex( $userInfo->ID ) . '/' );
 			wp_send_json_success( [ 'message' => __( 'Data updated successfully. Please wait a while, we\'re redirecting.', 'esignbinding' ), 'redirect' => $redirect, 'hooks' => [ 'register-existing-account-wizard-success' ] ], 200 );
 		}
 	}
 	public function changePassword() {
-		if( ! isset( $_POST[ 'password' ] ) || ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'gravityformsflutterwaveaddons/project/nonce/dashboard' ) ) {
+		if( ! isset( $_POST[ 'password' ] ) || ! isset( $_POST[ '_nonce' ] ) || ! wp_verify_nonce( $_POST[ '_nonce' ], 'esign/project/nonce/dashboard' ) ) {
 			wp_send_json_error( __( 'We\'ve detected you\'re requesting with an invalid security token or something went wrong with you', 'esignbinding' ), 200 );
 		}
 		$password = (array) $_POST[ 'password' ];
 		if( isset( $password[ 'new' ] ) && ! empty( $password[ 'new' ] ) && isset( $password[ 'old' ] ) && isset( $password[ 'confirm' ] ) && $password[ 'old' ] == $password[ 'confirm' ] ) {
 			wp_set_password( $password[ 'old' ], get_current_user_id() );
 			// wp_send_json_error( __( 'Password Updated Successfully!', 'esignbinding' ) );
-			set_transient( 'gravityformsflutterwaveaddons/project/transiant/admin/' . get_current_user_id(), [
+			set_transient( 'esign/project/transiant/admin/' . get_current_user_id(), [
 				'type'					=> 'success', // primary | danger | success | warning | info
 				'message'				=> __( 'Password Updated Successfully!', 'esignbinding' )
 			], 200 );
 		} else {
 			// wp_send_json_error( __( 'Password Mismatch. Please try again.', 'esignbinding' ) );
-			set_transient( 'gravityformsflutterwaveaddons/project/transiant/admin/' . get_current_user_id(), [
+			set_transient( 'esign/project/transiant/admin/' . get_current_user_id(), [
 				'type'					=> 'danger', // primary | danger | success | warning | info
 				'message'				=> __( 'Password Mismatch. Please try again.', 'esignbinding' )
 			], 200 );

@@ -1,4 +1,4 @@
-import './frontend/index';
+// import './frontend/index';
 // import './frontend/map';
 // import './modules/dropzone';
 // import './modules/videojs';

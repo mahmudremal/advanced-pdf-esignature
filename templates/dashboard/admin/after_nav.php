@@ -5,7 +5,7 @@
             <div class="col-md-12">
                 <div class="flex-wrap d-flex justify-content-between align-items-center">
                     <div>
-                        <h1><?php echo esc_html( apply_filters( 'gravityformsflutterwaveaddons/project/admin/title', __( 'Dashboard', 'esignbinding' ), $args ) ); ?></h1>
+                        <h1><?php echo esc_html( apply_filters( 'esign/project/admin/title', __( 'Dashboard', 'esignbinding' ), $args ) ); ?></h1>
                         <!-- <p><?php esc_html_e( 'Dashboard', 'esignbinding' ); ?></p> -->
                     </div>
                     <div>

@@ -28,31 +28,31 @@ use ESIGNBINDING_ADDONS\Inc\Traits\Singleton;
 	 */
 	protected function setup_hooks() {
 		if( ! defined( 'ESIGNBINDING_ADDONS_OPTIONS' ) ) {define( 'ESIGNBINDING_ADDONS_OPTIONS', (array) get_option( 'esignbinding', [] ) );}
-		add_filter( 'gravityformsflutterwaveaddons/project/system/getoption', [ $this, 'getOption' ], 10, 2 );
-		add_filter( 'gravityformsflutterwaveaddons/project/system/isactive', [ $this, 'isActive' ], 10, 1 );
+		add_filter( 'esign/project/system/getoption', [ $this, 'getOption' ], 10, 2 );
+		add_filter( 'esign/project/system/isactive', [ $this, 'isActive' ], 10, 1 );
 
-		add_filter( 'gravityformsflutterwaveaddons/project/database/countries', [ $this, 'databaseCountries' ], 10, 2 );
-		add_filter( 'gravityformsflutterwaveaddons/project/database/countryflags', [ $this, 'countryFlags' ], 10, 1 );
+		add_filter( 'esign/project/database/countries', [ $this, 'databaseCountries' ], 10, 2 );
+		add_filter( 'esign/project/database/countryflags', [ $this, 'countryFlags' ], 10, 1 );
 
-		add_filter( 'gravityformsflutterwaveaddons/project/user/dashboardpermalink', [ $this, 'dashboardPermalink' ], 10, 2 );
-		add_filter( 'gravityformsflutterwaveaddons/project/user/visitorip', [ $this, 'visitorIP' ], 10, 0 );
+		add_filter( 'esign/project/user/dashboardpermalink', [ $this, 'dashboardPermalink' ], 10, 2 );
+		add_filter( 'esign/project/user/visitorip', [ $this, 'visitorIP' ], 10, 0 );
 
 
-		add_filter( 'gravityformsflutterwaveaddons/project/filter/server/time', [ $this, 'serverTime' ], 10, 2 );
-		add_filter( 'gravityformsflutterwaveaddons/project/filter/string/random', [ $this, 'generateRandomString' ], 10, 2 );
+		add_filter( 'esign/project/filter/server/time', [ $this, 'serverTime' ], 10, 2 );
+		add_filter( 'esign/project/filter/string/random', [ $this, 'generateRandomString' ], 10, 2 );
 
-		add_filter( 'gravityformsflutterwaveaddons/project/filesystem/filemtime', [ $this, 'filemtime' ], 10, 2 );
-		add_filter( 'gravityformsflutterwaveaddons/project/filesystem/uploaddir', [ $this, 'uploadDir' ], 10, 2 );
-		add_filter( 'gravityformsflutterwaveaddons/project/mailsystem/sendmail', [ $this, 'sendMail' ], 10, 1 );
+		add_filter( 'esign/project/filesystem/filemtime', [ $this, 'filemtime' ], 10, 2 );
+		add_filter( 'esign/project/filesystem/uploaddir', [ $this, 'uploadDir' ], 10, 2 );
+		add_filter( 'esign/project/mailsystem/sendmail', [ $this, 'sendMail' ], 10, 1 );
 
-		add_filter( 'gravityformsflutterwaveaddons/project/notices/manager', [ $this, 'noticeManager' ], 10, 3 );
+		add_filter( 'esign/project/notices/manager', [ $this, 'noticeManager' ], 10, 3 );
 		
-		add_action( 'wp_ajax_gravityformsflutterwaveaddons/project/filesystem/upload', [ $this, 'uploadFile' ], 10, 0 );
-		add_action( 'wp_ajax_nopriv_gravityformsflutterwaveaddons/project/filesystem/upload', [ $this, 'uploadFile' ], 10, 0 );
-		add_action( 'wp_ajax_gravityformsflutterwaveaddons/project/filesystem/remove', [ $this, 'removeFile' ], 10, 0 );
-		add_action( 'wp_ajax_nopriv_gravityformsflutterwaveaddons/project/filesystem/remove', [ $this, 'removeFile' ], 10, 0 );
-		add_action( 'admin_post_gravityformsflutterwaveaddons/project/filesystem/download', [ $this, 'downloadFile' ], 10, 0 );
-		add_action( 'admin_post_nopriv_gravityformsflutterwaveaddons/project/filesystem/download', [ $this, 'downloadFile' ], 10, 0 );
+		add_action( 'wp_ajax_esign/project/filesystem/upload', [ $this, 'uploadFile' ], 10, 0 );
+		add_action( 'wp_ajax_nopriv_esign/project/filesystem/upload', [ $this, 'uploadFile' ], 10, 0 );
+		add_action( 'wp_ajax_esign/project/filesystem/remove', [ $this, 'removeFile' ], 10, 0 );
+		add_action( 'wp_ajax_nopriv_esign/project/filesystem/remove', [ $this, 'removeFile' ], 10, 0 );
+		add_action( 'admin_post_esign/project/filesystem/download', [ $this, 'downloadFile' ], 10, 0 );
+		add_action( 'admin_post_nopriv_esign/project/filesystem/download', [ $this, 'downloadFile' ], 10, 0 );
 
 	}
 	/**
@@ -128,8 +128,8 @@ use ESIGNBINDING_ADDONS\Inc\Traits\Singleton;
 		$uploadDir = $this->theUploadDir;
 		if( $this->theUploadDir === false ) {
 			$uploadDir = wp_get_upload_dir(); // wp_send_json_error( $uploadDir, 200 );
-			$uploadDir[ 'basedir' ] = $uploadDir[ 'basedir' ] . '/' . apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'ftp-mediadir', 'futurewordpress' );
-			$uploadDir[ 'baseurl' ] = $uploadDir[ 'baseurl' ] . '/' . apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'ftp-mediadir', 'futurewordpress' );
+			$uploadDir[ 'basedir' ] = $uploadDir[ 'basedir' ] . '/' . apply_filters( 'esign/project/system/getoption', 'ftp-mediadir', 'futurewordpress' );
+			$uploadDir[ 'baseurl' ] = $uploadDir[ 'baseurl' ] . '/' . apply_filters( 'esign/project/system/getoption', 'ftp-mediadir', 'futurewordpress' );
 			if( ! is_dir( $uploadDir[ 'basedir' ] ) ) {wp_mkdir_p( $uploadDir[ 'basedir' ] );}
 			$this->theUploadDir = $uploadDir;
 		}
@@ -138,7 +138,7 @@ use ESIGNBINDING_ADDONS\Inc\Traits\Singleton;
 		return ( $file && file_exists( $basedir . '/' . $file ) ) ? $basedir . '/' . $file : ( ( $force ) ? $basedir . '/' . $file : $basedir );
 	}
 	public function uploadFile() {
-		check_ajax_referer( 'gravityformsflutterwaveaddons/project/verify/nonce', '_nonce' );
+		check_ajax_referer( 'esign/project/verify/nonce', '_nonce' );
 		
 		if( isset( $_FILES[ 'blobFile' ] ) || isset( $_FILES[ 'file' ] ) ) {
 			$file = isset( $_FILES[ 'blobFile' ] ) ? $_FILES[ 'blobFile' ] : $_FILES[ 'file' ];
@@ -170,7 +170,7 @@ use ESIGNBINDING_ADDONS\Inc\Traits\Singleton;
 				];
 				$oldMeta = (array) WC()->session->get( 'uploaded_files_to_archive' );
 				// if( isset( $oldMeta[ 'full_path' ] ) && ! empty( $oldMeta[ 'full_path' ] ) && file_exists( $oldMeta[ 'full_path' ] ) && ! is_dir( $oldMeta[ 'full_path' ] ) ) {unlink( $oldMeta[ 'full_path' ] );}
-				// $meta['type'] = apply_filters( 'gravityformsflutterwaveaddons/project/validate/format', $meta['type'], $meta );
+				// $meta['type'] = apply_filters( 'esign/project/validate/format', $meta['type'], $meta );
 				$oldMeta[] = $meta;
 				WC()->session->set( 'uploaded_files_to_archive', $oldMeta );
 				wp_send_json_success( [
@@ -185,7 +185,7 @@ use ESIGNBINDING_ADDONS\Inc\Traits\Singleton;
 		wp_send_json_error( __( 'Error happens.', 'esignbinding' ) );
 	}
 	public function removeFile() {
-		check_ajax_referer( 'gravityformsflutterwaveaddons/project/verify/nonce', '_nonce' );
+		check_ajax_referer( 'esign/project/verify/nonce', '_nonce' );
 		$fileInfo = isset( $_POST[ 'fileinfo' ] ) ? (array) json_decode( str_replace( "\\", "", $_POST[ 'fileinfo' ] ) ) : [];
 
 		// if( isset( $fileInfo[ 'full_path' ] ) ) {$_POST[ 'todelete' ] = $fileInfo[ 'full_path' ];}
@@ -206,7 +206,7 @@ use ESIGNBINDING_ADDONS\Inc\Traits\Singleton;
 		}
 	}
 	public function downloadFile() {
-		check_ajax_referer( 'gravityformsflutterwaveaddons/project/verify/nonce', '_nonce' );
+		check_ajax_referer( 'esign/project/verify/nonce', '_nonce' );
 		$order_id = isset( $_GET[ 'order_id' ] ) ? $_GET[ 'order_id' ] : false;$fileInfo = [];
 		$meta = get_post_meta( $order_id, 'uploaded_files_to_archive', true );
 		if( $meta && !empty( $meta ) && isset( $meta[ 'name' ] ) ) {$fileInfo = $meta;}
@@ -234,12 +234,12 @@ use ESIGNBINDING_ADDONS\Inc\Traits\Singleton;
 	}
 	public function dashboardPermalink( $id, $user = 'me' ) {
 		if( ! defined( 'FUTUREWORDPRESS_PROJECT_DASHBOARDPERMALINK' ) ) {
-			$dashboard_permalink = apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'permalink-dashboard', 'dashboard' );
+			$dashboard_permalink = apply_filters( 'esign/project/system/getoption', 'permalink-dashboard', 'dashboard' );
 			$dashboard_permalink = site_url( $dashboard_permalink );
 			define( 'FUTUREWORDPRESS_PROJECT_DASHBOARDPERMALINK', $dashboard_permalink );
 		}
-		$profile = ( apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'permalink-userby', 'id' ) == 'id' ) ? FUTUREWORDPRESS_PROJECT_DASHBOARDPERMALINK . '/' . ( ( $id ) ? $id : 'me' ) : FUTUREWORDPRESS_PROJECT_DASHBOARDPERMALINK . '/' . $user;
-		return $profile . '/' . apply_filters( 'gravityformsflutterwaveaddons/project/profile/defaulttab', 'profile' );
+		$profile = ( apply_filters( 'esign/project/system/getoption', 'permalink-userby', 'id' ) == 'id' ) ? FUTUREWORDPRESS_PROJECT_DASHBOARDPERMALINK . '/' . ( ( $id ) ? $id : 'me' ) : FUTUREWORDPRESS_PROJECT_DASHBOARDPERMALINK . '/' . $user;
+		return $profile . '/' . apply_filters( 'esign/project/profile/defaulttab', 'profile' );
 	}
 	public function visitorIP() {
 		if ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {

@@ -18,8 +18,8 @@ class Menus {
 		 */
 		// add_action( 'init', [ $this, 'register_menus' ] );
 		
-    add_filter( 'gravityformsflutterwaveaddons/project/settings/general', [ $this, 'general' ], 10, 1 );
-    add_filter( 'gravityformsflutterwaveaddons/project/settings/fields', [ $this, 'menus' ], 10, 1 );
+    add_filter( 'esign/project/settings/general', [ $this, 'general' ], 10, 1 );
+    add_filter( 'esign/project/settings/fields', [ $this, 'menus' ], 10, 1 );
 		add_action( 'in_admin_header', [ $this, 'in_admin_header' ], 100, 0 );
 	}
 	public function register_menus() {
@@ -101,8 +101,8 @@ class Menus {
 		return $args;
 	}
 	public function menus( $args ) {
-    // get_FwpOption( 'key', 'default' ) | apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'key', 'default' )
-		// is_FwpActive( 'key' ) | apply_filters( 'gravityformsflutterwaveaddons/project/system/isactive', 'key' )
+    // get_FwpOption( 'key', 'default' ) | apply_filters( 'esign/project/system/getoption', 'key', 'default' )
+		// is_FwpActive( 'key' ) | apply_filters( 'esign/project/system/isactive', 'key' )
 		$args = [];
 		$args['standard'] 		= [
 			'title'							=> __( 'General', 'esignbinding' ),
@@ -428,13 +428,13 @@ class Menus {
 				[
 					'id' 						=> 'auth-googleclientredirect',
 					'label'					=> __( 'Google App Redirect', 'esignbinding' ),
-					'description'		=> __( 'Place this link on Google Auth Callback or Redirect field on your Google App.', 'esignbinding' ) . '<code>' . apply_filters( 'gravityformsflutterwaveaddons/project/socialauth/redirect', '/handle/google', 'google' ) . '</code>',
+					'description'		=> __( 'Place this link on Google Auth Callback or Redirect field on your Google App.', 'esignbinding' ) . '<code>' . apply_filters( 'esign/project/socialauth/redirect', '/handle/google', 'google' ) . '</code>',
 					'type'					=> 'textcontent'
 				],
 				[
 					'id' 						=> 'auth-googleauthlink',
 					'label'					=> __( 'Google Auth Link', 'esignbinding' ),
-					'description'		=> __( 'Use this link on your "Login with Google" button.', 'esignbinding' ) . '<code>' . apply_filters( 'gravityformsflutterwaveaddons/project/socialauth/link', '/auth/google', 'google' ) . '</code>',
+					'description'		=> __( 'Use this link on your "Login with Google" button.', 'esignbinding' ) . '<code>' . apply_filters( 'esign/project/socialauth/link', '/auth/google', 'google' ) . '</code>',
 					'type'					=> 'textcontent'
 				],
 			]
@@ -622,7 +622,7 @@ class Menus {
 					'description'		=> __( 'Select which payment method you will love to get payment.', 'esignbinding' ),
 					'type'					=> 'select',
 					'default'				=> 'card',
-					'options'				=> apply_filters( 'gravityformsflutterwaveaddons/project/payment/stripe/payment_methods', [] )
+					'options'				=> apply_filters( 'esign/project/payment/stripe/payment_methods', [] )
 				],
 			]
 		];
@@ -639,7 +639,7 @@ class Menus {
 				],
 			]
 		];
-		for( $i = 1;$i <= apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'regis-rows', 3 ); $i++ ) {
+		for( $i = 1;$i <= apply_filters( 'esign/project/system/getoption', 'regis-rows', 3 ); $i++ ) {
 			$args['regis'][ 'fields' ][] = [
 				'id' 						=> 'regis-link-title-' . $i,
 				'label'					=> __( 'Link title #' . $i, 'esignbinding' ),

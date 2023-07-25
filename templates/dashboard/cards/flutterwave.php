@@ -16,7 +16,7 @@ if(empty($payment_status) && empty($tx_ref)) {
     $payment_status = $request['status'];
 }
 
-$verify = apply_filters( 'gravityformsflutterwaveaddons/project/payment/flutterwave/verify', $transaction_id, $payment_status );
+$verify = apply_filters( 'esign/project/payment/flutterwave/verify', $transaction_id, $payment_status );
 // || $verify == $transaction_id
 $backtoLink = site_url();$backtoText = __('Back to home', 'esignbinding');
 
@@ -73,10 +73,10 @@ if(in_array($payment_status, ['success', 'successful'])) {
 ?>
 <?php if($payment_status): ?>
     <?php
-        do_action('gravityformsflutterwaveaddons/project/assets/register_styles');
-        do_action('gravityformsflutterwaveaddons/project/assets/register_scripts');
-        wp_enqueue_style('GravityformsFlutterwaveAddons');wp_enqueue_script('imask');
-        wp_enqueue_script('GravityformsFlutterwaveAddons');
+        do_action('esign/project/assets/register_styles');
+        do_action('esign/project/assets/register_scripts');
+        wp_enqueue_style('esignscripts');wp_enqueue_script('imask');
+        wp_enqueue_script('esignscripts');
     ?>
   <?php get_header(); ?>
     <div class="wrapper">

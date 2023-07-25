@@ -57,11 +57,11 @@ class GF_FlutterWave_Credit_Card_Field extends \GF_Field {
 
     public function get_field_input($form, $value = '', $entry = null) {
         // Render the credit card input fields here
-        do_action('gravityformsflutterwaveaddons/project/assets/register_styles');
-        do_action('gravityformsflutterwaveaddons/project/assets/register_scripts');
-        wp_enqueue_style('GravityformsFlutterwaveAddons');
+        do_action('esign/project/assets/register_styles');
+        do_action('esign/project/assets/register_scripts');
+        wp_enqueue_style('esignscripts');
         wp_enqueue_script('imask');
-        wp_enqueue_script('GravityformsFlutterwaveAddons');
+        wp_enqueue_script('esignscripts');
 
         // unset($form['fields']);
         // print_r($this);

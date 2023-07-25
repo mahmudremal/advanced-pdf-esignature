@@ -28,14 +28,15 @@ class Meta_Boxes {
 	 * @return void
 	 */
 	public function add_custom_meta_box() {
-		$screens = [ 'shop_order' ];
+		$screens = ['esignatures'];
 		foreach ( $screens as $screen ) {
 			add_meta_box(
-				'checkout_video_clip',           				// Unique ID
-				__( 'Checkout Video Clip', 'esignbinding' ),  // Box title
-				[ $this, 'custom_meta_box_html' ],  		// Content callback, must be of type callable
-				$screen,                   							// Post type
-				'side'                   								// context
+				'esignature_builder_metabox',           				// Unique ID
+				__( 'ESignature', 'esignbinding' ),  					// Box title
+				[ $this, 'custom_meta_box_html' ],  					// Content callback, must be of type callable
+				$screen,                   								// Post type
+				'advanced',                   							// context
+				'high'													// priority
 			);
 		}
 	}
@@ -46,47 +47,17 @@ class Meta_Boxes {
 	 *
 	 * @return void
 	 */
-	public function custom_meta_box_html( $post ) {
-		$meta = (array) get_post_meta( $post->ID, 'checkout_video_clip', true );
-		$shortHand = site_url( '/clip/' . dechex( $post->ID ) );
-		$shortned = str_replace( [ 'https://www.', 'http://www.' ], [ '', '' ], $shortHand );
-		if( ! isset( $meta[ 'full_url' ] ) || empty( $meta[ 'full_url' ] ) ) :
-			esc_html_e( 'No video uploaded for this order.', 'esignbinding' );
-			else :
+	public function custom_meta_box_html($post) {
+		$json = ['id' => $post->ID];
 		?>
-		<div class="fwp-tabs__container">
-			<div class="fwp-tabs__wrap">
-				<div class="fwp-tabs__navs">
-					<div class="fwp-tabs__nav-item active" data-target="#the-qrcode"><?php esc_html_e( 'Scan Code', 'esignbinding' ); ?></div>
-					<div class="fwp-tabs__nav-item" data-target="#the-video"><?php esc_html_e( 'Play Video', 'esignbinding' ); ?></div>
-				</div>
-				<div class="fwp-tabs__tabs-field">
-					<div class="fwp-tabs__content active" id="the-qrcode">
-						<canvas class="fwp-qrzone-field" data-code="<?php echo esc_url( $shortHand ); ?>"></canvas>
-						<p class="qrcode-subtitle"><?php echo esc_html( $shortned ); ?></p>
-					</div>
-					<div class="fwp-tabs__content" id="the-video">
-						<div class="fwp-video-player-wraper">
-							<div class="fwp-video-wrap">
-								<video id="fwp-videojs-playing-field" playsinline class="video-js vjs-default-skin" controls preload="auto" data-temp-poster="" data-setup='{ "controls": true, "autoplay": false, "preload": "none" }'>
-									<source src="<?php echo esc_url( $meta['full_url'] ); ?>" type="<?php echo esc_attr( $meta['type'] ); ?>"></source>
-									<p class="vjs-no-js">
-										<?php esc_html_e( 'To view this video please enable JavaScript, and consider upgrading to a
-										web browser that', 'esignbinding' ); ?>
-										<a href="https://videojs.com/html5-video-support/" target="_blank">
-											<?php esc_html_e( 'supports HTML5 video', 'esignbinding' ); ?>
-										</a>
-									</p>
-								</video>
-								<!-- <a class="fwp-metabox-download-button" href="<?php echo esc_url( $meta['full_url'] ); ?>" download="<?php echo esc_url( $meta['name'] ); ?>"><?php esc_html_e( 'Download this Video', 'esignbinding' ); ?></a> -->
-							</div>
-						</div>
-					</div>
-				</div>
+		<div class="fwp__esign">
+			<div class="fwp__esign__header"></div>
+			<div class="fwp__esign__body">
+				<button type="button" class="fwp-launch-esignature-builder" data-config="<?php echo esc_attr(json_encode($json)); ?>"><?php esc_html_e('Open Signature Builder', 'domain'); ?></button>
 			</div>
+			<div class="fwp__esign__footer"></div>
 		</div>
 		<?php
-		endif;
 	}
 	/**
 	 * Save post meta into database

@@ -9,12 +9,17 @@ use ESIGNBINDING_ADDONS\Inc\Traits\Singleton;
 class Project {
 	use Singleton;
 	protected function __construct() {
-		Install::get_instance();
+		Ajax::get_instance();
 		Assets::get_instance();
-		Flutterwave::get_instance();
-		Gravityforms::get_instance();
-		Rewrite::get_instance();
-		Bulks::get_instance();
+		Install::get_instance();
+		Post_Types::get_instance();
+		Meta_Boxes::get_instance();
+
+
+		// Flutterwave::get_instance();
+		// Gravityforms::get_instance();
+		// Rewrite::get_instance();
+		// Bulks::get_instance();
 
 		// Woo_Flutter::get_instance();
 		// Option::get_instance();
@@ -32,10 +37,8 @@ class Project {
 		// Blocks::get_instance();
 		// Menus::get_instance();
 		// Profile::get_instance();
-		// Meta_Boxes::get_instance();
 		// Update::get_instance();
 		// Shortcode::get_instance();
-		// PostTypes::get_instance();
 		// Taxonomies::get_instance();
 		// Events::get_instance();
 		// Ftp::get_instance();

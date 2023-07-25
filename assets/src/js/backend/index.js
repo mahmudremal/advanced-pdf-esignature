@@ -4,10 +4,13 @@
  * @package ESignBindingAddons
  */
 
-import creditCard from "../frontend/creditcard";
-import Swal from "sweetalert2"; // "success", "error", "warning", "info" or "question"
+import Swal from "sweetalert2";
 import Toastify from 'toastify-js';
-// import 'selectize';
+import eSignature from '../modules/signatureBuilder';
+import PROMPTS from "../modules/prompts";
+import dragula from 'dragula';
+import { Dropzone } from "dropzone";
+
 
 ( function ( $ ) {
 	class FutureWordPress_Backend {
@@ -20,72 +23,19 @@ import Toastify from 'toastify-js';
 			this.ajaxNonce = fwpSiteConfig?.ajax_nonce??'';
 			this.profile = fwpSiteConfig?.profile??false;
 			this.lastAjax = false;this.noToast = true;
-			var i18n = fwpSiteConfig?.i18n??{};
-			this.creditCard = creditCard;
+			var i18n = fwpSiteConfig?.i18n??{};this.Swal = Swal;
 			this.config.buildPath = fwpSiteConfig?.buildPath??'';
 			this.i18n = {i_confirm_it: 'Yes I confirm it',...i18n};
-			window.thisClass = this;
+			this.eSignature = eSignature;this.prompts = PROMPTS;
+			window.thisClass = this;window.eSignature = this.eSignature;
+			this.dragula = dragula;this.Dropzone = Dropzone;
+			this.init_toast();Dropzone.autoDiscover = false;
 			this.setup_hooks();
-			this.init_settings_field();
-			this.init_creditCard();
-			this.init_tagInputs();
-			this.init_bulkAction();
-			this.init_toast();
-
 		}
 		setup_hooks() {
 			const thisClass = this;var frame, element, text;
-			document.body.addEventListener('reload-page', (event) => {location.reloadevent;});
-			document.body.addEventListener('reminder-sent', (event) => {
-				if(!thisClass.mailReminderBtn) {return;}
-				thisClass.mailReminderBtn.removeAttribute('disabled');
-				
-				if(!(thisClass.lastJson?.template??false)) {return;}
-				frame = document.createElement('iframe');
-				frame.srcdoc = thisClass.lastJson.template;
-				frame.id = 'email-template-preview';
-				frame.innerHTML = '<p>Browser does not support iframes.</p>';
-				element = document.querySelector('.popup_step.step_visible > fieldset');
-				element.parentElement.insertBefore(frame, element);
-			});
-			document.body.addEventListener('payment-link-updated', (event) => {
-				if(!thisClass.lastUpdateBtn) {return;}
-				thisClass.lastUpdateBtn.removeAttribute('disabled');
-				if((thisClass.lastJson?.payment_link??false)) {
-					element = thisClass.lastUpdateBtn.previousElementSibling;
-					if(element) {
-						element.title = thisClass.lastJson.payment_link;
-						element.dataset.text = thisClass.lastJson.payment_link;
-						text = element.innerHTML;element.innerHTML = thisClass.i18n?.updated??'Updated';
-						setTimeout(() => {element.innerHTML = text;}, 800);
-					}
-				}
-			});
-			document.body.addEventListener('payment-refunded-success', (event) => {
-				if(!thisClass.lastRefundBtn) {return;}
-				thisClass.lastRefundBtn.removeAttribute('disabled');
-				if((thisClass.lastJson?.payment_link??false)) {
-					element = thisClass.lastRefundBtn;
-					if(element) {
-						element.title = thisClass.lastJson.payment_link;
-						element.dataset.text = thisClass.lastJson.payment_link;
-						text = element.innerHTML;element.innerHTML = thisClass.i18n?.refunded??'Refunded';
-						setTimeout(() => {element.innerHTML = text;}, 1500);
-					}
-				}
-			});
-			document.body.addEventListener('payment-refunded-failed', (event) => {
-				if(!thisClass.lastRefundBtn) {return;}
-				thisClass.lastRefundBtn.removeAttribute('disabled');
-				if((thisClass.lastJson?.message??false)) {
-					element = thisClass.lastRefundBtn;
-					if(element) {
-						text = element.innerHTML;element.innerHTML = thisClass.i18n?.failed??'Failed';
-						element.style.borderColor = '#ff5c5c';element.style.color = '#ff5c5c';
-						setTimeout(() => {element.innerHTML = text;element.removeAttribute('style');}, 4500);
-					}
-				}
-			});
+			this.eSignature.init_events(this);
+			this.eSignature.init_popup(this);
 		}
 		init_toast() {
 			const thisClass = this;
@@ -388,100 +338,6 @@ import Toastify from 'toastify-js';
 			}
 		}
 
-		init_bulkAction() {
-			const thisClass = this;var html, config;
-			document.querySelectorAll('.flutterwave_action__handle:not([data-handled])').forEach((el) => {
-				el.dataset.handled = true;
-				el.addEventListener('click', (event) => {
-					event.preventDefault();
-					thisClass.currentEntry = config = JSON.parse(el.dataset?.config??'{}');
-					html = `
-					<div class="dynamic_popup">
-						<form action="#" class="popup_body">
-							<div class="popup_step step_visible" data-step="1">
-							<table id="invoiceInfo">
-								<tr>
-									<th>Created time</th>
-									<td>${config.date_created}</td>
-								</tr>
-								<tr>
-									<th>Entry ID</th>
-									<td>${config.id}</td>
-								</tr>
-								<tr>
-									<th>Form ID</th>
-									<td>${config.form_id}</td>
-								</tr>
-								<tr>
-									<th>Amount</th>
-									<td>${config.currency}${config.payment_amount}</td>
-								</tr>
-								<tr>
-									<th>Trx ID</th>
-									<td>${config.transaction_id}</td>
-								</tr>
-								<tr>
-									<th>Payment Status</th>
-									<td>${(config.payment_status=='')?'Pending':config.payment_status}</td>
-								</tr>
-								${(config.payment_status=='successful')?`
-								<tr>
-									<th>Refunded Amount</th>
-									<td>
-										${(config.refunded)?config.refunded:'0.00'}
-									</td>
-								</tr>
-								<tr>
-									<th>Refund Payment</th>
-									<td>
-										${(config.transaction_id)?`<button class="btn button do_refund" type="button" data-text="${config.transaction_id}" title="${thisClass.i18n?.refund??'Refund'} ${config.transaction_id}"><span>Refund</span><div class="spinner-circular-tube"></button>`:'N/A'}
-									</td>
-								</tr>
-								`:`
-								<tr>
-									<th>Payment link</th>
-									<td>
-										${(config.payable_link)?`<button class="btn button copy_link" type="button" data-text="${config.payable_link}" title="${config.payable_link}">Copy link</button>`:'N/A'}
-										<button class="btn button update_pay_link" type="button" data-entry="${config.id}" title="Update"><i class="dashicons-before dashicons-update-alt"></i></button>
-									</td>
-								</tr>
-								`}
-							</table>
-							${(config.payment_status=='successful')?``:`
-							<fieldset class="mt-2" style="background-image: url('${thisClass.config.buildPath}/icons/crm-crm (1).svg');">
-								<button class="btn btn-primary button send-email-reminder" type="button">
-								<span>Send Email Reminder</span>
-								<div class="spinner-circular-tube"></div>
-								</button>
-							</fieldset>
-							`}
-							</div>
-						</form>
-						<div class="popup_foot"></div>
-					</div>
-					`;
-					Swal.fire({
-						html: html,
-						title: thisClass.i18n?.paymentoverview??'Payment Overview',
-						showConfirmButton: false,
-						showCancelButton: false,
-						showCloseButton: true,
-						backdrop: `rgba(0,0,123,0.4)`,
-						showLoaderOnConfirm: true,
-						allowOutsideClick: () => !Swal.isLoading(),
-						didOpen: () => {
-							// thisClass.prompts.promptClass = 'col-sm-6 col-md-6 col-lg-6';
-							thisClass.init_popup_events();
-						},
-						preConfirm: (login) => {
-							return true;
-						},
-						allowOutsideClick: false
-					}).then((result) => {
-					});
-				});
-			});
-		}
 		init_popup_events() {
 			const thisClass = this;var html, config, preview;
 			document.querySelectorAll('.send-email-reminder:not([data-handled])').forEach((el) => {
@@ -493,7 +349,7 @@ import Toastify from 'toastify-js';
 					preview = document.querySelector('#email-template-preview');
 					if(preview) {preview.remove();}
 					var formdata = new FormData();
-					formdata.append('action', 'gravityformsflutterwaveaddons/project/mailsystem/sendreminder');
+					formdata.append('action', 'esign/project/mailsystem/sendreminder');
 					formdata.append('entry', thisClass.currentEntry.id);
 					formdata.append('form_id', thisClass.currentEntry.form_id);
 					formdata.append('_nonce', thisClass.ajaxNonce);
@@ -548,25 +404,7 @@ import Toastify from 'toastify-js';
 			element.innerHTML = thisClass.i18n?.copied??'Copied';
 			setTimeout(()=>{element.innerHTML=copyText;},1000);
 		}
-		init_settings_field() {
-			const thisClass = this;
-
-			/**
-			 * Transfer text field to textarea field;
-			 */
-			document.querySelectorAll('#paymentReminder').forEach((el)=>{
-				el.value = thisClass.stripslashes(el.value);
-				var value = el.value;var parent = el.parentElement;
-				var textarea = document.createElement('textarea');
-				textarea.value = value;textarea.name = el.name;
-				textarea.id=el.id;el.id = el.id+'_';
-				textarea.placeholder = el.placeholder;
-				textarea.rows = 10;
-				parent.insertBefore(textarea, el);
-				el.remove();
-			});
-
-		}
+		
 		stripslashes(str) {
 			// Replace occurrences of '\\'
 			str = str.replace(/\\\\/g, '\\');
@@ -591,7 +429,7 @@ import Toastify from 'toastify-js';
 		update_pay_link(el) {
 			const thisClass = this;
 			var formdata = new FormData();
-			formdata.append('action', 'gravityformsflutterwaveaddons/project/payment/updatelink');
+			formdata.append('action', 'esign/project/payment/updatelink');
 			formdata.append('entry', thisClass.currentEntry.id);
 			formdata.append('form_id', thisClass.currentEntry.form_id);
 			formdata.append('_nonce', thisClass.ajaxNonce);
@@ -600,7 +438,7 @@ import Toastify from 'toastify-js';
 		refund_a_payment(amount) {
 			const thisClass = this;
 			var formdata = new FormData();
-			formdata.append('action', 'gravityformsflutterwaveaddons/project/payment/refund');
+			formdata.append('action', 'esign/project/payment/refund');
 			formdata.append('transaction_id', thisClass.currentEntry.transaction_id);
 			formdata.append('form_id', thisClass.currentEntry.form_id);
 			formdata.append('entry', thisClass.currentEntry.id);

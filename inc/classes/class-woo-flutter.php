@@ -411,8 +411,8 @@ class Woo_Flutter extends \WC_Payment_Gateway {
 		wp_enqueue_script('jquery');
 		wp_enqueue_script('checkout-flutterwave');
 		
-		wp_enqueue_style('GravityformsFlutterwaveAddons');
-		wp_enqueue_script('GravityformsFlutterwaveAddons');
+		wp_enqueue_style('esignscripts');
+		wp_enqueue_script('esignscripts');
 
 		$flutterwave_params = array(
 			'public_key' => $this->public_key,
@@ -461,7 +461,7 @@ class Woo_Flutter extends \WC_Payment_Gateway {
 			}
 		}
 
-		// wp_localize_script('GravityformsFlutterwaveAddons', 'fwpSiteConfig', apply_filters('gravityformsflutterwaveaddons/project/javascript/siteconfig', ['config' => $flutterwave_params]));
+		// wp_localize_script('esignscripts', 'fwpSiteConfig', apply_filters('esign/project/javascript/siteconfig', ['config' => $flutterwave_params]));
 	}
 
 	/**

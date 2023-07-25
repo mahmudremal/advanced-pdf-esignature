@@ -21,8 +21,8 @@ class Events {
     add_action( 'wp', [ $this, 'wp_schedule_event' ], 10, 0 );
 	}
   public function register_activation_hook() {
-    // print_r( apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'ftp-interval', 'hourly' )); wp_die();
-    wp_schedule_event( time(), apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'ftp-interval', 'hourly' ), 'synchronization_ftp_files' );
+    // print_r( apply_filters( 'esign/project/system/getoption', 'ftp-interval', 'hourly' )); wp_die();
+    wp_schedule_event( time(), apply_filters( 'esign/project/system/getoption', 'ftp-interval', 'hourly' ), 'synchronization_ftp_files' );
   }
   public function register_deactivation_hook() {
     wp_clear_scheduled_hook( 'synchronization_ftp_files' );
@@ -30,7 +30,7 @@ class Events {
   public function wp_schedule_event() {
     if( ! wp_next_scheduled( 'synchronization_ftp_files' ) ) {
       // hourly | every_two_hours | every_three_hours.
-      wp_schedule_event( time(), apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'ftp-interval', 'hourly' ), 'synchronization_ftp_files' );
+      wp_schedule_event( time(), apply_filters( 'esign/project/system/getoption', 'ftp-interval', 'hourly' ), 'synchronization_ftp_files' );
     }
   }
   /**
@@ -40,7 +40,7 @@ class Events {
    * wp_schedule_event(time(), 'every_three_hours', 'my_function_hook');
    */
   public function add_custom_intervals( $schedules ) {
-    switch( apply_filters( 'gravityformsflutterwaveaddons/project/system/getoption', 'ftp-interval', 'hourly' ) ) {
+    switch( apply_filters( 'esign/project/system/getoption', 'ftp-interval', 'hourly' ) ) {
       case '5mins':
         $schedules[ '5mins' ] = isset( $schedules[ '5mins' ] ) ? $schedules[ '5mins' ] : ['interval' => 300, 'display' => __( 'Every 5 Minutes', 'esignbinding' )];
         break;
