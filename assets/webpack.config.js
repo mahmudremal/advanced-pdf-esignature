@@ -16,6 +16,7 @@ const JS_DIR = path.resolve( __dirname, 'src/js' );
 const IMG_DIR = path.resolve( __dirname, 'src/img' );
 const LIB_DIR = path.resolve( __dirname, 'src/library' );
 const BUILD_DIR = path.resolve( __dirname, 'build' );
+const SRC_DIR = path.resolve( __dirname, 'src' );
 
 const entry = {
 	backend: JS_DIR + '/admin.js',
@@ -48,7 +49,8 @@ const plugins = ( argv ) => [
 
 	new CopyPlugin( {
 		patterns: [
-			{ from: LIB_DIR, to: BUILD_DIR + '/library' }
+			{from: LIB_DIR, to: BUILD_DIR+'/library'},
+			{from: SRC_DIR+'/icons', to: BUILD_DIR+'/icons'}
 		]
 	} ),
 

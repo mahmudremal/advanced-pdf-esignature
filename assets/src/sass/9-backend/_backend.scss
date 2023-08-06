@@ -1,4 +1,5 @@
-.wp-admin {
+// .wp-admin
+body {
   .fwp__esign {
     &__header {
       display: block;
@@ -72,18 +73,6 @@
           .invisible {
             visibility: hidden;
           }
-          .spinner-circular-tube {
-            width: 26px;
-            height: 26px;
-            display: none;
-            border-radius: 50%;
-            border: 11.2px #474bff double;
-            border-left-style: solid;
-            animation: spinner-aib1d7 0.75s infinite linear;
-          }
-          &:disabled .spinner-circular-tube {
-            display: block;
-          }
           &.btn-default {
             background: #333;
             margin-right: auto;
@@ -126,14 +115,24 @@
     padding: 10px 20px;
     box-shadow: 0 0 5rem #c1c1c185 inset, 0 0 5rem #c1c1c1;
     border-radius: 5px;
+    &:not([style^="display: none;"]) + .pdf_builder__row {
+      display: none;
+    }
   }
   #signature-builder {
     z-index: 0;
-    padding: 20px;
+    padding: unset;
+    overflow: hidden;
     min-height: 100px;
+    position: relative;
     background: #eee;
     margin-bottom: 20px;
     border-radius: 10px;
+    canvas {
+      width: 100%;
+      height: auto;
+      max-width: 100%;
+    }
   }
   .active {
     outline: 1px solid red;
@@ -181,9 +180,27 @@
   &__row {
     display: flex;
     flex-wrap: wrap;
+    .update_esign_template {
+      gap: 5px;
+      display: flex;
+      transition: all .7s ease;
+      .spinner-circular-tube {
+        width: 20px;
+        height: 20px;
+        display: none;
+        border-radius: 50%;
+        border: 11.2px #fdfdfd double;
+        border-left-style: solid;
+        animation: spinner-aib1d7 0.75s infinite linear;
+      }
+      &:disabled .spinner-circular-tube {
+        display: block;
+      }
+    }
   }
   &__builder {
     width: 75%;
+    padding: 20px;
     .esign-body {
       z-index: 0;
       padding: 20px;
@@ -192,36 +209,72 @@
       margin-bottom: 20px;
       border-radius: 10px;
       &__single {
-        padding: 5px 10px;
-        border: 1px solid #ddd;
-        details {
-          summary {
-            padding: 10px 5px;
-          }
-          &[open] {
-            summary {
-              margin-bottom: 10px;
-              border-bottom: 1px solid #ddd;
-              &+div {
-                gap: 20px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                input {
-                  max-width: 80%;
-                  width: -webkit-fill-available;
-                }
-              }
+        top: 20px;
+        left: 20px;
+        width: 200px;
+        height: 40px;
+        display: flex;
+        padding: 3px 10px;
+        position: absolute;
+        line-height: unset;
+        align-items: center;
+        background: #ebebeb;
+        justify-content: space-between;
+        border: 0.5px dashed #a5a5a5;
+        @include mq($until: 550px) {
+          padding: 3px 5px;
+        }
+        &__title {
+          padding: 10px 5px;
+        }
+        &.signpreview {
+          display: block;
+          .esign-body__single__title {
+            top: 0;
+            left: 5px;
+            padding: 0;
+            z-index: 1;
+            margin: unset;
+            font-size: 10px;
+            color: #9b9b9b;
+            position: absolute;
+            + img {
+              height: 100%;
+              width: 100%;
             }
           }
         }
+        .dashicons-trash {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: nowrap;
+          line-height: unset;
+          margin: auto;
+        }
+        canvas {
+          width: 100%;
+          height: 100%;
+        }
+      }
+    }
+  }
+  &__frontend {
+    .esign-body {
+      &__single {
+        border-width: 2px;
+        border-color: #ff3f3f;
       }
     }
   }
   &__fields {
     width: 25%;
     &__grid {
-      
+      padding: 20px 10px;
+      h3 {
+        font-size: 20px;
+        text-transform: uppercase;
+      }
     }
     .esign-fields {
       gap: 10px;
@@ -256,6 +309,59 @@
         color: #333;
         border-color: #ccc;
       }
+    }
+    &__settings {
+      display: none;
+      padding: 20px 10px;
+      &__header {
+        border: none;
+        display: flex;
+        flex-wrap: wrap;
+        padding-bottom: 10px;
+        justify-content: space-between;
+        border-bottom: 1px solid #ddd;
+        button {
+          border: none;
+          background: #ddd;
+          border-radius: 3px;
+        }
+        &__title {
+          color: #333;
+          font-size: 15px;
+        }
+      }
+      &__body {
+        .pdf_fields {
+          padding: 5px;
+          padding-top: 20px;
+          &__group {
+            display: block;
+            position: relative;
+            &__fieldset {
+              margin-bottom: 10px;
+              label {
+                margin-bottom: 10px;
+              }
+            }
+          }
+          &__label {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: space-between;
+          }
+          &__tooltip {
+            margin-left: 5px;
+            padding: 2px 5px;
+            background: #eee;
+            border-radius: 14px;
+          }
+        }
+      }
+    }
+    &.settings_enabled {
+      .pdf_builder__fields__grid {display: none;}
+      .pdf_builder__fields__settings {display: block;}
     }
   }
 }

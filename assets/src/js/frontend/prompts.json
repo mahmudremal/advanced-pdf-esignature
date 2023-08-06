@@ -1,0 +1,378 @@
+[
+    {
+        title: 'AIDA Framework',
+        subtitle: 'AIDA Framework',
+        intro: 'Use the oldest marketing framework in the world. Attention, Interest, Desire, Action.',
+        icon: 'dashicons-before dashicons-editor-insertmore',
+        syntex: 'Use the oldest marketing framework in the world. Attention, Interest, Desire, Action.Company/Product Name: {{product_name}}, Product description: {{product_desc}}, Tone of voice: {{tone}}',
+        ttlSntx: '{{product_name}}',
+        fields: [
+            {
+                title: 'Company/Product Name',
+                type: 'text',name: 'product_name',
+                placeholder: 'Otter AI',value: ''
+            },
+            {
+                title: 'Product Description',
+                type: 'textarea',name: 'product_desc',
+                placeholder: 'Generate rich notes for meetings, interviews, lectures, and other important voice conversations with Otter, your AI-powered assistant.',value: ''
+            },
+            {
+                title: 'Tone Of Voice',
+                type: 'text',name: 'tone',
+                placeholder: 'Tone Of Voice',value: 'Witty'
+            },
+        ]
+    },
+    {
+        title: 'Product Description (paragraph)',
+        subtitle: 'Product Description (paragraph)',
+        intro: 'Create compelling product descriptions for Amazon listings.',
+        icon: 'dashicons-before dashicons-menu-alt3',
+        syntex: 'Create compelling product descriptions for Ecommerce listing. Product name: {{product_name}},Key benefits/features: {{key_features}}, Tone of voice: {{tone}}',
+        ttlSntx: '{{product_name}}',
+        fields: [
+            {
+                title: 'Product Name',
+                type: 'text',name: 'product_name',value: '',
+                placeholder: 'ONYXNEO Comfort Silicone Insole'
+            },
+            {
+                title: 'Key Benefits/Features',
+                type: 'textarea',name: 'key_features',
+                placeholder: 'Ergonomic design, absorbs the shock waves, throughout weight distribution, Hypoallergenic material',value: ''
+            },
+            {
+                title: 'Tone Of Voice',
+                type: 'text',name: 'tone',
+                placeholder: 'Tone Of Voice',value: 'Witty'
+            },
+        ]
+    },
+    {
+        title: 'Product Features (bullets)',
+        subtitle: 'Product Features (bullets)',
+        intro: 'Create key feature and benefit bullet points for Ecommerce Product.',
+        icon: 'dashicons-before dashicons-editor-ul',
+        syntex: 'Create key feature and benefit bullet points for Ecommerce listing under the "{{product_name}}" section. Product name: {{product_name}}, Product info: {{product_info}}, Key benefits/features: {{key_features}}, Tone of voice: {{tone}}',
+        ttlSntx: '{{product_name}}',
+        fields: [
+            {
+                title: 'Product Name',
+                type: 'text',name: 'product_name',value: '',
+                placeholder: 'ONYXNEO Comfort Silicone Insole'
+            },
+            {
+                title: 'Product Info',
+                type: 'textarea',name: 'product_info',
+                placeholder: 'comfort silicone Insole is designed for effective heel pain relief, absorbs shock while walking or running, redistributes',value: ''
+            },
+            {
+                title: 'Key Benefits/Features',
+                type: 'text',name: 'key_features',
+                placeholder: 'Ergonomic design, absorbs the shock waves, throughout weight distribution, Hypoallergenic material',value: ''
+            },
+            {
+                title: 'Tone Of Voice',
+                type: 'text',name: 'tone',
+                placeholder: 'Tone Of Voice',value: 'Witty'
+            },
+        ]
+    },
+    {
+        title: 'Before-After-Bridge Framework',
+        subtitle: 'Before-After-Bridge Framework',
+        intro: 'Create marketing copy using the BAB framework. Before, After, Bridge.',
+        icon: 'dashicons-before dashicons-randomize',
+        syntex: 'Create marketing copy using the BAB framework. Before, After, Bridge. Company/Product Name: {{product_name}}, Content description: {{product_desc}}, Tone of voice: {{tone}}',
+        ttlSntx: '{{product_name}}',
+        fields: [
+            {
+                title: 'Company/Product Name',
+                type: 'text',name: 'product_name',value: '',
+                placeholder: 'ONYXNEO Comfort Silicone Insole'
+            },
+            {
+                title: 'Content Description',
+                type: 'textarea',name: 'product_desc',
+                placeholder: 'Ergonomic design, absorbs the shock waves, throughout weight distribution, Hypoallergenic material',value: ''
+            },
+            {
+                title: 'Tone Of Voice',
+                type: 'text',name: 'tone',
+                placeholder: 'Tone Of Voice',value: 'Witty'
+            },
+        ]
+    },
+    {
+        title: 'Blog Post Conclusion Paragraph',
+        subtitle: 'Blog Post Conclusion Paragraph',
+        intro: 'Wrap up your blog posts with an engaging conclusion paragraph.',
+        icon: 'dashicons-before dashicons-welcome-write-blog',
+        syntex: 'Wrap up blog posts with an engaging conclusion paragraph. Main points or outline of your blog post: {{main_points}}, Call to action: {{call2action}}, Tone of voice: {{tone}}',
+        ttlSntx: '{{main_points}}',
+        fields: [
+            {
+                title: 'What Are The Main Points Or Outline Of Your Blog Post?',
+                type: 'textarea',name: 'main_points',value: '',
+                placeholder: 'Comfort Silicone Insole'
+            },
+            {
+                title: 'Call To Action',
+                type: 'textarea',name: 'call2action',
+                placeholder: 'Comfort silicone Insole is designed for effective heel pain relief, absorbs shock while walking or running.',value: ''
+            },
+            {
+                title: 'Tone Of Voice',
+                type: 'text',name: 'tone',
+                placeholder: 'Tone Of Voice',value: 'Witty'
+            },
+        ]
+    },
+    {
+        title: 'Blog Post Intro Paragraph',
+        subtitle: 'Blog Post Intro Paragraph',
+        intro: 'Blast through writers block by letting us write your opening paragraph',
+        icon: 'dashicons-before dashicons-welcome-add-page',
+        syntex: 'Write opening paragraph for Blog post. Blog post title: {{post_title}}, Audience: {{audience}}',
+        ttlSntx: '{{post_title}}',
+        fields: [
+            {
+                title: 'Blog Post Title',
+                type: 'text',name: 'post_title',value: '',
+                placeholder: 'Comfort Silicone Insole'
+            },
+            {
+                title: 'Audience',
+                type: 'textarea',name: 'audience',
+                placeholder: 'Students',value: ''
+            },
+        ]
+    },
+    {
+        title: 'Blog Post Outline',
+        subtitle: 'Blog Post Outline',
+        intro: 'Create lists and outlines for articles. Works best for "Listicle" and "How to" style blog posts or articles.',
+        icon: 'dashicons-before dashicons-editor-textcolor',
+        syntex: 'Create lists and outlines for article.Blog post title/topic: {{post_title}}, Tone of voice: {{tone}}',
+        ttlSntx: '{{post_title}}',
+        fields: [
+            {
+                title: 'Blog Post Title/Topic',
+                type: 'text',name: 'post_title',value: '',
+                placeholder: 'Comfort Silicone Insole'
+            },
+            {
+                title: 'Tone Of Voice',
+                type: 'text',name: 'tone',
+                placeholder: 'Tone Of Voice',value: 'Witty'
+            },
+        ]
+    },
+    {
+        title: 'Blog Post Topic Ideas',
+        subtitle: 'Blog Post Topic Ideas',
+        intro: 'Brainstorm new blog post topics that will engage readers and rank well on Google.',
+        icon: 'dashicons-before dashicons-image-filter',
+        syntex: 'Brainstorm new blog post topics that will engage readers and rank well on Google.Company name: {{company_name}}, Product description: {{product_desc}}, Audience: Dahaka people, Tone of voice: {{tone}}',
+        ttlSntx: '{{company_name}}',
+        fields: [
+            {
+                title: 'Company Name',
+                type: 'text',name: 'company_name',value: '',
+                placeholder: 'ONYXNEO Comfort Silicone Insole'
+            },
+            {
+                title: 'Product Description',
+                type: 'textarea',name: 'product_desc',
+                placeholder: 'Otter AI',value: ''
+            },
+            {
+                title: 'Audience',
+                type: 'text',name: 'audience',value: '',
+                placeholder: 'ONYXNEO Comfort Silicone Insole'
+            },
+            {
+                title: 'Tone Of Voice',
+                type: 'text',name: 'tone',
+                placeholder: 'Tone Of Voice',value: 'Witty'
+            },
+        ]
+    },
+    {
+        title: 'Business or Product Name',
+        subtitle: 'Business or Product Name',
+        intro: 'Generate a winning name for your business or product.',
+        icon: 'dashicons-before dashicons-archive',
+        syntex: 'Generate a winning name for business or product. Business or product name: {{product_idea}}, Keywords to include: {{product_desc}}',
+        ttlSntx: '{{product_idea}}',
+        fields: [
+            {
+                title: 'Tell Us About Your Business Or Product',
+                type: 'textarea',name: 'product_idea',value: '',
+                placeholder: 'ONYXNEO Comfort Silicone Insole'
+            },
+            {
+                title: 'Keywords To Include',
+                type: 'text',name: 'product_desc',
+                placeholder: 'Otter AI',value: ''
+            },
+        ],
+        syntex: ''
+    },
+    {
+        title: 'Commands',
+        subtitle: 'Commands',
+        intro: 'Tell us exactly what to write with a command.',
+        icon: 'dashicons-before dashicons-sos',
+        syntex: 'write with a command. Command: {{command}}, background information: {{bg_info}}',
+        ttlSntx: '{{command}}',
+        fields: [
+            {
+                title: 'Your Command For OpenAI',
+                type: 'textarea',name: 'command',
+                placeholder: 'Otter AI',value: ''
+            },
+            {
+                title: 'Do You Have Any Background Information?',
+                type: 'textarea',name: 'bg_info',
+                placeholder: 'Otter AI',value: ''
+            },
+        ]
+    },
+    {
+        title: 'Company Bio',
+        subtitle: 'Company Bio',
+        intro: 'Tell your company\'s story with a captivating bio.',
+        icon: 'dashicons-before dashicons-groups',
+        syntex: 'Tell your company\'s story with a captivating bio. Company Name: {{company_name}}, Company information: {{company_info}}',
+        ttlSntx: '{{company_name}}',
+        fields: [
+            {
+                title: 'Company Name',
+                type: 'text',name: 'company_name',value: '',
+                placeholder: 'ONYXNEO Comfort Silicone Insole'
+            },
+            {
+                title: 'Company Information',
+                type: 'textarea',name: 'company_info',
+                placeholder: 'Witty',value: ''
+            },
+        ]
+    },
+    {
+        title: 'Content Improver',
+        subtitle: 'Content Improver',
+        intro: 'Take a piece of content and rewrite it to make it more interesting, creative, and engaging.',
+        icon: 'dashicons-before dashicons-editor-spellcheck',
+        syntex: 'Take a piece of content and rewrite it to make it more interesting, creative, and engaging. Content: {{content}}, Tone of voice: {{tone}}',
+        ttlSntx: '{{content}}',
+        fields: [
+            {
+                title: 'Content',
+                type: 'text',name: 'content',value: '',
+                placeholder: 'Comfort Silicone Insole'
+            },
+            {
+                title: 'Tone Of Voice',
+                type: 'text',name: 'tone',
+                placeholder: 'Tone Of Voice',value: 'Witty'
+            },
+        ]
+    },
+    {
+        title: 'Creative Story',
+        subtitle: 'Creative Story',
+        intro: 'Write wildly creative stories to engage your readers.',
+        icon: 'dashicons-before dashicons-lightbulb',
+        syntex: 'Write wildly creative stories to engage with readers. Plot: {{plot}}, Tone of voice: {{tone}}',
+        ttlSntx: '{{plot}}',
+        fields: [
+            {
+                title: 'Plot',
+                type: 'text',name: 'plot',value: '',
+                placeholder: 'Comfort Silicone Insole'
+            },
+            {
+                title: 'Tone Of Voice',
+                type: 'text',name: 'tone',
+                placeholder: 'Tone Of Voice',value: 'Witty'
+            },
+        ]
+    },
+    {
+        title: 'Email Subject Lines',
+        subtitle: 'Email Subject Lines',
+        intro: 'Write compelling email subject lines that get readers to open.',
+        icon: 'dashicons-before dashicons-email-alt',
+        syntex: 'Write compelling email subject lines that get readers to open. Company/Product Name: {{product_name}}, Tone of voice: {{tone}}, What is email about: {{email_about}}',
+        ttlSntx: '{{product_name}}',
+        fields: [
+            {
+                title: 'Company/Product Name',
+                type: 'text',name: 'product_name',value: '',
+                placeholder: 'Comfort Silicone Insole'
+            },
+            {
+                title: 'What Is Your Email About?',
+                type: 'textarea',name: 'email_about',value: '',
+                placeholder: 'Ecommerce'
+            },
+            {
+                title: 'Tone Of Voice',
+                type: 'text',name: 'tone',
+                placeholder: 'Tone Of Voice',value: 'Witty'
+            },
+        ]
+    },
+    {
+        title: 'Engaging Questions',
+        subtitle: 'Engaging Questions',
+        intro: 'Create a form to ask your audience creative questions to increase engagement.',
+        icon: 'dashicons-before dashicons-editor-help',
+        syntex: 'Create a form to ask audience creative questions to increase engagement. Topic: {{topic}}, Audience: {{audience}}, Tone of voice: {{tone}}',
+        ttlSntx: '{{topic}}',
+        fields: [
+            {
+                title: 'Topic',
+                type: 'text',name: 'topic',value: '',
+                placeholder: 'Comfort Silicone Insole'
+            },
+            {
+                title: 'Audience',
+                type: 'text',name: 'audience',value: '',
+                placeholder: 'Gold Investors'
+            },
+            {
+                title: 'Tone Of Voice',
+                type: 'text',name: 'tone',
+                placeholder: 'Tone Of Voice',value: 'Witty'
+            },
+        ]
+    },
+    {
+        title: 'Explain It To a Child',
+        subtitle: 'Explain It To a Child',
+        intro: 'Create a form to ask your audience creative questions to increase engagement.',
+        icon: 'dashicons-before dashicons-universal-access-alt',
+        syntex: 'Rephrase text to make it easier to read and understand. Input text: {{input_text}}, Audience: {{audience}}, Grade level: {{level}}',
+        ttlSntx: '{{input_text}}',
+        fields: [
+            {
+                title: 'Input Text',
+                type: 'textarea',name: 'input_text',value: '',
+                placeholder: 'Comfort Silicone Insole'
+            },
+            {
+                title: 'Audience',
+                type: 'textarea',name: 'audience',
+                placeholder: 'Child',value: 'Child',
+            },
+            {
+                title: 'Output Grade Level',
+                type: 'text',name: 'level',
+                placeholder: 'Grade Level',value: ''
+            },
+        ]
+    },
+]

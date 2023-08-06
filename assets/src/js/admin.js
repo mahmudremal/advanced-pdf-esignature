@@ -12,7 +12,10 @@ import '../sass/admin.scss';
 // import '../img/flutterwave.png';
 
 // Icons.
-// import '../icons/money-business-and-finance-svgrepo-com.svg';
+// import '../icons/date.svg';
+// import '../icons/time.svg';
+// import '../icons/signature.svg';
+
 import '../img/images/image-1.png';
 import '../img/images/image-2.png';
 import '../img/images/image-3.png';

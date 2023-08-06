@@ -5,38 +5,46 @@
  */
 
 import Swal from "sweetalert2";
-import Awesomplete from "awesomplete";
-import PROMPTS from "../modules/prompts";
 import Toastify from 'toastify-js';
-import voiceRecord from "./voicerecord";
-import popupCart from "./popupcart";
+import eSignature from '../modules/signatureBuilder';
+import PROMPTS from "../modules/prompts";
+import dragula from 'dragula';
+import { Dropzone } from "dropzone";
+// import 'datatables.net-dt';
+import DataTable from 'datatables.net';
+const vex = require('vex-js')
+vex.registerPlugin(require('vex-dialog'))
+vex.defaultOptions.className = 'vex-theme-os'; // Choose a theme for the modal appearance
+vex.defaultOptions.overlayClosesOnClick = false; // Disable closing on outside click
 
 
 ( function ( $ ) {
 	class FutureWordPress_Frontend {
+		/**
+		 * Constructor
+		 */
 		constructor() {
 			this.ajaxUrl = fwpSiteConfig?.ajaxUrl??'';
+			this.config = fwpSiteConfig?.config??fwpSiteConfig;
 			this.ajaxNonce = fwpSiteConfig?.ajax_nonce??'';
-			this.lastAjax = false;this.profile = fwpSiteConfig?.profile??false;
-			var i18n = fwpSiteConfig?.i18n??{};this.noToast = true;
-			this.config = fwpSiteConfig;
-			this.i18n = {
-				confirming								: 'Confirming',
-				...i18n
-			}
-			this.setup_hooks();
+			this.profile = fwpSiteConfig?.profile??false;
+			this.lastAjax = false;this.noToast = true;
+			var i18n = fwpSiteConfig?.i18n??{};this.Swal = Swal;
+			this.config.buildPath = fwpSiteConfig?.buildPath??'';
+			this.i18n = {i_confirm_it: 'Yes I confirm it',...i18n};
+			this.eSignature = eSignature;this.prompts = PROMPTS;
+			window.thisClass = this;window.eSignature = this.eSignature;
+			this.dragula = dragula;this.Dropzone = Dropzone;
+			thisClass.DataTable = DataTable;this.isFrontend = true;
+			Dropzone.autoDiscover = false;this.vex = vex;
+			this.init_toast();this.setup_hooks();
+			this.init_datable();this.init_micromodel();
 		}
 		setup_hooks() {
 			const thisClass = this;
-			window.thisClass = this;
-			this.prompts = PROMPTS;
-			this.Swal = Swal;
-			this.popupCart = popupCart;
-			this.init_toast();
-			this.init_events();
-			this.init_search_form();
-
-			voiceRecord.init_recorder(this);
+			this.eSignature.init_events(this);
+			this.eSignature.init_fields(this);
+			// this.eSignature.init_popup(this);
 		}
 		init_toast() {
 			const thisClass = this;
@@ -79,50 +87,7 @@ import popupCart from "./popupcart";
 				});
 			}
 		}
-		init_events() {
-			const thisClass = this;var template, html;
-			document.body.addEventListener('gotsignaturepopupresult', async (event) => {
-				thisClass.prompts.lastJson = thisClass.lastJson;
-				thisClass.popupCart.basePrice = thisClass.prompts.lastJson.signature.price;
-				thisClass.popupCart.priceSign = thisClass.prompts.lastJson.signature.currency;
-				template = await thisClass.prompts.get_template(thisClass);
-				html = document.createElement('div');html.appendChild(template);
-				// && json.header.signature_photo
-				if(thisClass.Swal && thisClass.Swal.isVisible()) {
-					thisClass.Swal.update({
-						progressSteps: thisClass.prompts.lastJson.signature.custom_fields.map((row, i)=>(row.steptitle=='')?(i+1):row.steptitle),
-						currentProgressStep: 0,
-						progressStepsDistance: '10px',
-
-						// showCloseButton: true,
-						// allowOutsideClick: true,
-						// allowEscapeKey: true,
-						html: html.innerHTML
-					});
-					thisClass.prompts.lastJson = thisClass.lastJson;
-					if(thisClass.lastJson.signature && thisClass.lastJson.signature.toast) {
-						thisClass.toastify({
-							text: thisClass.lastJson.signature.toast.replace(/(<([^>]+)>)/gi, ""),
-							duration: 45000,
-							close: true,
-							gravity: "top", // `top` or `bottom`
-							position: "left", // `left`, `center` or `right`
-							stopOnFocus: true, // Prevents dismissing of toast on hover
-							style: {background: 'linear-gradient(to right, #4b44bc, #8181be)'},
-							onClick: function(){} // Callback after click
-						}).showToast();
-					}
-					setTimeout(() => {
-						thisClass.prompts.init_events(thisClass);
-					}, 300);
-				}
-			});
-			document.body.addEventListener('popup_submitting_done', async (event) => {
-				var submit = document.querySelector('.popup_foot .button[data-react="continue"]');
-				if(submit) {submit.removeAttribute('disabled');}
-				if(thisClass.lastJson.redirectedTo) {location.href = thisClass.lastJson.redirectedTo;}
-			});
-		}
+		
 		sendToServer( data ) {
 			const thisClass = this;var message;
 			$.ajax({
@@ -134,37 +99,36 @@ import popupCart from "./popupcart";
 				processData: false,
 				success: function( json ) {
 					thisClass.lastJson = json.data;
-					if((json?.data??false)) {
-						var message = ((json?.data??false)&&typeof json.data==='string')?json.data:(
-							(typeof json.data.message==='string')?json.data.message:false
-						);
-						if( message ) {
-							// thisClass.toast.fire({icon: (json.success)?'success':'error', title: message})
-							thisClass.toastify({text: message,className: "info", duration: 3000, stopOnFocus: true, style: {background: (json.success)?'linear-gradient(to right, rgb(255 197 47), rgb(251 229 174))':'linear-gradient(to right, rgb(222 66 75), rgb(249 144 150))'}}).showToast();
-						}
-						if( json.data.hooks ) {
-							json.data.hooks.forEach(( hook ) => {
-								document.body.dispatchEvent( new Event( hook ) );
-							});
-						}
+					var message = ( typeof json.data.message === 'string') ? json.data.message : (
+						( typeof json.data === 'string') ? json.data : false
+					);
+					if( message ) {
+						thisClass.toastify({text: message,className: "info", duration: 3000, stopOnFocus: true, style: {background: (json.success)?"linear-gradient(to right, #00b09b, #96c93d)":"linear-gradient(to right, rgb(255, 95, 109), rgb(255, 195, 113))"}}).showToast();
+					}
+					if( json.data.hooks ) {
+						json.data.hooks.forEach(( hook ) => {
+							document.body.dispatchEvent( new Event( hook ) );
+						});
 					}
 				},
-				error: function(err) {
-					// thisClass.notify.fire({icon: 'warning',title: err.responseText})
-					err.responseText = (err.responseText && err.responseText != '')?err.responseText:thisClass.i18n?.somethingwentwrong??'Something went wrong!';
-					thisClass.toastify({text: err.responseText,className: "info",style: {background: "linear-gradient(to right, rgb(222 66 75), rgb(249 144 150))"}}).showToast();
-					// console.log(err);
+				error: function( err ) {
+					if( err.responseText ) {
+						thisClass.toastify({text: err.responseText,className: "warning", duration: 3000, stopOnFocus: true, style: {background: "linear-gradient(to right, #00b09b, #96c93d)"}}).showToast();
+					}
+					console.log( err.responseText );
 				}
 			});
 		}
+		// Popup form
 		generate_formdata(form=false) {
-			const thisClass = this;let data;
-			form = (form)?form:document.querySelector('form[name="acfgpt3_popupform"]');
+			const thisClass = this;
+			let data;
+			form = (form)?form:document.querySelector('form');
 			if (form && typeof form !== 'undefined') {
 			  const formData = new FormData(form);
 			  const entries = Array.from(formData.entries());
 		  
-			  data = entries.reduce((result, [key, value]) => {
+			  thisClass.lastFormData = data = entries.reduce((result, [key, value]) => {
 				const keys = key.split('[').map(k => k.replace(']', ''));
 		  
 				let nestedObj = result;
@@ -197,25 +161,31 @@ import popupCart from "./popupcart";
 		  
 				return result;
 			  }, {});
-		  
-			  data = {
-				...data?.acfgpt3??data,
-			  };
-			  thisClass.lastFormData = data;
 			} else {
-			  thisClass.lastFormData = thisClass.lastFormData?thisClass.lastFormData:{};
+			  thisClass.lastFormData = thisClass.lastFormData ? thisClass.lastFormData : {};
 			}
+			
 			return thisClass.lastFormData;
+		}
+		generate_fieldata() {
+			const thisClass = this;thisClass.fields = {};
+			thisClass.fields.title = document.querySelector('.editor-post-title__input') || document.querySelector('#titlewrap input[name=post_title]');
+			thisClass.fields.gallerymeta = document.querySelector('.acf-gallery[id]')?.id??'';
+			thisClass.fields.gallerymeta = thisClass.fields.gallerymeta.slice(4);
+			thisClass.fields.galleryid = thisClass.config?.postid??false;
+			thisClass.fields.headings = document.querySelector( '#acfgpt3_popupform .steps-single .generated_headings' );
 		}
 		transformObjectKeys(obj) {
 			const transformedObj = {};
+		  
 			for (const key in obj) {
 			  if (obj.hasOwnProperty(key)) {
 				const value = obj[key];
+		  
 				if (key.includes('[') && key.includes(']')) {
 				  // Handle keys with square brackets
 				  const matches = key.match(/(.+?)\[(\w+)\]/);
-				  if (matches && matches.length >= 3) {
+				  if (matches && matches.length === 3) {
 					const newKey = matches[1];
 					const arrayKey = matches[2];
 		  
@@ -224,12 +194,6 @@ import popupCart from "./popupcart";
 					}
 		  
 					transformedObj[newKey][arrayKey] = value;
-				  } else {
-					if(key.substr(-2)=='[]') {
-						const newKey = key.substr(0, (key.length-2));
-						if(!transformedObj[newKey]) {transformedObj[newKey]=[];}
-						transformedObj[newKey].push(value);
-					}
 				  }
 				} else {
 				  // Handle regular keys
@@ -257,58 +221,214 @@ import popupCart from "./popupcart";
 		  
 			return transformedObj;
 		}
-		init_search_form() {
-			const thisClass = this;var form, html, config, json;
-			document.querySelectorAll('.init_cusomizeaddtocartbtn:not([data-handled])').forEach((el)=>{
+
+
+		paymentButtonHandler() {
+			const thisClass = this;
+			$(thisClass.PaymentWrap).hide();
+
+			if ( thisClass.allowSubmit ) {
+				thisClass.allowSubmit = false;
+				return true;
+			}
+
+			let $form    = $( 'form#payment-form, form#order_review' ),
+			flutterwave_txnref = $form.find( 'input.tbz_wc_flutterwave_txnref' );
+			flutterwave_txnref.val( '' );
+
+			let flutterwave_callback = function( response ) {
+
+				console.log(response);
+				$form.append( '<input type="hidden" class="tbz_wc_flutterwave_txnref" name="tbz_wc_flutterwave_txnref" value="' + response.transaction_id + '"/>' );
+				$form.append( '<input type="hidden" class="tbz_wc_flutterwave_order_txnref" name="tbz_wc_flutterwave_order_txnref" value="' + response.tx_ref + '"/>' );
+
+				thisClass.allowSubmit = true;
+
+				$form.submit();
+				$( 'body' ).block(
+					{
+						message: null,
+						overlayCSS: {
+							background: '#fff',
+							opacity: 0.6
+						},
+						css: {
+							cursor: "wait"
+						}
+					}
+				);
+			};
+
+			FlutterwaveCheckout({
+				public_key: thisClass.config.public_key,
+				tx_ref: thisClass.config.txref,
+				amount: thisClass.config.amount,
+				currency: thisClass.config.currency,
+				country: thisClass.config.country,
+				meta: thisClass.config.meta,
+				customer: {
+					email: thisClass.config.customer_email,
+					name: thisClass.config.customer_name,
+				},
+				customizations: {
+					title: thisClass.config.custom_title,
+					description: thisClass.config.custom_desc,
+					logo: thisClass.config.custom_logo,
+				},
+				callback: flutterwave_callback,
+				onclose: function() {
+					$(thisClass.PaymentWrap).show();
+					$( this.el ).unblock();
+				}
+			});
+
+			return false;
+		}
+
+		init_tagInputs() {
+			var input, select, values, label, options;
+			select = document.querySelector('#subAccounts');
+			if(!select) {return;}
+			input = document.createElement('input');
+			input.type = 'hidden';input.name = select.name;
+			select.removeAttribute('name');input.id=select.id;
+			select.removeAttribute('id');select.multiple = 1;
+			select.parentElement.insertBefore(input, select);
+			select.addEventListener('change', function() {
+				options = Array.from(select.selectedOptions);
+				values = options.map(option => option.value);
+				input.value = values.join(',');
+			});
+			if(true) {
+				values = input.value.split(',').map(value => value.trim());
+				Array.from(select.options).forEach(option => {
+					option.selected = values.includes(option.value);
+				});
+			}
+		}
+
+		init_popup_events() {
+			const thisClass = this;var html, config, preview;
+			document.querySelectorAll('.send-email-reminder:not([data-handled])').forEach((el) => {
 				el.dataset.handled = true;
 				el.addEventListener('click', (event) => {
 					event.preventDefault();
-					html = PROMPTS.get_template(thisClass);
-					Swal.fire({
-						title: false, // thisClass.i18n?.generateaicontent??'Generate AI content',
-						width: 600,
-						// padding: '3em',
-						// color: '#716add',
-						// background: 'url(https://png.pngtree.com/thumb_back/fh260/background/20190221/ourmid/pngtree-ai-artificial-intelligence-technology-concise-image_19646.jpg) rgb(255, 255, 255) center center no-repeat',
-						showConfirmButton: false,
-						showCancelButton: false,
-						showCloseButton: false,
-						allowOutsideClick: false,
-						allowEscapeKey: true,
-						// confirmButtonText: 'Generate',
-						// cancelButtonText: 'Close',
-						// confirmButtonColor: '#3085d6',
-						// cancelButtonColor: '#d33',
-						customClass: {popup: 'fwp-swal2-popup'},
-						// focusConfirm: true,
-						// reverseButtons: true,
-						// backdrop: `rgba(0,0,123,0.4) url("https://sweetalert2.github.io/images/nyan-cat.gif") left top no-repeat`,
-						backdrop: `rgb(255 255 255)`,
-
-						showLoaderOnConfirm: true,
-						allowOutsideClick: false, // () => !Swal.isLoading(),
-						
-						html: html,
-						// footer: '<a href="">Why do I have this issue?</a>',
-						didOpen: async () => {
-							config = JSON.parse(el.dataset.config);
-							json = {signature_id: config.id};
-							
-							var formdata = new FormData();
-							formdata.append('action', 'esign/project/ajax/search/signature');
-							formdata.append('dataset', await JSON.stringify(json));
-							formdata.append('_nonce', thisClass.ajaxNonce);
-
-							thisClass.sendToServer(formdata);
-							thisClass.prompts.init_prompts(thisClass);
-						},
-						preConfirm: async (login) => {return thisClass.prompts.on_Closed(thisClass);}
-					}).then( async (result) => {
-						if(result.isConfirmed) {}
-					})
+					el.disabled = true;
+					thisClass.mailReminderBtn = el;
+					preview = document.querySelector('#email-template-preview');
+					if(preview) {preview.remove();}
+					var formdata = new FormData();
+					formdata.append('action', 'esign/project/mailsystem/sendreminder');
+					formdata.append('entry', thisClass.currentEntry.id);
+					formdata.append('form_id', thisClass.currentEntry.form_id);
+					formdata.append('_nonce', thisClass.ajaxNonce);
+					thisClass.sendToServer(formdata);
+				});
+			});
+			document.querySelectorAll('.copy_link:not([data-handled])').forEach((el) => {
+				el.dataset.handled = true;
+				el.addEventListener('click', (event) => {
+					event.preventDefault();
+					thisClass.copyToClipboard(el);
+				});
+			});
+			document.querySelectorAll('.do_refund:not([data-handled])').forEach((el) => {
+				el.dataset.handled = true;
+				el.addEventListener('click', (event) => {
+					event.preventDefault();
+					var text, amount;
+					thisClass.currentEntry.refunded = (thisClass.currentEntry.refunded)?thisClass.currentEntry.refunded:0.00;
+					text = `Enter the amount you want to refund. Until now you refunded ${thisClass.currentEntry.refunded} and you are able to refund ${(thisClass.currentEntry.payment_amount - thisClass.currentEntry.refunded)}.`;
+					amount = parseFloat(prompt(text));
+					if(amount && amount > 0) {
+						el.disabled = true;
+						thisClass.lastRefundBtn = el;
+						thisClass.refund_a_payment(amount);
+					}
+				});
+			});
+			document.querySelectorAll('.update_pay_link:not([data-handled])').forEach((el) => {
+				el.dataset.handled = true;
+				el.addEventListener('click', (event) => {
+					event.preventDefault();
+					el.disabled = true;
+					thisClass.lastUpdateBtn = el;
+					thisClass.update_pay_link(el);
 				});
 			});
 		}
+		copyToClipboard(element) {
+			const text = element.getAttribute('data-text');
+			
+			const el = document.createElement('textarea');
+			el.value = text;var copyText = element.innerHTML;
+			el.setAttribute('readonly', '');
+			el.style.position = 'absolute';
+			el.style.left = '-9999px';
+			document.body.appendChild(el);
+			
+			el.select();
+			document.execCommand('copy');
+			document.body.removeChild(el);
+			element.innerHTML = thisClass.i18n?.copied??'Copied';
+			setTimeout(()=>{element.innerHTML=copyText;},1000);
+		}
+		
+		stripslashes(str) {
+			// Replace occurrences of '\\'
+			str = str.replace(/\\\\/g, '\\');
+			// Replace occurrences of "\'"
+			str = str.replace(/\\'/g, "'");
+			// Replace occurrences of '\"'
+			str = str.replace(/\\"/g, '"');
+			// Replace occurrences of '\\r'
+			str = str.replace(/\\r/g, '\r');
+			// Replace occurrences of '\\n'
+			str = str.replace(/\\n/g, '\n');
+			// Replace occurrences of '\\t'
+			str = str.replace(/\\t/g, '\t');
+			// Replace occurrences of '\\b'
+			str = str.replace(/\\b/g, '\b');
+			// Replace occurrences of '\\f'
+			str = str.replace(/\\f/g, '\f');
+			// Replace occurrences of '\\'
+			str = str.replace(/\\\\/g, '\\');
+			return str;
+		}
+		update_pay_link(el) {
+			const thisClass = this;
+			var formdata = new FormData();
+			formdata.append('action', 'esign/project/payment/updatelink');
+			formdata.append('entry', thisClass.currentEntry.id);
+			formdata.append('form_id', thisClass.currentEntry.form_id);
+			formdata.append('_nonce', thisClass.ajaxNonce);
+			thisClass.sendToServer(formdata);
+		}
+		refund_a_payment(amount) {
+			const thisClass = this;
+			var formdata = new FormData();
+			formdata.append('action', 'esign/project/payment/refund');
+			formdata.append('transaction_id', thisClass.currentEntry.transaction_id);
+			formdata.append('form_id', thisClass.currentEntry.form_id);
+			formdata.append('entry', thisClass.currentEntry.id);
+			formdata.append('_nonce', thisClass.ajaxNonce);
+			formdata.append('amount', amount);
+			thisClass.sendToServer(formdata);
+		}
+
+		init_datable() {
+			const thisClass = this;
+			if(window.do_datatable) {
+				window.do_datatable.forEach((dt) => {
+					// console.log(dt);
+					new DataTable(dt[0], dt[1]);
+				});
+			}
+		}
+		init_micromodel() {
+			const thisClass = this;
+		}
+
 	}
 	new FutureWordPress_Frontend();
-} )( jQuery );
+} )(jQuery);

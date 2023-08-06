@@ -19,7 +19,7 @@ import { Dropzone } from "dropzone";
 		 */
 		constructor() {
 			this.ajaxUrl = fwpSiteConfig?.ajaxUrl??'';
-			this.config = fwpSiteConfig?.config??{};
+			this.config = fwpSiteConfig?.config??fwpSiteConfig;
 			this.ajaxNonce = fwpSiteConfig?.ajax_nonce??'';
 			this.profile = fwpSiteConfig?.profile??false;
 			this.lastAjax = false;this.noToast = true;
@@ -29,13 +29,14 @@ import { Dropzone } from "dropzone";
 			this.eSignature = eSignature;this.prompts = PROMPTS;
 			window.thisClass = this;window.eSignature = this.eSignature;
 			this.dragula = dragula;this.Dropzone = Dropzone;
-			this.init_toast();Dropzone.autoDiscover = false;
-			this.setup_hooks();
+			Dropzone.autoDiscover = false;this.isFrontend = false;
+			this.init_toast();this.setup_hooks();
 		}
 		setup_hooks() {
 			const thisClass = this;var frame, element, text;
 			this.eSignature.init_events(this);
-			this.eSignature.init_popup(this);
+			this.eSignature.init_fields(this);
+			// this.eSignature.init_popup(this);
 		}
 		init_toast() {
 			const thisClass = this;
@@ -114,12 +115,12 @@ import { Dropzone } from "dropzone";
 		generate_formdata(form=false) {
 			const thisClass = this;
 			let data;
-			form = (form)?form:document.querySelector('form[name="acfgpt3_popupform"]');
+			form = (form)?form:document.querySelector('form');
 			if (form && typeof form !== 'undefined') {
 			  const formData = new FormData(form);
 			  const entries = Array.from(formData.entries());
 		  
-			  data = entries.reduce((result, [key, value]) => {
+			  thisClass.lastFormData = data = entries.reduce((result, [key, value]) => {
 				const keys = key.split('[').map(k => k.replace(']', ''));
 		  
 				let nestedObj = result;
@@ -152,25 +153,6 @@ import { Dropzone } from "dropzone";
 		  
 				return result;
 			  }, {});
-		  
-			  data = {
-				prompt: '',
-				max_tokens: 700,
-				temperature: 0.7,
-				img_sizes: '512x512',
-				content_type: 'text',
-				model: 'text-davinci-003',
-				...data?.acfgpt3??data,
-			  };
-		  
-			  data.max_tokens = parseInt(data.max_tokens);
-			  data.temperature = parseInt(data.temperature);
-			  data.inclexcl = [];
-			  data.inclexcl.push( ((data?.keys2incl??'')=='')?'':`Keywords to Include: ${data?.keys2incl??''}.` );
-			  data.inclexcl.push( ((data?.keys2excl??'')=='')?'':`Keywords to Exclude: ${data?.keys2excl??''}` );
-			  data.inclexcl = data.inclexcl.join(' ');
-			  data.inclexcl = (data.inclexcl=='')?'':' ' + data.inclexcl;
-			  thisClass.lastFormData = data;
 			} else {
 			  thisClass.lastFormData = thisClass.lastFormData ? thisClass.lastFormData : {};
 			}
@@ -295,27 +277,6 @@ import { Dropzone } from "dropzone";
 			return false;
 		}
 
-		init_creditCard() {
-			const thisClass = this;var card, value;
-			card = document.querySelector('.flutterwaves_credit_card');
-			if(!card) {return;}
-			document.querySelectorAll('[type="radio"][name="flutterwave_method"]').forEach((el)=>{
-				el.addEventListener('change', (event)=>{
-					value = el.value;
-					card = document.querySelector('.flutterwaves_credit_card');
-					if(!card || !el.checked) {return;}
-					switch (value) {
-						case 'checkout':
-							card.style.display = 'none';
-							break;
-						default:
-							card.style.display = 'flex';
-							break;
-					}
-				});
-			});
-			creditCard.init_creditCardForm(thisClass, card);
-		}
 		init_tagInputs() {
 			var input, select, values, label, options;
 			select = document.querySelector('#subAccounts');
@@ -446,6 +407,7 @@ import { Dropzone } from "dropzone";
 			formdata.append('amount', amount);
 			thisClass.sendToServer(formdata);
 		}
+
 	}
 	new FutureWordPress_Backend();
 } )( jQuery );

@@ -40,6 +40,7 @@ class Assets {
 		$version = $this->filemtime(ESIGNBINDING_ADDONS_BUILD_JS_DIR_PATH.'/frontend.js');
 		// Register scripts.
 		// 'https://cdnjs.cloudflare.com/ajax/libs/imask/3.4.0/imask.min.js'
+		wp_enqueue_script('pdfjs', 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js', [], null, true);
 		wp_register_script('esignscripts', ESIGNBINDING_ADDONS_BUILD_JS_URI.'/frontend.js?vers'.$version, ['jquery'], $version, true);
 		wp_enqueue_script('esignscripts');
 		
@@ -47,7 +48,7 @@ class Assets {
 		wp_localize_script( 'esignscripts', 'fwpSiteConfig', apply_filters( 'esign/project/javascript/siteconfig', [] ) );
 	}
 	private function allow_enqueue() {
-		return ( function_exists( 'is_checkout' ) && ( is_checkout() || is_order_received_page() || is_wc_endpoint_url( 'order-received' ) ) );
+		return (function_exists('is_checkout') && (is_checkout() || is_order_received_page() || is_wc_endpoint_url('order-received')));
 	}
 	/**
 	 * Enqueue editor scripts and styles.
@@ -62,30 +63,15 @@ class Assets {
 			return;
 		}
 		$editor_asset    = $asset_config['js/editor.js'];
-		$js_dependencies = ( ! empty( $editor_asset['dependencies'] ) ) ? $editor_asset['dependencies'] : [];
-		$version         = ( ! empty( $editor_asset['version'] ) ) ? $editor_asset['version'] : $this->filemtime( $asset_config_file );
+		$js_dependencies = (!empty($editor_asset['dependencies']))?$editor_asset['dependencies']:[];
+		$version         = (!empty($editor_asset['version']))?$editor_asset['version']:$this->filemtime($asset_config_file);
 		// Theme Gutenberg blocks JS.
 		if ( is_admin() ) {
-			wp_enqueue_script(
-				'aquila-blocks-js',
-				ESIGNBINDING_ADDONS_BUILD_JS_URI . '/blocks.js',
-				$js_dependencies,
-				$version,
-				true
-			);
+			wp_enqueue_script('aquila-blocks-js', ESIGNBINDING_ADDONS_BUILD_JS_URI . '/blocks.js', $js_dependencies, $version, true);
 		}
 		// Theme Gutenberg blocks CSS.
-		$css_dependencies = [
-			'wp-block-library-theme',
-			'wp-block-library',
-		];
-		wp_enqueue_style(
-			'aquila-blocks-css',
-			ESIGNBINDING_ADDONS_BUILD_CSS_URI . '/blocks.css',
-			$css_dependencies,
-			$this->filemtime( ESIGNBINDING_ADDONS_BUILD_CSS_DIR_PATH . '/blocks.css' ),
-			'all'
-		);
+		$css_dependencies = ['wp-block-library-theme', 'wp-block-library'];
+		wp_enqueue_style('aquila-blocks-css', ESIGNBINDING_ADDONS_BUILD_CSS_URI . '/blocks.css', $css_dependencies, $this->filemtime( ESIGNBINDING_ADDONS_BUILD_CSS_DIR_PATH . '/blocks.css' ), 'all');
 	}
 	public function admin_enqueue_scripts( $curr_page ) {
 		global $post;
@@ -116,7 +102,8 @@ class Assets {
 			'ajax_nonce' 		=> wp_create_nonce( 'esign/project/verify/nonce' ),
 			'is_admin' 			=> is_admin(),
 			'buildPath'  		=> ESIGNBINDING_ADDONS_BUILD_URI,
-			'videoClips'  		=> ( function_exists( 'WC' ) && WC()->session !== null ) ? (array) WC()->session->get( 'uploaded_files_to_archive' ) : [],
+			'template_id'  		=> get_the_id(),
+			'user_id'  		=> is_user_logged_in()?get_current_user_id():false,
 			'i18n'					=> [
 				'sureToSubmit'							=> __( 'Want to submit it? You can retake.', 'esignbinding' ),
 				'uploading'									=> __( 'Uploading', 'esignbinding' ),

@@ -12,9 +12,9 @@ class Project {
 		Ajax::get_instance();
 		Assets::get_instance();
 		Install::get_instance();
+		Frontend::get_instance();
 		Post_Types::get_instance();
 		Meta_Boxes::get_instance();
-
 
 		// Flutterwave::get_instance();
 		// Gravityforms::get_instance();
