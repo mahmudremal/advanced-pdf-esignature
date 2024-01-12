@@ -9,16 +9,17 @@ const initializeSignatureBuilder = {
     init_events: (thisClass) => {
         var template, html;
         document.body.addEventListener('gotsignaturepopupresult', async (event) => {
+            thisClass.prompts.signatureExists = false;
             thisClass.prompts.lastJson = thisClass.lastJson;
+            initializeSignatureBuilder.fix_pdf_schema(thisClass);
             template = await thisClass.prompts.get_template(thisClass);
             var div = document.createElement('div');div.classList.add('dynamic_popup');
             html = document.createElement('div');html.appendChild(div);
             // && json.header.signature_photo
             if(thisClass.Swal && thisClass.Swal.isVisible()) {
-                thisClass.Swal.update({
-                    html: html.innerHTML
-                });
+                thisClass.Swal.update({html: html.innerHTML});
                 thisClass.prompts.lastJson = thisClass.lastJson;
+                initializeSignatureBuilder.fix_pdf_schema(thisClass);
                 setTimeout(() => {
                     var popup = document.querySelector('.dynamic_popup');
                     if(popup) {popup.appendChild(template);}
@@ -26,26 +27,24 @@ const initializeSignatureBuilder = {
                         thisClass.isPreventClose = true;
                         thisClass.prompts.init_events(thisClass);
                         if((thisClass.prompts.lastJson.signature.custom_fields?.pdf??false)) {
-
                             const uploadPDF = document.querySelector('.upload-pdf');
                             if(uploadPDF) {uploadPDF.style.display = 'none';}
-
-                            const pdFile = thisClass.prompts.lastJson.signature.custom_fields.pdf;
+                            await thisClass.prompts.drawLoadingSpinner();
+                            var pdFile = thisClass.prompts.lastJson.signature.custom_fields.pdf;
                             var filename = pdFile.split('/').pop().split('#')[0].split('?')[0];
-                            let response = await fetch(pdFile);
+                            let response = await fetch(pdFile, {cache: "no-store"});
                             let data = await response.blob();
                             let metadata = {type: 'image/jpeg'};
                             let file = new File([data], filename, metadata);
+                            thisClass.prompts.currentPDFBlob = data;
 
                             // console.log(file);
                             
                             thisClass.lastUploaded = pdFile;
                             thisClass.prompts.currentPDF = file;
-                            await thisClass.prompts.loadAndPreviewPDF(file);
+                            await thisClass.prompts.loadAndPreviewPDF(file, thisClass);
                             // thisClass.prompts.initDragAndDrop(thisClass);
                             thisClass.prompts.loadPreviousFields(thisClass);
-
-                            
                             
                         }
                     }, 300);
@@ -71,6 +70,12 @@ const initializeSignatureBuilder = {
         });
         document.body.addEventListener('template_update_failed', (event) => {
             initializeSignatureBuilder.update_btns.forEach((btn)=>{btn.disabled = false;});
+        });
+        document.body.addEventListener('signature_confirmation_failed', (event) => {
+            // thisClass.Swal?.close();
+        });
+        document.body.addEventListener('signature_confirmation_success', (event) => {
+            thisClass.Swal?.close();
         });
     },
     init_popup: (thisClass) => {
@@ -109,7 +114,7 @@ const initializeSignatureBuilder = {
                     // onClose: () => {thisClass.isPreventClose = false;},
                     didOpen: async () => {
                         config = JSON.parse(el.dataset?.config??'{}');
-                        
+                        thisClass.prompts.currentEsignConfig = config;
                         var formdata = new FormData();
                         formdata.append('action', 'esign/project/ajax/template/data');
                         formdata.append('template', config?.id??'');
@@ -125,6 +130,11 @@ const initializeSignatureBuilder = {
                 })
             });
         });
+    },
+    fix_pdf_schema: (thisClass) => {
+        var pdFile = ((thisClass.prompts.lastJson?.signature)?.custom_fields)?.pdf;
+        if(pdFile && location.protocol.startsWith('https') && pdFile.startsWith('http://')) {pdFile = 'https://' + pdFile.slice(7);}
+        if(pdFile) {thisClass.prompts.lastJson.signature.custom_fields.pdf = pdFile;}
     }
 };
 

@@ -1,3 +1,6 @@
+$primaryColor: #ff3d6c;
+$secondaryColor: #034faa;
+
 // .wp-admin
 body {
   .fwp__esign {
@@ -7,97 +10,103 @@ body {
   }
 
   .swal2-container.swal2-center.swal2-backdrop-show {
-    z-index: 9999;
+    z-index: 999999;
   }
-  .fwp-swal2-popup {
-    height: 90vh;
-    margin: auto;
-    max-height: 100vh;
-    width: 95vw !important;
-    max-width: 100vw !important;
-    .swal2-html-container {
-      margin: 0;
-      text-align: unset;
-    }
-    .dynamic_popup {
-      .spinner-material {
-        width: 56px;
-        height: 56px;
-        margin: auto;
-        margin-top: 50px;
-        border-radius: 50%;
-        margin-bottom: 50px;
-        border: 9px solid #474bff;
-        border-bottom-color: #ddd;
-        animation: spinner-aib1d7 0.8s infinite linear;
-        & + h3 {
-          text-align: center;
-          margin-bottom: 2rem;
-        }
+  .swal2-container.swal2-center {
+    > .fwp-swal2-popup {
+      height: 90vh;
+      margin: auto;
+      max-height: 100vh;
+      width: 95vw !important;
+      max-width: 100vw !important;
+      @include mq($until: 250px) {
+        grid-row: 1;
+        grid-column: 1;
       }
-      .popup_close{
-        top: 1rem;
-        left: unset;
-        right: 1rem;
-        height: 30px;
-        width: 30px;
-        display: flex;
-        padding: unset;
-        cursor: pointer;
-        position: absolute;
-        border-radius: 50%;
-        text-align: center;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid #d3d3d3;
-      }
-      .popup_body {
-        margin: auto;
-        display: block;
-        max-width: 500px;
+      .swal2-html-container {
+        margin: 0;
         text-align: unset;
-        padding: 2rem 1rem;
       }
-      .popup_foot {
-        gap: 20px;
+      .dynamic_popup {
+        .spinner-material {
+          width: 56px;
+          height: 56px;
+          margin: auto;
+          margin-top: 50px;
+          border-radius: 50%;
+          margin-bottom: 50px;
+          border: 9px solid #474bff;
+          border-bottom-color: #ddd;
+          animation: spinner-aib1d7 0.8s infinite linear;
+          & + h3 {
+            text-align: center;
+            margin-bottom: 2rem;
+          }
+        }
+        .popup_close{
+          top: 1rem;
+          left: unset;
+          right: 1rem;
+          height: 30px;
+          width: 30px;
+          display: flex;
+          padding: unset;
+          cursor: pointer;
+          position: absolute;
+          border-radius: 50%;
+          text-align: center;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid #d3d3d3;
+        }
+        .popup_body {
+          margin: auto;
+          display: block;
+          max-width: 500px;
+          text-align: unset;
+          padding: 2rem 1rem;
+        }
+        .popup_foot {
+          gap: 20px;
+          width: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          padding-left: 20px;
+          padding-right: 20px;
+          justify-content: end;
+          .button {
+            gap: 10px;
+            display: flex;
+            align-items: center;
+            .invisible {
+              visibility: hidden;
+            }
+            &.btn-default {
+              background: #333;
+              margin-right: auto;
+            }
+          }
+          .calculated-prices {
+            font-weight: 700;
+            .price_amount {
+              color: #fb18a9;
+            }
+          }
+        }
+    
+      }
+      .swal2-progress-steps {
         width: 100%;
         display: flex;
-        flex-wrap: wrap;
-        padding-left: 20px;
-        padding-right: 20px;
-        justify-content: end;
-        .button {
-          gap: 10px;
-          display: flex;
-          align-items: center;
-          .invisible {
-            visibility: hidden;
-          }
-          &.btn-default {
-            background: #333;
-            margin-right: auto;
-          }
+        align-items: center;
+        align-content: center;
+        justify-content: center;
+        .swal2-progress-step {
+          padding: 3px 10px;
+          height: unset;
+          width: unset;
+          border-radius: 15px;
         }
-        .calculated-prices {
-          font-weight: 700;
-          .price_amount {
-            color: #fb18a9;
-          }
-        }
-      }
-  
-    }
-    .swal2-progress-steps {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      align-content: center;
-      justify-content: center;
-      .swal2-progress-step {
-        padding: 3px 10px;
-        height: unset;
-        width: unset;
-        border-radius: 15px;
       }
     }
   }
@@ -122,16 +131,16 @@ body {
   #signature-builder {
     z-index: 0;
     padding: unset;
-    overflow: hidden;
+    overflow: auto;
     min-height: 100px;
     position: relative;
-    background: #eee;
+    background: none;
     margin-bottom: 20px;
     border-radius: 10px;
     canvas {
-      width: 100%;
-      height: auto;
-      max-width: 100%;
+      // width: 100%;
+      // height: auto;
+      // max-width: 100%;
     }
   }
   .active {
@@ -176,6 +185,8 @@ body {
   &__container {
     width: 100%;
     margin: 5rem auto;
+    // max-width: 1150px;
+    max-width: calc(1320px + 1.5rem * 2);
   }
   &__row {
     display: flex;
@@ -201,6 +212,16 @@ body {
   &__builder {
     width: 75%;
     padding: 20px;
+    &.w-full {
+      width: 100%;
+      #signature-builder {
+        width: 100%;
+        canvas {
+          width: 100% !important;
+          height: auto !important;
+        }
+      }
+    }
     .esign-body {
       z-index: 0;
       padding: 20px;
@@ -226,18 +247,25 @@ body {
         }
         &__title {
           padding: 10px 5px;
+          text-transform: capitalize;
         }
-        &.signpreview {
+        &__signpreview {
           display: block;
+          padding: unset;
+          border-width: 1px;
           .esign-body__single__title {
             top: 0;
             left: 5px;
             padding: 0;
             z-index: 1;
             margin: unset;
+            padding: 0 5px;
             font-size: 10px;
-            color: #9b9b9b;
+            color: #ffffff;
             position: absolute;
+            background: #333;
+            border-radius: 3px;
+            box-shadow: 1px 1px 5px #fff;
             + img {
               height: 100%;
               width: 100%;
@@ -262,18 +290,49 @@ body {
   &__frontend {
     .esign-body {
       &__single {
-        border-width: 2px;
-        border-color: #ff3f3f;
+        &__enabled {
+          border-width: 1px;
+          border-color: $primaryColor;
+          &[data-type="sign"] {
+            border-width: 2px;
+          }
+        }
       }
+      &__pattern {
+        // https://www.magicpattern.design/tools/css-backgrounds
+        background-color: #e5e5f7;
+        opacity: 0.8;
+        background-size: 10px 10px;
+        background-image: repeating-linear-gradient(45deg, $primaryColor 0, $primaryColor 1px, #e5e5f7 0, #e5e5f7 50%);
+      }
+    }
+    .update_esign_signature {
+      color: #fff;
+      background: $secondaryColor;
     }
   }
   &__fields {
     width: 25%;
+    display: block;
+    overflow: hidden;
+    position: relative;
+    transition: all .7s ease;
     &__grid {
+      display: block;
+      position: relative;
       padding: 20px 10px;
       h3 {
         font-size: 20px;
         text-transform: uppercase;
+      }
+      .modal {
+        &__collapse {
+          top: 50%;
+          left: -5px;
+          display: none;
+          position: absolute;
+          transform: translateX(-15px);
+        }
       }
     }
     .esign-fields {
@@ -362,6 +421,18 @@ body {
     &.settings_enabled {
       .pdf_builder__fields__grid {display: none;}
       .pdf_builder__fields__settings {display: block;}
+    }
+  }
+  &__collapse {
+    .pdf_builder {
+      &__builder {
+        width: 100%;
+      }
+      &__fields {
+        width: 0;
+        opacity: 0;
+        visibility: hidden;
+      }
     }
   }
 }

@@ -2,6 +2,8 @@ import interact from 'interactjs';
 import { PDFDocument, rgb, degrees, SVGPath, drawSvgPath, StandardFonts } from 'pdf-lib';
 import SignaturePad from "signature_pad";
 import {signaturePadEVENT} from "./signaturePad";
+import { format as date_formate } from 'date-fns';
+import PROMPTS from './prompts';
 
 const STOREDATA = {i18n: {}};
 const str_replace = (str) => {
@@ -49,7 +51,7 @@ export const do_field = (field, child = false, esitingData = {}) => {
       case 'input':case 'text':case 'number':case 'date':case 'time':case 'local':case 'color':case 'range':
           input = document.createElement('input');input.classList.add('form-control');
           input.name = 'field.'+field.fieldID;input.id = `field_${field?.fieldID??i}`;
-          input.setAttribute('value', esitingData[field.fieldID]);
+          input.setAttribute('value', esitingData?.[field.fieldID]??(field?.default??''));
           input.placeholder = str_replace(field?.placeholder??'');
           input.type = (field.type=='input')?'text':field.type;
           Object.keys(field?.attr??{}).forEach((key)=>{input.setAttribute(key, field.attr[key])});
@@ -124,7 +126,8 @@ export const do_field = (field, child = false, esitingData = {}) => {
       case 'password':
           group = document.createElement('div');group.classList.add('input-group', 'mb-3');
           input = document.createElement('input');input.classList.add('form-control');
-          input.name = 'field.'+field.fieldID;input.setAttribute('value', esitingData[field.fieldID]);
+          input.name = 'field.'+field.fieldID;
+          input.setAttribute('value', esitingData?.[field.fieldID]??(field?.default??''));
           input.placeholder = str_replace(field?.placeholder??'');
           input.id = `field_${field?.fieldID??i}`;input.type = (field.type=='input')?'text':field.type;
           Object.keys(field?.attr??{}).forEach((key)=>{input.setAttribute(key, field.attr[key])});
@@ -208,37 +211,88 @@ export const do_field = (field, child = false, esitingData = {}) => {
   }
   return div;
 }
-
-export const renderPages = (numPages, pdf) => {
+export const renderPages = async (numPages, pdf, thisClass) => {
   const pdfPreview = document.querySelector('#signature-builder');
-  pdfPreview.querySelectorAll('canvas').forEach((el)=>{el.remove();});
-  for (let pageNumber = 1; pageNumber <= numPages; pageNumber++) {
-    const pdfCanvas = document.createElement('canvas');
-    pdf.getPage(pageNumber).then(function (page) {
-      // Set the canvas dimensions to the PDF page dimensions
-      const viewport = page.getViewport({scale: 2});
-      pdfCanvas.width = viewport.width;
-      pdfCanvas.height = viewport.height;
-
-      // Render the PDF page on the canvas
-      const context = pdfCanvas.getContext('2d');
-      const renderContext = {canvasContext: context,viewport: viewport};
-      page.render(renderContext);
+  pdfPreview.querySelectorAll('canvas').forEach((el) => {el.remove();});
+  const promises = [];
+  thisClass.prompts.perSerPdf.pdfPreview = pdfPreview;
+  let xOffset = 0; let yOffset = 0;
+  for(let pageNumber = 1; pageNumber <= numPages; pageNumber++) {
+    const pagePromise = new Promise(async (resolve, reject) => {
+      try {
+        if(thisClass.prompts.oneCanvas) {
+          await pdf.getPage(pageNumber).then((page) => {
+              const canvas = document.createElement('canvas');
+              const context = canvas.getContext('2d');
+              // console.log(page.view);
+  
+              // Set the canvas dimensions
+              canvas.width = page.view[2];
+              canvas.height = page.view[3];
+  
+              // Render the PDF page on the canvas
+              const viewport = page.getViewport({scale: 4});
+              const renderContext = {canvasContext: context, viewport: viewport};
+              page.render(renderContext).promise.then(() => {
+                  // Convert the canvas to a Phaser image
+                  thisClass.prompts.perSerPdf.images.push({
+                    order: pageNumber,
+                    id: `page-${pageNumber}`, src: false,
+                    width: viewport.width, height: viewport.height,
+                    // width: 200, height: 250, 
+                    canvas: canvas, xOffset: xOffset, yOffset: yOffset
+                  });
+                  resolve();
+              });
+          });
+          // pdfCanvas.toBlob((blob) => {
+          //   const dataUrl = URL.createObjectURL(blob);
+          // });
+        } else {
+          const page = await pdf.getPage(pageNumber);
+          const pdfCanvas = document.createElement('canvas');
+          const viewport = page.getViewport({scale: 2});
+          const context = pdfCanvas.getContext('2d');
+          const renderContext = {canvasContext: context, viewport: viewport, textRenderingMode: "smooth"};
+          pdfCanvas.width = viewport.width;
+          pdfCanvas.height = viewport.height;
+          pdfCanvas.style.width = viewport.width + 'px';
+          pdfCanvas.style.height = viewport.height + 'px';
+          await page.render(renderContext).promise;
+  
+          pdfPreview.appendChild(pdfCanvas);
+          resolve(); // Resolve the promise
+        }
+      } catch (error) {reject(error);}
     });
-    pdfPreview.appendChild(pdfCanvas);
+
+    promises.push(pagePromise);
   }
+  // Wait for all page promises to resolve
+  await Promise.all(promises);
+  
+  return true;
 }
+
 export const addElementToPDF = (field, position, thisClass, data = false) => {
+  if(position?.signDone) {return;}
   const config = JSON.parse(field.querySelector('.esign-fields__handle').dataset?.config??'{}');
   if(!(thisClass?.fieldsData??false)) {thisClass.fieldsData = [];}
   const args = {unique: (thisClass.fieldsData.length+1), ...config};
   thisClass.fieldsData.push(args);
   const addedElement = document.createElement('div');
   addedElement.classList.add('esign-body__single');
+  if(data?.enableSign) {
+    data.fieldEL = addedElement;
+    addedElement.classList.add('esign-body__single__enabled');
+  }
+  addedElement.dataset.type = data?.field??'';
   addedElement.dataset.storedOn = args.unique;
   if(position.dx && (position?.canvas??false)) {}
   // if(position.dx) {addedElement.style.left = position.dx + 'px';addedElement.dataset.x = position.dx;}
   // if(position.dy) {addedElement.style.top = position.dy + 'px';addedElement.dataset.y = position.dy;}
+  if(position.height) {addedElement.dataset.height = parseFloat(position.height);}
+  if(position.width) {addedElement.dataset.width = parseFloat(position.width);}
   if(position.height) {addedElement.style.height = position.height;}
   if(position.width) {addedElement.style.width = position.width;}
   if(position.dx) {addedElement.dataset.x = position.dx;}
@@ -252,8 +306,15 @@ export const addElementToPDF = (field, position, thisClass, data = false) => {
       )
     );
   }
+  if(thisClass.isFrontend && !(data?.enableSign) && (data?.field??'') == 'sign') {
+    addedElement.classList.add('esign-body__pattern');
+    addedElement.title = thisClass.i18n?.notsignedyet??'User not signed yet!';
+  }
   addedElement.innerHTML = `
-    <div class="esign-body__single__title">${args?.title??'eSignature'}</div>
+    <div class="esign-body__single__title" style="color: ${((data?.data)?.field)?.fontColor};font-size: ${((data?.data)?.field)?.fontSize}px;">${
+      (thisClass.isFrontend && !(data?.enableSign) && (data?.field??'') == 'sign')?(
+        ((data?.data)?.field)?.user_name??'Pending Sign'
+      ):(args?.title??'eSignature')}</div>
     ${(thisClass.isFrontend)?``:`
     <button type="button" class="btn btn-default btn-xs remove">
       <span class="dashicons-before dashicons-trash"></span>
@@ -261,21 +322,20 @@ export const addElementToPDF = (field, position, thisClass, data = false) => {
     `}
   `;
   if(thisClass.isFrontend) {
-    
-  if((data?.field??'') == 'date') {
-    const date_formate = (((data?.data??{})?.field??{})['2'] == '')?'M d, Y':(((data?.data??{})?.field??{})['2']);
     const currentDate = new Date();
-    addedElement.innerHTML = currentDate.getMonth()+' '+currentDate.getDate()+', '+currentDate.getFullYear();
-  } else if((data?.field??'') == 'time') {
-    const date_formate = (((data?.data??{})?.field??{})['2'] == '')?'H:i:s':(((data?.data??{})?.field??{})['2']);
-    const currentDate = new Date();
-    addedElement.innerHTML = currentDate.getHours()+':'+currentDate.getMinutes()+':'+currentDate.getSeconds();
-  } else {}
+    if((data?.field??'') == 'date') {
+      const dateFormate = ((((data?.data??{})?.field??{})?.format??'') == '')?'M d, Y':(((data?.data??{})?.field??{})?.format??'');
+      
+      addedElement.innerHTML = date_formate(currentDate, dateFormate);
+    } else if((data?.field??'') == 'time') {
+      const dateFormate = ((((data?.data??{})?.field??{})?.format??'') == '')?'H:i:s':(((data?.data??{})?.field??{})?.format??'');
+      addedElement.innerHTML = date_formate(currentDate, dateFormate);
+    } else {}
   }
   if(!thisClass.isFrontend) {init_dragging(addedElement);}
   addedElement.addEventListener('click', (event) => {
     if(thisClass.isFrontend) {
-      if((data?.field??'') == 'sign') {
+      if((data?.field??'') == 'sign' && data?.enableSign && !(data?.signDone)) {
         // alert('Signature poup is under development');
         thisClass.eSignVex = thisClass.vex.dialog.open({
           showCloseButton: true,
@@ -288,7 +348,6 @@ export const addElementToPDF = (field, position, thisClass, data = false) => {
               <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
               <div class="modal__header">
                 <h2 class="modal__title" id="modal-1-title">E-Signature Pad.</h2>
-                <!-- <button class="modal__close" aria-label="Close modal" data-esign-popup-close="true"></button> -->
               </div>
               <div class="modal__content" id="modal-1-content">
                 <div class="modal__content__wrap">
@@ -354,7 +413,6 @@ export const addElementToPDF = (field, position, thisClass, data = false) => {
           //   // console.log('Modal closed', data);
           // },
         });
-        // console.log(data);
         
         setTimeout(() => {
           init_eSignature(addedElement, thisClass);
@@ -380,6 +438,32 @@ export const addElementToPDF = (field, position, thisClass, data = false) => {
           wrap.appendChild(fieldHTML);
         });
         stored.html = wrap;
+        if(data) {data.settingsEL = wrap;}
+        
+        wrap.querySelectorAll('[data-field-id]').forEach((inputEl) => {
+          switch(inputEl.dataset.fieldId) {
+            case 'format':
+              break;
+            case 'fontColor':
+              inputEl.addEventListener('change', (event) => {
+                if(!data) {return;}
+                var title = data.fieldEL?.firstElementChild;
+                if(!title || !(title?.style)) {return;}
+                title.style.color = event.target.value;
+              });
+              break;
+            case 'fontSize':
+              inputEl.addEventListener('change', (event) => {
+                if(!data) {return;}
+                var title = data.fieldEL?.firstElementChild;
+                if(!title || !(title?.style)) {return;}
+                title.style.fontSize = event.target.value + 'px';
+              });
+              break;
+            default:
+              break;
+          }
+        });
       }
       // Push it on FIELD BODY
       body.innerHTML = '';body.appendChild(stored.html);
@@ -388,9 +472,11 @@ export const addElementToPDF = (field, position, thisClass, data = false) => {
   addedElement.querySelectorAll('.remove').forEach((trash)=>{
     trash.addEventListener('click', (event) => {
       event.preventDefault();
-      if(confirm('Are you sure?')) {
+      var rusure = thisClass.i18n?.rusure??'Are you sure?';
+      if(confirm(rusure)) {
         trash.parentElement.remove();
-        document.querySelector('.pdf_builder__fields').classList.remove('settings_enabled');
+        document.querySelector('.pdf_builder__fields')?.classList.remove('settings_enabled');
+        if(data && data?.settingsEL) {data.settingsEL.remove();}
       }
     });
   });
@@ -403,7 +489,6 @@ export const init_dragging = (el) => {
   .resizable({
     // resize from all edges and corners
     edges: { left: true, right: true, bottom: true, top: true },
-
     listeners: {
       move (event) {
         var target = event.target
@@ -537,7 +622,7 @@ export const initDragAndDropFeature = (el) => {
     },
   })
 }
-export const previewPDFile = (file) => {
+export const previewPDFile = (file, thisClass) => {
   if (!file) {return;}
   
   const canvasContainer = document.getElementById('pdfContainer');
@@ -545,8 +630,12 @@ export const previewPDFile = (file) => {
   fileReader.onload = function () {
       const typedArray = new Uint8Array(this.result);
       // Load the PDF file using PDF.js
-      pdfjsLib.getDocument(typedArray).promise.then(function (pdf) {
-          renderPages(pdf.numPages, pdf);
+      pdfjsLib.getDocument(typedArray).promise.then(async (pdf) => {
+        await renderPages(pdf.numPages, pdf, thisClass);
+      }).then(() => {
+        if(thisClass.prompts.oneCanvas) {thisClass.prompts.perSerPdf.init(thisClass);}
+      }).catch(function (error) {
+        console.error('Error loading PDF:', error);
       });
   };
 
@@ -574,40 +663,51 @@ export const dragFromRight2Left = (thisClass) => {
     },
   });
 }
-
 export const loadPreviousFields = (thisClass) => {
   const custom_fields = thisClass.prompts.lastJson.signature.custom_fields;
   const fields = custom_fields.fields;const canvas = custom_fields.canvas;
-  fields.forEach((row)=>{var proceed = true;
-    if(thisClass.isFrontend && thisClass.config.user_id != ((row?.data??{})?.field??{})['1']) {
-      proceed = false;// console.log(row, fields);
-    }
-    if(proceed) {
+  fields.forEach((row)=>{
+    // if(row.enableSign) {
       row.canvas = canvas[0];// console.log(row);
       var fieldRow = thisClass.fields.find((rowf)=>rowf.id==row.field);
       var field = document.createElement('div');field.classList.add('esign-fields__single');
       var handle = document.createElement('div');handle.classList.add('esign-fields__handle');
       handle.dataset.config = JSON.stringify({id: fieldRow?.id??'', title: fieldRow?.title??''});
       field.appendChild(handle);var position = row;addElementToPDF(field, position, thisClass, row);
-    }
+    // }
   });
 }
-
 export const init_eSignature = async (addedElement, thisClass) => {
+  thisClass.date_formate = date_formate;
   // Implement signature capturing using signature_pad
-  const signatureCanvas = document.getElementById('signatureCanvas');
-  thisClass.signaturePad = new SignaturePad(signatureCanvas, {
-    // backgroundColor: 'rgb(255, 255, 255)'
-  });
-  signaturePadEVENT(thisClass);
+  var signatureCanvas = document.getElementById('signatureCanvas');
+  if((thisClass?.signaturePadEl)?.querySelector('canvas')) {
+    signatureCanvas.parentElement.insertBefore(
+      thisClass.signaturePadEl.querySelector('canvas'), signatureCanvas
+    );
+    signatureCanvas.remove();signatureCanvas = document.getElementById('signatureCanvas');
+  } else {
+    thisClass.signaturePad = new SignaturePad(signatureCanvas, {
+      // backgroundColor: 'rgb(255, 255, 255)',
+      // penWidth: 2, minWidth: 2, maxWidth: 4
+    });
+    // thisClass.signaturePad.penWidth = 2; // Example pen width
+    // thisClass.signaturePad.minWidth = 2; // Example min width
+    // thisClass.signaturePad.maxWidth = 4; // Example max width
   
+    // thisClass.signaturePad.resizeCanvas({
+    //   width: 500, // Your desired width
+    //   height: 300, // Your desired height
+    // });
+  
+  }
+  signaturePadEVENT(thisClass);
   document.querySelectorAll('[data-esign-popup-proceed]').forEach((el)=>{
     el.addEventListener('click', (event) => {
       importSignature2Element(thisClass, addedElement);
     });
   });
 }
-
 // Function to add signature to PDF using pdf-lib
 async function addSignatureToPDF(pdfBytes, signatureDataUrl) {
   const pdfDoc = await PDFDocument.load(pdfBytes);
@@ -649,12 +749,12 @@ export const upload_esignature = async (thisClass) => {
 
       // Handle the data URL after reading is complete
       reader.onloadend = async () => {
-        const signatureDataUrl = reader.result; // The signature data URL
+        thisClass.signatureDataUrl = reader.result; // The signature data URL
 
         // Use the pdf-lib and the addSignatureToPDF function from the previous example
         // to add the signature to the PDF
         const originalPdfBytes = '...'; // Load your original PDF bytes here
-        const modifiedPdfBytes = await addSignatureToPDF(originalPdfBytes, signatureDataUrl);
+        const modifiedPdfBytes = await addSignatureToPDF(originalPdfBytes, thisClass.signatureDataUrl);
 
         // Now you have the modified PDF with the uploaded signature (modifiedPdfBytes)
         // You can save it, send it to the client, or use it as needed
@@ -665,19 +765,22 @@ export const upload_esignature = async (thisClass) => {
 }
 export const importSignature2Element = async (thisClass, addedElement) => {
   if(thisClass.signaturePad.isEmpty()) {
-    thisClass.toastify({text: 'Please provide a signature.',className: "warning", duration: 3000, stopOnFocus: true, style: {background: "linear-gradient(to right, rgb(255 200 153), rgb(255 166 33))"}}).showToast();
+    var text = thisClass.i18n?.plsdosign??'Please provide a signature.';
+    thisClass.toastify({text: text,className: "warning", duration: 3000, stopOnFocus: true, style: {background: "linear-gradient(to right, rgb(255 200 153), rgb(255 166 33))"}}).showToast();
   } else {
-    const signatureDataUrl = thisClass.signaturePad.toDataURL('image/png');
-    // console.log(signatureDataUrl);
+    thisClass.signatureDataUrl = thisClass.signaturePad.toDataURL('image/png');
+    // console.log(thisClass.signatureDataUrl);
     // const originalPdfBytes = '...'; // Load your original PDF bytes here
-    // const modifiedPdfBytes = await addSignatureToPDF(originalPdfBytes, signatureDataUrl);
+    // const modifiedPdfBytes = await addSignatureToPDF(originalPdfBytes, thisClass.signatureDataUrl);
 
     addedElement.querySelectorAll('img').forEach((img)=>{img.remove();});
     const sign_image = document.createElement('img');
-    sign_image.src = signatureDataUrl;
-    addedElement.classList.add('signpreview');
+    sign_image.src = thisClass.signatureDataUrl;
+    addedElement.classList.add('esign-body__single__signpreview');
     addedElement.appendChild(sign_image);
-    
+    thisClass.signatureFieldEl = addedElement;
+    thisClass.signaturePadEl = document.createElement('div');
+    thisClass.signaturePadEl.appendChild(thisClass.signaturePad.canvas);
     thisClass.vex.close(thisClass.eSignVex);
   }
 }

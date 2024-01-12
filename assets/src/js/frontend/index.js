@@ -12,8 +12,9 @@ import dragula from 'dragula';
 import { Dropzone } from "dropzone";
 // import 'datatables.net-dt';
 import DataTable from 'datatables.net';
-const vex = require('vex-js')
-vex.registerPlugin(require('vex-dialog'))
+// import "regenerator-runtime/runtime";
+const vex = require('vex-js');
+vex.registerPlugin(require('vex-dialog'));
 vex.defaultOptions.className = 'vex-theme-os'; // Choose a theme for the modal appearance
 vex.defaultOptions.overlayClosesOnClick = false; // Disable closing on outside click
 
@@ -37,6 +38,7 @@ vex.defaultOptions.overlayClosesOnClick = false; // Disable closing on outside c
 			this.dragula = dragula;this.Dropzone = Dropzone;
 			thisClass.DataTable = DataTable;this.isFrontend = true;
 			Dropzone.autoDiscover = false;this.vex = vex;
+			this.toEsign = {};
 			this.init_toast();this.setup_hooks();
 			this.init_datable();this.init_micromodel();
 		}
