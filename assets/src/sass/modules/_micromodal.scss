@@ -209,6 +209,15 @@ from { transform: translateY(15%); }
         -webkit-transform: skew(3deg) rotate(3deg);
         transform: skew(3deg) rotate(3deg);
     }
+    &__footer,
+    &__header {
+        color: #C3C3C3;
+        text-align: center;
+        font-size: 1.2em;
+        margin-top: 8px;
+        border-top: 1px solid #ddd;
+        position: relative;
+    }
     &__body {
         position: relative;
         -webkit-box-flex: 1;
@@ -222,23 +231,32 @@ from { transform: translateY(15%); }
             display: block;
         }
     }
-    &__footer {
-        color: #C3C3C3;
-        text-align: center;
-        font-size: 1.2em;
-        margin-top: 8px;
-        border-top: 1px solid #ddd;
-        position: r;
-    }
     &__actions {
-        display: -webkit-box;
-        display: -ms-flexbox;
         display: flex;
-        -webkit-box-pack: justify;
+        margin: 5px auto;
         -ms-flex-pack: justify;
+        -webkit-box-pack: justify;
         justify-content: space-between;
-        margin-top: 8px;
-        display: block;
+        & > .dashicons {
+            padding: 5px;
+            display: flex;
+            cursor: pointer;
+            font-size: 15px;
+            overflow: hidden;
+            border-radius: 10px;
+            align-items: center;
+            align-content: center;
+            justify-content: center;
+            border: 1px solid #ddd;
+            & > * {
+                width: 0;
+                height: 0;
+                margin: 0;
+                padding: 0;
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
         .column {
             padding: .1em;
             display: grid;
@@ -246,7 +264,7 @@ from { transform: translateY(15%); }
             display: flex;
             align-items: center;
             justify-content: space-around;
-            &:nth-child(2) {
+            &.disabled {
                 display: none;
             }
             .button {
@@ -300,4 +318,9 @@ from { transform: translateY(15%); }
             display: flex;
         }
     }
+}
+
+.signature-preview {
+    width: 90%;
+    height: 90%
 }

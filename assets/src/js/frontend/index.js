@@ -1,13 +1,12 @@
 /**
  * Frontend Script.
  * 
- * @package TeddyBearCustomizeAddon
+ * @package ESignBindingAddons
  */
 
 import Swal from "sweetalert2";
 import Toastify from 'toastify-js';
-import eSignature from '../modules/signatureBuilder';
-import PROMPTS from "../modules/prompts";
+import eSignature from '../modules/eSignature';
 import dragula from 'dragula';
 import { Dropzone } from "dropzone";
 // import 'datatables.net-dt';
@@ -33,20 +32,15 @@ vex.defaultOptions.overlayClosesOnClick = false; // Disable closing on outside c
 			var i18n = fwpSiteConfig?.i18n??{};this.Swal = Swal;
 			this.config.buildPath = fwpSiteConfig?.buildPath??'';
 			this.i18n = {i_confirm_it: 'Yes I confirm it',...i18n};
-			this.eSignature = eSignature;this.prompts = PROMPTS;
-			window.thisClass = this;window.eSignature = this.eSignature;
 			this.dragula = dragula;this.Dropzone = Dropzone;
-			thisClass.DataTable = DataTable;this.isFrontend = true;
+			this.DataTable = DataTable;this.isFrontend = true;
 			Dropzone.autoDiscover = false;this.vex = vex;
-			this.toEsign = {};
+			this.toEsign = {};window.thisClass = this;
 			this.init_toast();this.setup_hooks();
 			this.init_datable();this.init_micromodel();
 		}
 		setup_hooks() {
-			const thisClass = this;
-			this.eSignature.init_events(this);
-			this.eSignature.init_fields(this);
-			// this.eSignature.init_popup(this);
+			this.eSignature = new eSignature(this);
 		}
 		init_toast() {
 			const thisClass = this;
@@ -224,141 +218,6 @@ vex.defaultOptions.overlayClosesOnClick = false; // Disable closing on outside c
 			return transformedObj;
 		}
 
-
-		paymentButtonHandler() {
-			const thisClass = this;
-			$(thisClass.PaymentWrap).hide();
-
-			if ( thisClass.allowSubmit ) {
-				thisClass.allowSubmit = false;
-				return true;
-			}
-
-			let $form    = $( 'form#payment-form, form#order_review' ),
-			flutterwave_txnref = $form.find( 'input.tbz_wc_flutterwave_txnref' );
-			flutterwave_txnref.val( '' );
-
-			let flutterwave_callback = function( response ) {
-
-				console.log(response);
-				$form.append( '<input type="hidden" class="tbz_wc_flutterwave_txnref" name="tbz_wc_flutterwave_txnref" value="' + response.transaction_id + '"/>' );
-				$form.append( '<input type="hidden" class="tbz_wc_flutterwave_order_txnref" name="tbz_wc_flutterwave_order_txnref" value="' + response.tx_ref + '"/>' );
-
-				thisClass.allowSubmit = true;
-
-				$form.submit();
-				$( 'body' ).block(
-					{
-						message: null,
-						overlayCSS: {
-							background: '#fff',
-							opacity: 0.6
-						},
-						css: {
-							cursor: "wait"
-						}
-					}
-				);
-			};
-
-			FlutterwaveCheckout({
-				public_key: thisClass.config.public_key,
-				tx_ref: thisClass.config.txref,
-				amount: thisClass.config.amount,
-				currency: thisClass.config.currency,
-				country: thisClass.config.country,
-				meta: thisClass.config.meta,
-				customer: {
-					email: thisClass.config.customer_email,
-					name: thisClass.config.customer_name,
-				},
-				customizations: {
-					title: thisClass.config.custom_title,
-					description: thisClass.config.custom_desc,
-					logo: thisClass.config.custom_logo,
-				},
-				callback: flutterwave_callback,
-				onclose: function() {
-					$(thisClass.PaymentWrap).show();
-					$( this.el ).unblock();
-				}
-			});
-
-			return false;
-		}
-
-		init_tagInputs() {
-			var input, select, values, label, options;
-			select = document.querySelector('#subAccounts');
-			if(!select) {return;}
-			input = document.createElement('input');
-			input.type = 'hidden';input.name = select.name;
-			select.removeAttribute('name');input.id=select.id;
-			select.removeAttribute('id');select.multiple = 1;
-			select.parentElement.insertBefore(input, select);
-			select.addEventListener('change', function() {
-				options = Array.from(select.selectedOptions);
-				values = options.map(option => option.value);
-				input.value = values.join(',');
-			});
-			if(true) {
-				values = input.value.split(',').map(value => value.trim());
-				Array.from(select.options).forEach(option => {
-					option.selected = values.includes(option.value);
-				});
-			}
-		}
-
-		init_popup_events() {
-			const thisClass = this;var html, config, preview;
-			document.querySelectorAll('.send-email-reminder:not([data-handled])').forEach((el) => {
-				el.dataset.handled = true;
-				el.addEventListener('click', (event) => {
-					event.preventDefault();
-					el.disabled = true;
-					thisClass.mailReminderBtn = el;
-					preview = document.querySelector('#email-template-preview');
-					if(preview) {preview.remove();}
-					var formdata = new FormData();
-					formdata.append('action', 'esign/project/mailsystem/sendreminder');
-					formdata.append('entry', thisClass.currentEntry.id);
-					formdata.append('form_id', thisClass.currentEntry.form_id);
-					formdata.append('_nonce', thisClass.ajaxNonce);
-					thisClass.sendToServer(formdata);
-				});
-			});
-			document.querySelectorAll('.copy_link:not([data-handled])').forEach((el) => {
-				el.dataset.handled = true;
-				el.addEventListener('click', (event) => {
-					event.preventDefault();
-					thisClass.copyToClipboard(el);
-				});
-			});
-			document.querySelectorAll('.do_refund:not([data-handled])').forEach((el) => {
-				el.dataset.handled = true;
-				el.addEventListener('click', (event) => {
-					event.preventDefault();
-					var text, amount;
-					thisClass.currentEntry.refunded = (thisClass.currentEntry.refunded)?thisClass.currentEntry.refunded:0.00;
-					text = `Enter the amount you want to refund. Until now you refunded ${thisClass.currentEntry.refunded} and you are able to refund ${(thisClass.currentEntry.payment_amount - thisClass.currentEntry.refunded)}.`;
-					amount = parseFloat(prompt(text));
-					if(amount && amount > 0) {
-						el.disabled = true;
-						thisClass.lastRefundBtn = el;
-						thisClass.refund_a_payment(amount);
-					}
-				});
-			});
-			document.querySelectorAll('.update_pay_link:not([data-handled])').forEach((el) => {
-				el.dataset.handled = true;
-				el.addEventListener('click', (event) => {
-					event.preventDefault();
-					el.disabled = true;
-					thisClass.lastUpdateBtn = el;
-					thisClass.update_pay_link(el);
-				});
-			});
-		}
 		copyToClipboard(element) {
 			const text = element.getAttribute('data-text');
 			
@@ -396,26 +255,6 @@ vex.defaultOptions.overlayClosesOnClick = false; // Disable closing on outside c
 			// Replace occurrences of '\\'
 			str = str.replace(/\\\\/g, '\\');
 			return str;
-		}
-		update_pay_link(el) {
-			const thisClass = this;
-			var formdata = new FormData();
-			formdata.append('action', 'esign/project/payment/updatelink');
-			formdata.append('entry', thisClass.currentEntry.id);
-			formdata.append('form_id', thisClass.currentEntry.form_id);
-			formdata.append('_nonce', thisClass.ajaxNonce);
-			thisClass.sendToServer(formdata);
-		}
-		refund_a_payment(amount) {
-			const thisClass = this;
-			var formdata = new FormData();
-			formdata.append('action', 'esign/project/payment/refund');
-			formdata.append('transaction_id', thisClass.currentEntry.transaction_id);
-			formdata.append('form_id', thisClass.currentEntry.form_id);
-			formdata.append('entry', thisClass.currentEntry.id);
-			formdata.append('_nonce', thisClass.ajaxNonce);
-			formdata.append('amount', amount);
-			thisClass.sendToServer(formdata);
 		}
 
 		init_datable() {

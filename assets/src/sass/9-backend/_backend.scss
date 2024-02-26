@@ -242,6 +242,9 @@ body {
         background: #ebebeb;
         justify-content: space-between;
         border: 0.5px dashed #a5a5a5;
+        
+        display: none;
+        
         @include mq($until: 550px) {
           padding: 3px 5px;
         }

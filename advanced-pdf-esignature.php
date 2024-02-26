@@ -5,7 +5,7 @@
  * @wordpress-plugin
  * Plugin Name:       Advanced PDF E-Signature
  * Plugin URI:        https://github.com/mahmudremal/advanced-pdf-esignature/
- * Description:       Integrate Flutterwave's secure payment gateway seamlessly with Gravity Forms. Accept credit cards, bank transfers & mobile money effortlessly.
+ * Description:       Integrated Electronic signature with WordPress CMS, email notifications, email template custmizations and customized featured with users signers. Leatest version capabilities, mobile friendly, easy to use and on-click singning capabilities.
  * Version:           1.0.0
  * Requires at least: 5.2
  * Requires PHP:      7.2
@@ -20,8 +20,8 @@
  * @author  Remal Mahmud (https://github.com/mahmudremal)
  * @version 1.0.2
  * @link https://github.com/mahmudremal/advanced-pdf-esignature/
- * @category	WooComerce Plugin
- * @copyright	Copyright (c) 2023-25
+ * @category	WordPress Plugin
+ * @copyright	Copyright (c) 2024-26
  * 
  * 
  * webdevayon
@@ -52,10 +52,19 @@ defined('ESIGNBINDING_ADDONS_TEST_MODE') || define('ESIGNBINDING_ADDONS_TEST_MOD
 require_once ESIGNBINDING_ADDONS_DIR_PATH . '/inc/helpers/autoloader.php';
 // require_once ESIGNBINDING_ADDONS_DIR_PATH . '/inc/helpers/template-tags.php';
 
-if(!function_exists( 'electronicdocumentsigningandmanagement_plugin_instance' ) ) {
-	function electronicdocumentsigningandmanagement_plugin_instance() {\ESIGNBINDING_ADDONS\Inc\Project::get_instance();}
-	electronicdocumentsigningandmanagement_plugin_instance();
-}
 
+try {
+	if(!function_exists('electronicdocumentsigningandmanagement_plugin_instance')) {
+		function electronicdocumentsigningandmanagement_plugin_instance() {\ESIGNBINDING_ADDONS\Inc\Project::get_instance();}
+		electronicdocumentsigningandmanagement_plugin_instance();
+	}
+} catch (\Exception $e) {
+	// echo "Exception: " . $e->getMessage();
+} catch (\Error $e) {
+	// echo "Error: " . $e->getMessage();
+} finally {
+	// Optional code that always runs
+	// echo "Finally block executed.";
+}
 
 

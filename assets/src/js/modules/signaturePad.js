@@ -1,64 +1,147 @@
 // import ColorPicker from 'simple-color-picker';
 
 
-export const signaturePadEVENT = (thisClass) => {
-    const signaturePad = thisClass.signaturePad;
-    const wrapper = document.getElementById("signature-pad");
-    const clearButton = wrapper.querySelector("[data-action=clear]");
-    const changeBackgroundColorButton = wrapper.querySelector("[data-action=change-background-color]");
-    const changeColorButton = wrapper.querySelector("[data-action=change-color]");
-    const changeWidthButton = wrapper.querySelector("[data-action=change-width]");
-    const changeuploadedButton = wrapper.querySelector("[data-action=change-uploaded]");
-    const undoButton = wrapper.querySelector("[data-action=undo]");
-    const savePNGButton = wrapper.querySelector("[data-action=save-png]");
-    const saveJPGButton = wrapper.querySelector("[data-action=save-jpg]");
-    const saveSVGButton = wrapper.querySelector("[data-action=save-svg]");
-    const saveSVGWithBackgroundButton = wrapper.querySelector("[data-action=save-svg-with-background]");
-    const canvas = wrapper.querySelector("canvas");
+// export const signaturePadEVENT = (thisClass) => {
+// }
+/**
+ * Singlature Pad Template Script.
+ * 
+ * @package ESignBindingAddons
+ */
+class Pad {
+    constructor(thisClass) {
+        this.setup_hooks(thisClass);
+    }
+    setup_hooks(thisClass) {
+        this.get_fields(thisClass);
 
-    // Adjust canvas coordinate space taking into account pixel ratio,
-    // to make it look crisp on mobile devices.
-    // This also causes canvas to be cleared.
-    function resizeCanvas() {
-        // When zoomed out to less than 100%, for some very strange reason,
-        // some browsers report devicePixelRatio as less than 1
-        // and only part of the canvas is cleared then.
-        const ratio =  Math.max(window.devicePixelRatio || 1, 1);
+        window.onresize = this.resizeCanvas;
+        this.resizeCanvas();
 
-        // This part causes the canvas to be cleared
-        canvas.width = canvas.offsetWidth * ratio;
-        canvas.height = canvas.offsetHeight * ratio;
-        canvas.getContext("2d").scale(ratio, ratio);
-
-        // This library does not listen for canvas changes, so after the canvas is automatically
-        // cleared by the browser, SignaturePad#isEmpty might still return false, even though the
-        // canvas looks empty, because the internal data of this library wasn't cleared. To make sure
-        // that the state of this library is consistent with visual state of the canvas, you
-        // have to clear it manually.
-        //signaturePad.clear();
-        
-        // If you want to keep the drawing on resize instead of clearing it you can reset the data.
-        signaturePad.fromData(signaturePad.toData());
+        this.init_events(thisClass);
+    }
+    get_fields(thisClass) {
+        this.signaturePad = thisClass.signaturePad;
+        this.wrapper = document.getElementById("signature-pad");
+        this.actions = document.querySelectorAll(".signature-pad__actions > .dashicons");
+        this.clearButton = this.wrapper.querySelector("[data-action=clear]");
+        this.changeBackgroundColorButton = this.wrapper.querySelector("[data-action=change-background-color]");
+        this.changeColorButton = this.wrapper.querySelector("[data-action=change-color]");
+        this.changeWidthButton = this.wrapper.querySelector("[data-action=change-width]");
+        this.changeuploadedButton = this.wrapper.querySelector("[data-action=change-uploaded]");
+        this.undoButton = this.wrapper.querySelector("[data-action=undo]");
+        this.savePNGButton = this.wrapper.querySelector("[data-action=save-png]");
+        this.saveJPGButton = this.wrapper.querySelector("[data-action=save-jpg]");
+        this.saveSVGButton = this.wrapper.querySelector("[data-action=save-svg]");
+        this.saveSVGWithBackgroundButton = this.wrapper.querySelector("[data-action=save-svg-with-background]");
+        this.canvas = this.wrapper.querySelector("canvas");
+    }
+    init_events(thisClass) {
+        const Pad = this;
+        Pad.actions.forEach(el => {
+            el.addEventListener("click", (event) => {
+                [...el.children].forEach(input => input.click());
+            });
+        });
+        Pad.clearButton.addEventListener("click", (event) => {
+            Pad.signaturePad.clear();
+        });
+        Pad.undoButton.addEventListener("click", (event) => {
+            const data = Pad.signaturePad.toData();
+            if (data) {
+                data.pop(); // remove the last dot or line
+                Pad.signaturePad.fromData(data);
+            }
+        });
+    
+        Pad.changeBackgroundColorButton.addEventListener("input", (event) => {
+            const color = event.target?.value??false;
+            if(!color) {return;}
+            Pad.signaturePad.backgroundColor = color;
+            const data = Pad.signaturePad.toData();
+            Pad.signaturePad.clear();
+            Pad.signaturePad.fromData(data);
+        });
+        Pad.changeColorButton.addEventListener("input", (event) => {
+            const color = event.target?.value??false;
+            if(!color) {return;}
+            Pad.signaturePad.penColor = color;
+        });
+    
+        Pad.changeWidthButton.addEventListener("click", (event) => {
+            const min = Math.round(Math.random() * 100) / 10;
+            const max = Math.round(Math.random() * 100) / 10;
+    
+            Pad.signaturePad.minWidth = Math.min(min, max);
+            Pad.signaturePad.maxWidth = Math.max(min, max);
+        });
+        Pad.changeuploadedButton.addEventListener("change", (event) => {
+            if(event.target.files[0]) {
+                Pad.loadSignatureImage(event.target.files[0], Pad.signaturePad);
+            }
+        });
+    
+        Pad.savePNGButton.addEventListener("click", (event) => {
+            if (Pad.signaturePad.isEmpty()) {
+                alert("Please provide a signature first.");
+            } else {
+                const dataURL = Pad.signaturePad.toDataURL();
+                Pad.download(dataURL, "signature.png");
+            }
+        });
+        Pad.saveJPGButton.addEventListener("click", (event) => {
+            if (Pad.signaturePad.isEmpty()) {
+                alert("Please provide a signature first.");
+            } else {
+                const dataURL = Pad.signaturePad.toDataURL("image/jpeg");
+                Pad.download(dataURL, "signature.jpg");
+            }
+        });
+        Pad.saveSVGButton.addEventListener("click", (event) => {
+            if (Pad.signaturePad.isEmpty()) {
+                alert("Please provide a signature first.");
+            } else {
+                const dataURL = Pad.signaturePad.toDataURL('image/svg+xml');
+                Pad.download(dataURL, "signature.svg");
+            }
+        });
+        Pad.saveSVGWithBackgroundButton.addEventListener("click", (event) => {
+            if (Pad.signaturePad.isEmpty()) {
+                alert("Please provide a signature first.");
+            } else {
+                const dataURL = Pad.signaturePad.toDataURL('image/svg+xml', {includeBackgroundColor: true});
+                Pad.download(dataURL, "signature.svg");
+            }
+        });
     }
 
-    // On mobile devices it might make more sense to listen to orientation change,
-    // rather than window resize events.
-    // window.onresize = resizeCanvas;
-    // resizeCanvas();
+    resizeCanvas() {
+        const Pad = this;
+        // 
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
 
-
-    function loadSignatureImage(file, signaturePad) {
+        if (Pad.canvas?.offsetWidth) {
+            Pad.canvas.width = Pad.canvas.offsetWidth * ratio;
+            Pad.canvas.height = Pad.canvas.offsetHeight * ratio;
+            Pad.canvas.getContext("2d").scale(ratio, ratio);
+            Pad.signaturePad.fromData(Pad.signaturePad.toData());
+        } else {
+            console.log('Resizing failed deu t offsetWidth method not found.')
+        }
+    }
+    loadSignatureImage(file, signaturePad) {
+        const Pad = this;
         const reader = new FileReader();
         reader.onload = function (event) {
             const base64Signature = event.target.result.split(',')[1];
-            signaturePad.fromDataURL('data:image/png;base64,' + base64Signature);
-            // const data = signaturePad.toData();
-            // signaturePad.fromData(data);
+            Pad.signaturePad.fromDataURL('data:image/png;base64,' + base64Signature);
+            // const data = Pad.signaturePad.toData();
+            // Pad.signaturePad.fromData(data);
         };
         reader.readAsDataURL(file);
     }
-    
-    function download(dataURL, filename) {
+    download(dataURL, filename) {
+        const Pad = this;
         const blob = dataURLToBlob(dataURL);
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -69,11 +152,8 @@ export const signaturePadEVENT = (thisClass) => {
         a.click();
         window.URL.revokeObjectURL(url);
     }
-
-    // One could simply use Canvas#toBlob method instead, but it's just to show
-    // that it can be done using result of SignaturePad#toDataURL.
-    function dataURLToBlob(dataURL) {
-        // Code taken from https://github.com/ebidel/filer.js
+    dataURLToBlob(dataURL) {
+        const Pad = this;
         const parts = dataURL.split(';base64,');
         const contentType = parts[0].split(":")[1];
         const raw = window.atob(parts[1]);
@@ -82,79 +162,8 @@ export const signaturePadEVENT = (thisClass) => {
         for (let i = 0; i < rawLength; ++i) {
             uInt8Array[i] = raw.charCodeAt(i);
         }
-        return new Blob([uInt8Array], { type: contentType });
+        return new Blob([uInt8Array], {type: contentType});
     }
-
-    clearButton.addEventListener("click", () => {
-        signaturePad.clear();
-    });
-
-    undoButton.addEventListener("click", () => {
-        const data = signaturePad.toData();
-        if (data) {
-            data.pop(); // remove the last dot or line
-            signaturePad.fromData(data);
-        }
-    });
-
-    changeBackgroundColorButton.addEventListener("input", (event) => {
-        const color = event.target?.value??false;
-        if(!color) {return;}
-        signaturePad.backgroundColor = color;
-        const data = signaturePad.toData();
-        signaturePad.clear();
-        signaturePad.fromData(data);
-    });
-    changeColorButton.addEventListener("input", (event) => {
-        const color = event.target?.value??false;
-        if(!color) {return;}
-        signaturePad.penColor = color;
-    });
-
-    changeWidthButton.addEventListener("click", () => {
-        const min = Math.round(Math.random() * 100) / 10;
-        const max = Math.round(Math.random() * 100) / 10;
-
-        signaturePad.minWidth = Math.min(min, max);
-        signaturePad.maxWidth = Math.max(min, max);
-    });
-    changeuploadedButton.addEventListener("change", (event) => {
-        if(event.target.files[0]) {
-            loadSignatureImage(event.target.files[0], signaturePad);
-        }
-    });
-
-    savePNGButton.addEventListener("click", () => {
-        if (signaturePad.isEmpty()) {
-            alert("Please provide a signature first.");
-        } else {
-            const dataURL = signaturePad.toDataURL();
-            download(dataURL, "signature.png");
-        }
-    });
-    saveJPGButton.addEventListener("click", () => {
-        if (signaturePad.isEmpty()) {
-            alert("Please provide a signature first.");
-        } else {
-            const dataURL = signaturePad.toDataURL("image/jpeg");
-            download(dataURL, "signature.jpg");
-        }
-    });
-    saveSVGButton.addEventListener("click", () => {
-        if (signaturePad.isEmpty()) {
-            alert("Please provide a signature first.");
-        } else {
-            const dataURL = signaturePad.toDataURL('image/svg+xml');
-            download(dataURL, "signature.svg");
-        }
-    });
-    saveSVGWithBackgroundButton.addEventListener("click", () => {
-        if (signaturePad.isEmpty()) {
-            alert("Please provide a signature first.");
-        } else {
-            const dataURL = signaturePad.toDataURL('image/svg+xml', {includeBackgroundColor: true});
-            download(dataURL, "signature.svg");
-        }
-    });
 }
 
+export default Pad;

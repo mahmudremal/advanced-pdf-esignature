@@ -4,70 +4,64 @@
 // import { PDFDocument, rgb, degrees, SVGPath, drawSvgPath, StandardFonts } from 'pdf-lib';
 // import PDFJSExpress from "@pdftron/pdfjs-express";
 import { PDFDocument, rgb, values } from 'pdf-lib';
-import {loadPreviousFields, addElementToPDF, init_dragging, dragFromRight2Left, previewPDFile, init_eSignature} from './pdfUtils';
+// import {loadPreviousFields, addElementToPDF, init_dragging, dragFromRight2Left, previewPDFile, init_eSignature} from './pdfUtils';
+import PDFUtils from './pdfUtils';
 // import interact from 'interactjs';
-import { perSerPdf } from "./parser";
-
-const PROMPTS = {
-    perSerPdf: perSerPdf,
-    i18n: {}, uploadedPDF: false,
-    signatureExists: false,
-    oneCanvas: false,
-    init_dragging: init_dragging,
-    init_eSignature: init_eSignature,
-    addElementToPDF: addElementToPDF,
-    loadPreviousFields: loadPreviousFields,
-    get_template: (thisClass) => {
-        var json, html;
+class PROMPTS extends PDFUtils {
+    constructor(thisClass) {
+        super(thisClass);
+    }
+    get_template(thisClass) {
+        const eSign = this;var json, html;
         html = document.createElement('div');html.classList.add('dynamic_popup');
-        if(PROMPTS?.lastJson) {
-            PROMPTS.checkif_signature_exists(thisClass);
-            html.appendChild(PROMPTS.generate_template(thisClass));
+        if(eSign?.lastJson) {
+            eSign.checkif_signature_exists(thisClass);
+            html.appendChild(eSign.generate_template(thisClass));
         } else {
             html.innerHTML = `<div class="spinner-material"></div><h3>${thisClass.i18n?.pls_wait??'Please wait...'}</h3>`;
         }
         return html;
-    },
-
-    init_individualFields: (thisClass) => {
+    }
+    init_individualFields(thisClass) {
+        const eSign = this;
         var fields, card, single, handle, image;
-        // ${(PROMPTS.lastJson.signature.custom_fields?.pdf??false)?`style="display: none;"`:''}
-        PROMPTS.dropZoneHTML = `
+        // ${(eSign.lastJson.signature.custom_fields?.pdf??false)?`style="display: none;"`:''}
+        eSign.dropZoneHTML = `
             <div class="upload-pdf">
                 <div class="pdf-dropzone">
                     <form class="pdf-dropzone__form needsclick" action="/upload">
                     <div class="dz-message needsclick">
-                        <h1 class="svelte-12uhhij">${PROMPTS.i18n?.upload_pdf??'Upload PDF'}</h1>
-                        <p>${PROMPTS.i18n?.dropdf_subtitle??'Drop PDF document here or click to upload.'}<p>
-                        <span class="note needsclick">${PROMPTS.i18n?.upload_pdf_details??'PDF file will generate a preview and you\'ll be forwarded to Signature builder screen.'}</span>
+                        <h1 class="svelte-12uhhij">${eSign.i18n?.upload_pdf??'Upload PDF'}</h1>
+                        <p>${eSign.i18n?.dropdf_subtitle??'Drop PDF document here or click to upload.'}<p>
+                        <span class="note needsclick">${eSign.i18n?.upload_pdf_details??'PDF file will generate a preview and you\'ll be forwarded to Signature builder screen.'}</span>
                     </div>
                     </form>
                 </div>
             </div>
         `;
-        fields = PROMPTS.get_custom_fields(thisClass);
-        PROMPTS.esignEditorHTML = `
+        fields = eSign.get_custom_fields(thisClass);
+        eSign.esignEditorHTML = `
             <div class="pdf_builder__row ${(thisClass.isFrontend)?'pdf_builder__frontend':''}">
-                <div class="pdf_builder__builder ${(thisClass.isFrontend && !PROMPTS.signatureExists)?'w-full':''}">
+                <div class="pdf_builder__builder ${(thisClass.isFrontend && !eSign.signatureExists)?'w-full':''}">
                     <div id="signature-builder" class="esign-body">
-                        <canvas>
+                        <canvas id="contractCanvas">
                     </div>
-                    ${(thisClass.isFrontend && ! PROMPTS.signatureExists)?``:`
-                    <button class="btn btn-primary pull-right ${(thisClass.isFrontend)?'update_esign_signature':`update_esign_template`}"><span>${(thisClass.isFrontend)?(PROMPTS.i18n?.confirm_singing??'Confirm Signing'):(PROMPTS.i18n?.save??'Save')}</span><div class="spinner-circular-tube"></div></button>
+                    ${(thisClass.isFrontend && ! eSign.signatureExists)?``:`
+                    <button class="btn btn-primary pull-right ${(thisClass.isFrontend)?'update_esign_signature':`update_esign_template`}"><span>${(thisClass.isFrontend)?(eSign.i18n?.confirm_singing??'Confirm Signing'):(eSign.i18n?.save??'Save')}</span><div class="spinner-circular-tube"></div></button>
                     `}
                     
                 </div>
                 ${(thisClass.isFrontend)?(
-                    (!PROMPTS.signatureExists)?'':`
+                    (!eSign.signatureExists)?'':`
                     <div class="pdf_builder__fields">
                         <div class="pdf_builder__fields__grid">
                             <span class="modal__collapse" aria-label="Collapse sidebar">
                                 <svg width="42px" height="42px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 7L14.5 12L9.5 17" stroke="#000000" stroke-linecap="round" stroke-linejoin="round"></path></svg>
                             </span>
-                            <h3>${PROMPTS.i18n?.e_signature??'e-Signature'}</h3>
-                            <p>${PROMPTS.i18n?.custmfields_subtitle??'Find the signature field, click over your signature field, draw or upload your signature & confirm the contract.'}</p>
+                            <h3>${eSign.i18n?.e_signature??'e-Signature'}</h3>
+                            <p>${eSign.i18n?.custmfields_subtitle??'Find the signature field, click over your signature field, draw or upload your signature & confirm the contract.'}</p>
                             ${(thisClass.isFrontend)?``:`<div id="signature-modules" class="esign-fields"></div>`}
-                            ${(thisClass.isFrontend)?`<button class="btn btn-primary pull-right update_esign_signature"><span>${PROMPTS.i18n?.confirm_singing??'Confirm Signing'}</span><div class="spinner-circular-tube"></div></button>`:``}
+                            ${(thisClass.isFrontend)?`<button class="btn btn-primary pull-right update_esign_signature"><span>${eSign.i18n?.confirm_singing??'Confirm Signing'}</span><div class="spinner-circular-tube"></div></button>`:``}
                         </div>
                         ${(thisClass.isFrontend)?'':`
                         <div class="pdf_builder__fields__settings">
@@ -77,7 +71,7 @@ const PROMPTS = {
                             </div>
                             <div class="pdf_builder__fields__settings__body"></div>
                             <div class="pdf_builder__fields__settings__footer">
-                                <button class="btn btn-primary pull-right  ${(thisClass.isFrontend)?'update_esign_signature':`update_esign_template`}"><span>${(thisClass.isFrontend)?(PROMPTS.i18n?.confirm_singing??'Confirm Signing'):(PROMPTS.i18n?.save??'Save')}</span><div class="spinner-circular-tube"></div></button>
+                                <button class="btn btn-primary pull-right  ${(thisClass.isFrontend)?'update_esign_signature':`update_esign_template`}"><span>${(thisClass.isFrontend)?(eSign.i18n?.confirm_singing??'Confirm Signing'):(eSign.i18n?.save??'Save')}</span><div class="spinner-circular-tube"></div></button>
                             </div>
                         </div>
                         `}
@@ -86,8 +80,8 @@ const PROMPTS = {
                 ):`
                 <div class="pdf_builder__fields">
                     <div class="pdf_builder__fields__grid">
-                        <h3>${PROMPTS.i18n?.custmfields_title??'Field widgets'}</h3>
-                        <p>${PROMPTS.i18n?.custmfields_subtitle??'Drag & Drop each fields on the desired location and select necessery data to make it functional.'}</p>
+                        <h3>${eSign.i18n?.custmfields_title??'Field widgets'}</h3>
+                        <p>${eSign.i18n?.custmfields_subtitle??'Drag & Drop each fields on the desired location and select necessery data to make it functional.'}</p>
                         <div id="signature-modules" class="esign-fields">
                             ${fields.map((row, index) => {
                                 single = document.createElement('div');single.classList.add('esign-fields__single');
@@ -111,7 +105,7 @@ const PROMPTS = {
                         </div>
                         <div class="pdf_builder__fields__settings__body"></div>
                         <div class="pdf_builder__fields__settings__footer">
-                            <button class="btn btn-primary pull-right update_esign_template"><span>${PROMPTS.i18n?.save??'Save'}</span><div class="spinner-circular-tube"></div></button>
+                            <button class="btn btn-primary pull-right update_esign_template"><span>${eSign.i18n?.save??'Save'}</span><div class="spinner-circular-tube"></div></button>
                         </div>
                     </div>
                 </div>
@@ -119,12 +113,14 @@ const PROMPTS = {
 
             </div>
         `;
-    },
-    init_prompts: (thisClass) => {
-        PROMPTS.core = thisClass;
-    },
-    init_events: (thisClass) => {
-        document.querySelectorAll('.pdf_builder__fields__settings__header button:not([data-handled])').forEach((el) => {
+    }
+    init_prompts(thisClass) {
+        // eSign.core = thisClass;
+    }
+    prompts_events(thisClass) {
+        const eSign = this;
+
+        document.querySelectorAll('.pdf_builder__fields__settings__header button:not([data-handled])').forEach(el => {
             el.dataset.handled = true;
             el.addEventListener('click', (event) => {
                 event.preventDefault();
@@ -133,18 +129,18 @@ const PROMPTS = {
         });
         window.addEventListener('beforeunload', function (event) {
             if(thisClass?.isPreventClose) {
-                if(thisClass.isFrontend && !(thisClass.prompts?.signatureExists)) {
+                if(thisClass.isFrontend && !(eSign?.signatureExists)) {
                     // Pass without preventing.
                 } else {
                     event.preventDefault();event.returnValue = '';return '';
                 }
             }
         });
-        thisClass.eSignature.update_btns = document.querySelectorAll('.pdf_builder__row .update_esign_template');
-        thisClass.eSignature.update_btns.forEach((btn)=>{
+        eSign.update_btns = document.querySelectorAll('.pdf_builder__row .update_esign_template');
+        eSign.update_btns.forEach((btn) => {
             btn.addEventListener('click', (event) => {
                 const formData = {fields: [], pdf: false};
-                formData.fields = Object.values(document.querySelectorAll('.pdf_builder__builder .esign-body__single')).map((el)=>{
+                formData.fields = Object.values(document.querySelectorAll('.pdf_builder__builder .esign-body__single')).map((el) => {
                     var field = thisClass.fieldsData.find((row)=>row.unique == el.dataset.storedOn);
                     return {
                       height: el.style.height, width: el.style.width, dx: parseFloat(el.dataset.x), dy: parseFloat(el.dataset.y),
@@ -153,14 +149,14 @@ const PROMPTS = {
                     };
                 });
 
-                // formData.fields.forEach((row) => {
+                // formData.fields.forEach((row) {
                 //     if(((row?.data)?.field)?.user) {
                 //         users.push(row.data.field.user);
                 //     }
                 // });
                 // console.log(formData);
                 
-                thisClass.eSignature.update_btns.forEach((btn)=>{btn.disabled = true;});
+                eSign.update_btns.forEach((btn) => {btn.disabled = true;});
                 var formdata = new FormData();
                 formdata.append('action', 'esign/project/ajax/template/update');
                 formdata.append('_nonce', thisClass.ajaxNonce);
@@ -168,44 +164,50 @@ const PROMPTS = {
                     formdata.append('lastUploaded', thisClass.lastUploaded);
                     formData.pdf = thisClass.lastUploaded;
                     formData.canvas = [];
-                    document.querySelectorAll('.pdf_builder__container #signature-builder canvas').forEach((el, i)=>{
+                    document.querySelectorAll('.pdf_builder__container #signature-builder canvas').forEach((el, i) => {
                         formData.canvas.push({width: el.width, height: el.height, serial: i});
                     });
                 }
                 formdata.append('dataset', JSON.stringify(formData));
                 formdata.append('template', thisClass.config.template_id);
-                if((thisClass.prompts?.currentPDF??false)) {
-                    formdata.append('pdf', thisClass.prompts.currentPDF, thisClass.prompts.currentPDF.name);
+                if((eSign?.currentPDF??false)) {
+                    formdata.append('pdf', eSign.currentPDF, eSign.currentPDF.name);
                 }
                 
                 thisClass.sendToServer(formdata);
             });
         });
-        document.querySelectorAll('.pdf_builder__row .update_esign_signature').forEach((btn)=>{
+        document.querySelectorAll('.pdf_builder__row .update_esign_signature').forEach(btn => {
             btn.addEventListener('click', (event) => {
-                thisClass.eSignature.update_btns.forEach((btn)=>{btn.disabled = true;});
+                eSign.update_btns.forEach((btn) => {btn.disabled = true;});
                 thisClass.eSignVex = thisClass.vex.dialog.confirm({
                     message: 'Are you absolutely sure you want to agree with the following agreement?',
                     callback: async (agree) => {
                         if(agree) {
                             // thisClass.toastify({text: 'Rest of the process is to attach signature with PDF permanently & forword to next signer, is under development.',className: "warning", duration: 7500, stopOnFocus: true, style: {background: "linear-gradient(to right, #00b09b, #96c93d)"}}).showToast();
 
-                            thisClass.toEsign = thisClass?.toEsign??{};
-                            thisClass.toEsign.pdfBlob = thisClass.prompts.currentPDF;
-                            const fieldsToProcess = thisClass.prompts.lastJson.signature.custom_fields.fields.filter(field =>
+                            eSign.toEsign = eSign?.toEsign??{};
+                            eSign.toEsign.pdfBlob = eSign.currentPDF;
+                            const fieldsToProcess = eSign.lastJson.signature.custom_fields.fields.filter(field =>
                                 field?.enableSign && !field?.signDone
                             );
-                            const result = await PROMPTS.attachImageTextToPDF(thisClass, fieldsToProcess);
-                            if(false) {
+                            const result = await eSign.attachImageTextToPDF(thisClass, fieldsToProcess);
+                            if(true) {
                                 thisClass.vex.dialog.open({
                                     message: 'Signature Attached Preview',
-                                    contentCSS: {width:'90%',height: '90%'}, // Adjust the dimensions as needed
+                                    className: 'signature-preview',
                                     // unsafeContent:
-                                    input: `<embed src="${modifiedPdfBlob}"/>`,
+                                    input: `<embed src="${eSign.toEsign.pdfURL}"/>`,
                                     overlayClosesOnClick: true,
                                     callback: async (agree) => {
                                         if(agree) {
-                                            window.open(modifiedPdfBlob)
+                                            // window.open(eSign.toEsign.pdfURL);
+                                            var formdata = new FormData();
+                                            formdata.append('pdf', eSign.toEsign.pdfBlob, eSign.currentPDF.name);
+                                            formdata.append('template', eSign.currentEsignConfig.id);
+                                            formdata.append('action', 'esign/project/ajax/signing/confirm');
+                                            formdata.append('_nonce', thisClass.ajaxNonce);
+                                            thisClass.sendToServer(formdata);
                                         }
                                     }
                                 });
@@ -216,27 +218,24 @@ const PROMPTS = {
                 });
             });
         });
-
-        // PROMPTS.init_drag_n_drop(thisClass);
-        PROMPTS.init_pdf_dropzone(thisClass);
-        dragFromRight2Left(thisClass);
-    },
-    generate_template: (thisClass) => {
-        return PROMPTS.generate_fields(thisClass);
-    },
-    generate_fields: (thisClass) => {
-        PROMPTS.init_individualFields(thisClass);
-        return PROMPTS.generate_builder(thisClass);
-    },
-
-
-    htmlToElement: (html) => {
+        // eSign.init_drag_n_drop(thisClass);
+        eSign.init_pdf_dropzone(thisClass);
+        eSign.dragFromRight2Left(thisClass);
+    }
+    generate_template(thisClass) {
+        return this.generate_fields(thisClass);
+    }
+    generate_fields(thisClass) {
+        this.init_individualFields(thisClass);
+        return this.generate_builder(thisClass);
+    }
+    htmlToElement(html) {
         const template = document.createElement('template');
         template.innerHTML = html.trim();
         return template.content.firstChild;
-    },
-    
-    get_custom_fields: (thisClass) => {
+    }
+    get_custom_fields(thisClass) {
+        const eSign = this;
         thisClass.fields = (thisClass?.fields??false)?thisClass.fields:[
             {
                 id: 'sign',
@@ -269,7 +268,7 @@ const PROMPTS = {
                             {label: 'Remal Mahmud', value: 'remal'},
                             {label: 'Nathalia', value: 'nathalia'},
                         ]
-                    },
+                    }
                 ]
             },
             {
@@ -309,39 +308,42 @@ const PROMPTS = {
                         required: true
                     }
                 ]
-            },
+            }
         ];
         return (thisClass.fields);
-    },
-    generate_builder: (thisClass) => {
+    }
+    generate_builder(thisClass) {
         var builder = document.createElement('div');builder.classList.add('pdf_builder__container');
-        builder.innerHTML = `${(!thisClass.isFrontend)?PROMPTS.dropZoneHTML:''} ${PROMPTS.esignEditorHTML}`;
+        builder.innerHTML = `${(!thisClass.isFrontend)?this.dropZoneHTML:''} ${this.esignEditorHTML}`;
         return builder;
-    },
-    addCustomField: (el, target) => {},
-    init_drag_n_drop: (thisClass) => {
+    }
+    addCustomField(el, target) {
+        // 
+    }
+    init_drag_n_drop(thisClass) {
+        const eSign = this;
         const container = document.querySelector('.dynamic_popup .container');
         const draggableElements = Array.from(document.querySelectorAll('.dynamic_popup .drag.btn'));
         const dragZone = document.querySelector('.dynamic_popup #signature-modules');
-        PROMPTS.dropZone = document.querySelector('.dynamic_popup #signature-builder');
+        eSign.dropZone = document.querySelector('.dynamic_popup #signature-builder');
       
-        PROMPTS.dropZone.addEventListener('drop', async (event) => {
+        eSign.dropZone.addEventListener('drop', async (event) => {
           event.preventDefault();
           const file = event.dataTransfer.files[0];
           console.log(event.dataTransfer);
           if (file.type === 'application/pdf') {
             // Step 2: Load and preview the PDF
-            await PROMPTS.loadAndPreviewPDF(file, thisClass);
+            await eSign.loadAndPreviewPDF(file, thisClass);
             // Initialize drag and drop for custom fields
-            PROMPTS.initDragAndDrop(thisClass);
+            eSign.initDragAndDrop(thisClass);
           }
         });
       
-        PROMPTS.dropZone.addEventListener('dragover', (event) => {
+        eSign.dropZone.addEventListener('dragover', (event) => {
           event.preventDefault();
         });
-    },
-    initDragAndDrop: (thisClass) => {
+    }
+    initDragAndDrop(thisClass) {
         console.log('initDragAndDrop...');
         const draggableElements = Array.from(document.querySelectorAll('.dynamic_popup .drag.btn'));
         const dropZone = document.querySelector('.dynamic_popup #signature-builder');
@@ -352,7 +354,7 @@ const PROMPTS = {
           copy: true,
           accepts: function (el, target, source, sibling) {
             return !el.classList.contains('ui-sortable-helper');
-          },
+          }
         });
       
         drake.on('drop', (el, target, source) => {
@@ -378,30 +380,30 @@ const PROMPTS = {
         });
     
         dropZone.addEventListener('sort', () => {
-        dropZone.classList.remove('active');
+            dropZone.classList.remove('active');
         });
-    },
-
-    init_pdf_dropzone: (thisClass) => {
-        document.querySelectorAll('.upload-pdf .pdf-dropzone:not([data-handled])').forEach((el)=>{
+    }
+    
+    init_pdf_dropzone(thisClass) {
+        const eSign = this;
+        document.querySelectorAll('.upload-pdf .pdf-dropzone:not([data-handled])').forEach(el => {
             el.dataset.handled = true;
             const output = document.createElement('div');
-            PROMPTS.uploadPDF = document.createElement('div');
-            PROMPTS.previewEl = document.querySelector('#signature-builder') || document.createElement('div');
-            PROMPTS.dropzone = new thisClass.Dropzone(el, {
+            eSign.uploadPDF = document.createElement('div');
+            eSign.previewEl = document.querySelector('#signature-builder') || document.createElement('div');
+            eSign.dropzone = new thisClass.Dropzone(el, {
                 url: thisClass.ajaxUrl,
                 method: 'post',
                 uploadMultiple: false,
                 maxFilesize: 256,
                 // previewTemplate: '',
                 disablePreviews: true,
-                addedfiles() {},
+                // addedfiles() => {},
                 addedfile: async (file) => {
-                    PROMPTS.currentPDF = file;
-                    const pdfFields = await PROMPTS.loadAndPreviewPDF(file, thisClass);
+                    eSign.currentPDF = file;
+                    const pdfFields = await eSign.loadAndPreviewPDF(file, thisClass);
                     const uploadPDF = document.querySelector('.upload-pdf');
                     if(uploadPDF) {uploadPDF.style.display = 'none';}
-                    
                     // const pdfUrl = URL.createObjectURL(file);
                     // Create an <embed> element to display the PDF preview
                     // const embed = document.createElement('embed');
@@ -410,28 +412,27 @@ const PROMPTS = {
                     // embed.width = '100%';
                     // embed.height = '600px';
                 
-                    // PROMPTS.previewPDF = file;
-                    // PROMPTS.previewPDFUrl = pdfUrl;
-                    // PROMPTS.previewEl.innerHTML = '';
-                    // PROMPTS.previewEl.appendChild(embed);
-                    // PROMPTS.uploadPDF.appendChild(el.parentElement);
+                    // eSign.previewPDF = file;
+                    // eSign.previewPDFUrl = pdfUrl;
+                    // eSign.previewEl.innerHTML = '';
+                    // eSign.previewEl.appendChild(embed);
+                    // eSign.uploadPDF.appendChild(el.parentElement);
                 },
                 acceptedFiles: 'application/pdf,.pdf',
                 autoProcessQueue: false, // Disable auto-processing of files for preview only
             });
-            // PROMPTS.dropzone.on('addedfile', (file) => {});
+            // eSign.dropzone.on('addedfile', (file) {});
         });
-    },
+    }
+    async loadAndPreviewPDF(file, thisClass) {
+        this.previewPDFile(file, thisClass);
+    }
 
-    loadAndPreviewPDF: async (file, thisClass) => {
-        previewPDFile(file, thisClass);
-    },
-
-    init_parser: (thisClass) => {
+    init_parser(thisClass) {
         // 
-    },
+    }
 
-    addSignatureToCanvas: (src, canvas, position) => {
+    addSignatureToCanvas(src, canvas, position) {
         const canvasContext = canvas.getContext('2d');
         const image = new Image();
         image.src = src;
@@ -439,29 +440,30 @@ const PROMPTS = {
         image.onload = () => {
           canvasContext.drawImage(image, 100, 100, 200, 150); // Adjust position and size
         };
-    },
-    attachImageTextToPDF: async (thisClass, fields) => {
-        const pdfBlob = thisClass.toEsign.pdfBlob;
+    }
+    async attachImageTextToPDF(thisClass, fields) {
+        const eSign = this;
+        const pdfBlob = eSign.toEsign.pdfBlob;
         try {
             // Load the PDF blob
             const pdfData = await pdfBlob.arrayBuffer();
             const pdfDoc = await PDFDocument.load(pdfData);
     
-            // await Promise.all(fields.map(new Promise(async (resolve, reject) => {
+            // await Promise.all(fields.map(new Promise(async (resolve, reject) {
             await Promise.all(fields.map(async (field) => {
                 try {
-                    const index = await PROMPTS.get_field_page_index(field, thisClass);
+                    const index = await eSign.get_field_page_index(field, thisClass);
                     const pdfSelectedPage = pdfDoc.getPages()[index];
-                    const canvas = thisClass.prompts.lastJson.signature.custom_fields.canvas[index];
+                    const canvas = eSign.lastJson.signature.custom_fields.canvas[index];
                     // Calculate image position and size
                     const canvasWidth = canvas.width;
                     const canvasHeight = canvas.height;
                     // const posY = ;
-                    const posY = PROMPTS?.indexedPosY??parseFloat(field.fieldEL.dataset.y);
+                    const posY = eSign?.indexedPosY??parseFloat(field.fieldEL.dataset.y);
                     const position = {
                         x: parseFloat(field.fieldEL.dataset.x) / canvasWidth * pdfSelectedPage.getWidth(),
                         y: pdfSelectedPage.getHeight() - posY / canvasHeight * pdfSelectedPage.getHeight(),
-                        // y: (pdfSelectedPage.getHeight() - posY),
+                        // y(pdfSelectedPage.getHeight() - posY),
                         width: (parseFloat(field.fieldEL.dataset.width) / canvasWidth) * pdfSelectedPage.getWidth(),
                         height: (parseFloat(field.fieldEL.dataset.height) / canvasHeight) * pdfSelectedPage.getHeight(),
                     };
@@ -491,7 +493,7 @@ const PROMPTS = {
                             fontSize = parseFloat(((field?.data)?.field)?.fontSize);
                             fontSize = (fontSize >= 1)?fontSize:12;
                             fontColor = ((field?.data)?.field)?.fontColor;
-                            fontColor = PROMPTS.hexToRgb(fontColor, false);
+                            fontColor = eSign.hexToRgb(fontColor, false);
                             var text = thisClass.date_formate(currentDate, dateFormate);
                             pdfSelectedPage.drawText(text, {
                                 x: position.x,
@@ -508,23 +510,16 @@ const PROMPTS = {
                     console.error('Error:', error);
                     return false;
                 }
-                // }))).then(async (values) => {
+                // }))).then(async (values) {
             })).then(async (values) => {
                 // console.log(values);
                 // Save the modified PDF as a new blob
-                const modifiedPdfBlob = await pdfDoc.save();
-                const blob = new Blob([modifiedPdfBlob], { type: 'application/pdf' });
-                thisClass.toEsign.pdfBlob = blob;
-                const objectURL = URL.createObjectURL(blob);
-                window.open(objectURL);
+                eSign.modifiedPdfBlob = await pdfDoc.save();
+                const blob = new Blob([eSign.modifiedPdfBlob], {type: 'application/pdf'});
+                eSign.toEsign.pdfBlob = blob;
+                eSign.toEsign.pdfURL = URL.createObjectURL(blob);
                 
-                var formdata = new FormData();
-                formdata.append('pdf', thisClass.toEsign.pdfBlob, thisClass.prompts.currentPDF.name);
-                formdata.append('template', thisClass.prompts.currentEsignConfig.id);
-                formdata.append('action', 'esign/project/ajax/signing/confirm');
-                formdata.append('_nonce', thisClass.ajaxNonce);
-                thisClass.sendToServer(formdata);
-                return objectURL;
+                return eSign.toEsign.pdfURL;
             });
             return null;
         } catch (error) {
@@ -532,13 +527,13 @@ const PROMPTS = {
             // Handle error as needed
             return null;
         }
-    },
-    pixelsToPoints: (pixels) => {
+    }
+    pixelsToPoints(pixels) {
         if(typeof pixels == 'string') {pixels = parseFloat(pixels);}
         const DPI = 72; // Standard DPI for PDFs
         return pixels / DPI / window.devicePixelRatio;
-    },
-    hexToRgb: (hex, str = true) => {
+    }
+    hexToRgb(hex, str = true) {
         hex = hex?.replace('#', '');
         if(hex == '') {return (str)?`rgb(0, 0, 0)`:[0, 0, 0];}
         // const r = parseInt(hex.substring(0, 2), 16);
@@ -549,91 +544,104 @@ const PROMPTS = {
         const b = parseInt(hex.substring(4, 6), 16) / 255;
         
         return (str)?`rgb(${r}, ${g}, ${b})`:[r, g, b];
-    },
-    checkif_signature_exists: (thisClass) => {
-        var fieldsExists = ((PROMPTS.lastJson?.signature)?.custom_fields)?.fields;
+    }
+    checkif_signature_exists(thisClass) {
+        const eSign = this;
+        var fieldsExists = ((eSign.lastJson?.signature)?.custom_fields)?.fields;
         if(fieldsExists) {
-            fieldsExists = fieldsExists?.map((row) => {
+            fieldsExists = fieldsExists?.map(row => {
                 row.enableSign = true;if(thisClass.isFrontend && thisClass.config.user_id != ((row?.data??{})?.field??{})?.user) {row.enableSign = false;}return row;
             });
-            const isExists = fieldsExists?.find((row) => ((row?.enableSign) && !(row?.signDone)));
-            if(isExists) {PROMPTS.signatureExists = true;}
+            const isExists = fieldsExists?.find(row => ((row?.enableSign) && !(row?.signDone)));
+            if(isExists) {eSign.signatureExists = true;}
         }
-    },
-    get_field_page_index: (field, thisClass) => {
+    }
+    get_field_page_index(field, thisClass) {
+        const eSign = this;
         let index = 0;
         let posY = field?.dy;
-        const canvases = (((PROMPTS.lastJson?.signature)?.custom_fields)?.canvas);
+        const canvases = (((eSign.lastJson?.signature)?.custom_fields)?.canvas);
         if(field?.dy && canvases) {
             for(let i = 0; i < canvases.length; i++) {
                 var canvas = canvases[i];
                 posY -= canvas.height;
                 if(posY <= 0) {break;}
                 // if(posY <= (canvases[i + 1]?.height ?? canvas.height)) {break;}
-                index++;PROMPTS.indexedPosY = Math.abs(posY);
+                index++;eSign.indexedPosY = Math.abs(posY);
             }
         }
         return index;
-    },
-    updateCanvasWidth: () => {
+    }
+    updateCanvasWidth() {
         window.addEventListener('resize', () => {
             const deviceWidth = window.innerWidth;
             const desiredWidth = deviceWidth * 0.9; // Adjust the scaling factor as needed
             // esignSingle.style.transform = `translate(${desiredWidth}px, ${esignSingle.dataset.y}px)`;
         });
-    },
-    drawLoadingSpinner: () => {
-        const canvasObj = ((PROMPTS.lastJson?.signature)?.custom_fields)?.canvas[0];
+    }
+    drawLoadingSpinner(thisClass) {
+        const eSign = this;
+        const fieldsObj = (eSign.lastJson?.signature)?.custom_fields;
         const canvasHeight = parseFloat(window.getComputedStyle(document.querySelector('.swal2-container.swal2-center>.swal2-popup.swal2-show.swal2-modal.fwp-swal2-popup')).getPropertyValue('height'));
         const canvas = document.querySelector('.pdf_builder__container #signature-builder canvas');
-        if (canvasObj) {
-            canvas.height = canvasHeight; // canvasObj.height;
-            canvas.width = canvasObj.width;
-        }
-        const ctx = canvas.getContext('2d');
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const radius = 20; // Adjust the size as needed
-        const lineWidth = 4; // Adjust the line width as needed
-        const speed = 1; // Adjust the rotation speed as needed
-    
-        let angle = 0;
-    
-        const drawFrame = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-            ctx.strokeStyle = '#3498db'; // Spinner color
-            ctx.lineWidth = lineWidth;
-            ctx.stroke();
-    
-            // Draw "Loading..." text
-            ctx.font = '16px Arial'; // Adjust the font size and style as needed
-            ctx.fillStyle = '#3498db'; // Text color
-            ctx.textAlign = 'center';
-            ctx.fillText('Loading...', centerX, centerY + radius + 30); // Adjust the Y coordinate as needed
-    
-            angle += speed;
-            if (angle >= 360) {
-                angle = 0;
+        if (!canvas) {
+            var message = eSign.i18n?.canvas_not_found??'Canvas not found';
+            thisClass.toastify({text: message,className: "info", duration: 3000, stopOnFocus: true, style: {background: 'linear-gradient(to right, rgb(255, 95, 109), rgb(255, 195, 113))'}}).showToast();
+        } else if (fieldsObj && fieldsObj?.canvas && fieldsObj.canvas[0]) {
+            const canvasObj = fieldsObj.canvas[0];
+            if (canvasObj) {
+                canvas.height = canvasHeight;
+                canvas.width = canvasObj.width;
+                // canvasObj.height;
             }
-    
-            ctx.save();
-            ctx.translate(centerX, centerY);
-            ctx.rotate((angle * Math.PI) / 180);
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(radius, 0);
-            ctx.strokeStyle = '#3498db'; // Spinner color
-            ctx.lineWidth = lineWidth;
-            ctx.stroke();
-            ctx.restore();
-    
-            requestAnimationFrame(drawFrame);
-        };
-        drawFrame();
+        } else {
+            const args = {
+                ctx: canvas.getContext('2d'),
+                centerY: canvas.height / 2,
+                centerX: canvas.width / 2,
+                canvas: canvas,
+                lineWidth: 4,
+                radius: 20,
+                speed: 1,
+                angle: 0
+            };
+            eSign.drawFrame(args);
+        }
     }
-
-};
+    drawFrame(args) {
+        const eSign = this;
+        const ctx = args.ctx;
+        ctx.clearRect(0, 0, args.canvas.width, args.canvas.height);
+        
+        ctx.beginPath();
+        ctx.arc(args.centerX, args.centerY, args.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = '#3498db'; // Spinner color
+        ctx.lineWidth = args.lineWidth;
+        ctx.stroke();
+        
+        // Draw "Loading..." text
+        ctx.font = '16px Arial'; // Adjust the font size and style as needed
+        ctx.fillStyle = '#3498db'; // Text color
+        ctx.textAlign = 'center';
+        ctx.fillText('Loading...', args.centerX, args.centerY + args.radius + 30); // Adjust the Y coordinate as needed
+        
+        args.angle += args.speed;
+        if (args.angle >= 360) {
+            args.angle = 0;
+        }
+        
+        ctx.save();
+        ctx.translate(args.centerX, args.centerY);
+        ctx.rotate((args.angle * Math.PI) / 180);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(args.radius, 0);
+        ctx.strokeStyle = '#3498db'; // Spinner color
+        ctx.lineWidth = args.lineWidth;
+        ctx.stroke();
+        ctx.restore();
+        
+        requestAnimationFrame(eSign.drawFrame(args));
+    }
+}
 export default PROMPTS;

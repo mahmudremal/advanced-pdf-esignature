@@ -83,6 +83,7 @@
 		"pdfjs": "^2.5.2",
 		"phaser": "^3.60.0",
 		"sass": "^1.56.1",
+		"scrawl-canvas": "^8.12.0",
 		"signature_pad": "^4.1.6",
 		"simple-color-picker": "^1.0.5",
 		"sweetalert2": "^11.7.5",

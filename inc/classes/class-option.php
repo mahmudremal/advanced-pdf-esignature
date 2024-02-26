@@ -26,28 +26,28 @@ class Option {
 		$this->plugin_name = 'esignbinding';
 		$this->textdomain = 'esignbinding'; // str_replace('_', '-', $plugin_slug);
 		// Initialise settings
-		add_action( 'init', [ $this, 'init' ] );
-		add_action( 'admin_init', array( $this, 'admin_init' ) );
+		add_action('init', [$this, 'init']);
+		add_action('admin_init', array($this, 'admin_init'));
 		// Add settings page to menu
-		add_action( 'admin_menu' , array( $this, 'add_menu_item' ) );
+		add_action('admin_menu' , array($this, 'add_menu_item'));
 		// Add settings link to plugins page
-		add_filter( 'plugin_action_links_' . plugin_basename( $this->file ) , array( $this, 'add_settings_link' ) );
+		add_filter('plugin_action_links_' . plugin_basename($this->file) , array($this, 'add_settings_link'));
 	}
 	/**
 	 * Initialise settings
 	 * @return void
 	 */
 	public function init() {
-		$this->general = (object) wp_parse_args( apply_filters( 'esign/project/settings/general', [] ), [
-			'page_title'					=> __( 'Configuration.', 'esignbinding' ),
-			'menu_title'					=> __( 'Config', 'esignbinding' ),
+		$this->general = (object) wp_parse_args(apply_filters('esign/project/settings/general', []), [
+			'page_title'					=> __('Configuration.', 'esignbinding'),
+			'menu_title'					=> __('Config', 'esignbinding'),
 			'role'								=> 'manage_options',
 			'slug'								=> $this->plugin_slug,
-			'page_header'					=> __( 'customization page.', 'esignbinding' ),
-			'page_subheader'			=> __( 'Your setting panel from where you can control and customize.', 'esignbinding' ),
-			'no_password'					=> __( 'A password is required.', 'esignbinding' ),
-		] );
-		// print_r( $this->general->page_header );wp_die();
+			'page_header'					=> __('customization page.', 'esignbinding'),
+			'page_subheader'			=> __('Your setting panel from where you can control and customize.', 'esignbinding'),
+			'no_password'					=> __('A password is required.', 'esignbinding'),
+		]);
+		// print_r($this->general->page_header);wp_die();
 	}
 	public function admin_init() {
 		$this->settings = $this->settings_fields();
@@ -59,18 +59,18 @@ class Option {
 	 * @return void
 	 */
 	public function add_menu_item() {
-		$page = add_options_page( $this->general->page_title, $this->general->menu_title, $this->general->role, $this->general->slug,  [ $this, 'settings_page' ] );
+		$page = add_options_page($this->general->page_title, $this->general->menu_title, $this->general->role, $this->general->slug,  [$this, 'settings_page']);
 	}
 	/**
 	 * Add settings link to plugin list table
 	 * @param  array $links Existing links
 	 * @return array 		Modified links
 	 */
-	public function add_settings_link( $links ) {
-		$settings_link = '<a href="options-general.php?page='.$this->general->slug.'">' . __( 'Settings', 'esignbinding' ) . '</a>';
-		// array_push( $links, $settings_link );
+	public function add_settings_link($links) {
+		$settings_link = '<a href="options-general.php?page='.$this->general->slug.'">' . __('Settings', 'esignbinding') . '</a>';
+		// array_push($links, $settings_link);
 		$links[] = $settings_link;
-		// $links[] = '<a href="https://www.fiverr.com/mahmud_remal/" target="_blank">' . __( 'Developer Support', 'esignbinding' ) . '</a>';
+		// $links[] = '<a href="https://www.fiverr.com/mahmud_remal/" target="_blank">' . __('Developer Support', 'esignbinding') . '</a>';
 		return $links;
 	}
 	/**
@@ -79,7 +79,7 @@ class Option {
 	 */
 	private function settings_fields() {
 		$settings = [];
-		$settings = apply_filters( 'esign/project/settings/fields', $settings );
+		$settings = apply_filters('esign/project/settings/fields', $settings);
 		return $settings;
 	}
 	/**
@@ -88,14 +88,14 @@ class Option {
 	 */
 	public function get_options() {
 		$options = get_option($this->general->slug);
-		if ( !$options && is_array( $this->settings ) ) {
+		if (!$options && is_array($this->settings)) {
 			$options = Array();
-			foreach( $this->settings as $section => $data ) {
-				foreach( $data['fields'] as $field ) {
-					$options[ $field['id'] ] = $field['default'];
+			foreach($this->settings as $section => $data) {
+				foreach($data['fields'] as $field) {
+					$options[$field['id']] = $field['default'];
 				}
 			}
-			add_option( $this->general->slug, $options );
+			add_option($this->general->slug, $options);
 		}
 		return $options;
 	}
@@ -104,20 +104,20 @@ class Option {
 	 * @return void
 	 */
 	public function register_settings() {
-		if( is_array( $this->settings ) ) {
-			register_setting( $this->general->slug, $this->general->slug, array( $this, 'validate_fields' ) );
-			foreach( $this->settings as $section => $data ) {
+		if(is_array($this->settings)) {
+			register_setting($this->general->slug, $this->general->slug, array($this, 'validate_fields'));
+			foreach($this->settings as $section => $data) {
 				// Add section to page
-				add_settings_section( $section, $data['title'], array( $this, 'settings_section' ), $this->general->slug );
-				foreach( $data['fields'] as $field ) {
+				add_settings_section($section, $data['title'], array($this, 'settings_section'), $this->general->slug);
+				foreach($data['fields'] as $field) {
 					// Add field to page
-					add_settings_field( $field['id'], $field['label'], array( $this, 'display_field' ), $this->general->slug, $section, array( 'field' => $field ) );
+					add_settings_field($field['id'], $field['label'], array($this, 'display_field'), $this->general->slug, $section, array('field' => $field));
 				}
 			}
 		}
 	}
-	public function settings_section( $section ) {
-		$html = '<p> ' . $this->settings[ $section['id'] ]['description'] . '</p>' . "\n";
+	public function settings_section($section) {
+		$html = '<p> ' . $this->settings[$section['id']]['description'] . '</p>' . "\n";
 		echo $html;
 	}
 	/**
@@ -125,15 +125,15 @@ class Option {
 	 * @param  array $args Field data
 	 * @return void
 	 */
-	public function display_field( $args ) {
-		$field = wp_parse_args( $args['field'], [
+	public function display_field($args) {
+		$field = wp_parse_args($args['field'], [
 			'placeholder'	=> ''
-		] );
+		]);
 		$html = '';
 		$option_name = $this->general->slug ."[". $field['id']. "]";
-		$field[ 'default' ] = isset( $field[ 'default' ] ) ? $field[ 'default' ] : '';
-		$data = (isset($this->options[$field['id']])) ? $this->options[$field['id']] : $field[ 'default' ];
-		switch( $field['type'] ) {
+		$field['default'] = isset($field['default']) ? $field['default'] : '';
+		$data = (isset($this->options[$field['id']])) ? $this->options[$field['id']] : $field['default'];
+		switch($field['type']) {
 			case 'text':
 			case 'email':
 			case 'password':
@@ -142,67 +142,67 @@ class Option {
 			case 'time':
 			case 'color':
 			case 'url':
-				$html .= '<input id="' . esc_attr( $field['id'] ) . '" type="' . $field['type'] . '" name="' . esc_attr( $option_name ) . '" placeholder="' . esc_attr( $field['placeholder'] ) . '" value="' . esc_attr( $data ) . '"' . $this->attributes( $field ) . '/>' . "\n";
+				$html .= '<input id="' . esc_attr($field['id']) . '" type="' . $field['type'] . '" name="' . esc_attr($option_name) . '" placeholder="' . esc_attr($field['placeholder']) . '" value="' . esc_attr($data) . '"' . $this->attributes($field) . '/>' . "\n";
 			break;
 			case 'text_secret':
-				$html .= '<input id="' . esc_attr( $field['id'] ) . '" type="text" name="' . esc_attr( $option_name ) . '" placeholder="' . esc_attr( $field['placeholder'] ) . '" value="" ' . $this->attributes( $field ) . '/>' . "\n";
+				$html .= '<input id="' . esc_attr($field['id']) . '" type="text" name="' . esc_attr($option_name) . '" placeholder="' . esc_attr($field['placeholder']) . '" value="" ' . $this->attributes($field) . '/>' . "\n";
 			break;
 			case 'textarea':
-				$html .= '<textarea id="' . esc_attr( $field['id'] ) . '" rows="5" cols="50" name="' . esc_attr( $option_name ) . '" placeholder="' . esc_attr( $field['placeholder'] ) . '" ' . $this->attributes( $field ) . '>' . $data . '</textarea><br/>'. "\n";
+				$html .= '<textarea id="' . esc_attr($field['id']) . '" rows="5" cols="50" name="' . esc_attr($option_name) . '" placeholder="' . esc_attr($field['placeholder']) . '" ' . $this->attributes($field) . '>' . $data . '</textarea><br/>'. "\n";
 			break;
 			case 'checkbox':
 				$checked = '';
-				if( ( $data && 'on' == $data ) || $field[ 'default' ] == true ) {
+				if(($data && 'on' == $data) || $field['default'] == true) {
 					$checked = 'checked="checked"';
 				}
-				$html .= '<input id="' . esc_attr( $field['id'] ) . '" type="' . $field['type'] . '" name="' . esc_attr( $option_name ) . '" ' . $checked . ' ' . $this->attributes( $field ) . '/>' . "\n";
+				$html .= '<input id="' . esc_attr($field['id']) . '" type="' . $field['type'] . '" name="' . esc_attr($option_name) . '" ' . $checked . ' ' . $this->attributes($field) . '/>' . "\n";
 			break;
 			case 'checkbox_multi':
-				foreach( $field['options'] as $k => $v ) {
+				foreach($field['options'] as $k => $v) {
 					$checked = false;
-					if( is_array($data) && in_array( $k, $data ) ) {
+					if(is_array($data) && in_array($k, $data)) {
 						$checked = true;
 					}
-					$html .= '<label for="' . esc_attr( $field['id'] . '_' . $k ) . '"><input type="checkbox" ' . checked( $checked, true, false ) . ' name="' . esc_attr( $option_name ) . '[]" value="' . esc_attr( $k ) . '" id="' . esc_attr( $field['id'] . '_' . $k ) . '" /> ' . $v . '</label> ';
+					$html .= '<label for="' . esc_attr($field['id'] . '_' . $k) . '"><input type="checkbox" ' . checked($checked, true, false) . ' name="' . esc_attr($option_name) . '[]" value="' . esc_attr($k) . '" id="' . esc_attr($field['id'] . '_' . $k) . '" /> ' . $v . '</label> ';
 				}
 			break;
 			case 'radio':
-				foreach( $field['options'] as $k => $v ) {
+				foreach($field['options'] as $k => $v) {
 					$checked = false;
-					if( $k == $data ) {$checked = true;}
-					if( ! $checked && $k == $field[ 'default' ] ) {$checked = true;}
-					$html .= '<label for="' . esc_attr( $field['id'] . '_' . $k ) . '"><input type="radio" ' . checked( $checked, true, false ) . ' name="' . esc_attr( $option_name ) . '" value="' . esc_attr( $k ) . '" id="' . esc_attr( $field['id'] . '_' . $k ) . '" ' . $this->attributes( $field ) . '/> ' . $v . '</label> ';
+					if($k == $data) {$checked = true;}
+					if(! $checked && $k == $field['default']) {$checked = true;}
+					$html .= '<label for="' . esc_attr($field['id'] . '_' . $k) . '"><input type="radio" ' . checked($checked, true, false) . ' name="' . esc_attr($option_name) . '" value="' . esc_attr($k) . '" id="' . esc_attr($field['id'] . '_' . $k) . '" ' . $this->attributes($field) . '/> ' . $v . '</label> ';
 				}
 			break;
 			case 'select':
-				$html .= '<select name="' . esc_attr( $option_name ) . '" id="' . esc_attr( $field['id'] ) . '" ' . $this->attributes( $field ) . '>';
-				foreach( $field['options'] as $k => $v ) {
-					$selected = ( $k == $data );
-					if( empty( $data ) && ! $selected && $k == $field[ 'default' ] ) {$selected = true;}
-					$html .= '<option ' . selected( $selected, true, false ) . ' value="' . esc_attr( $k ) . '">' . $v . '</option>';
+				$html .= '<select name="' . esc_attr($option_name) . '" id="' . esc_attr($field['id']) . '" ' . $this->attributes($field) . '>';
+				foreach($field['options'] as $k => $v) {
+					$selected = ($k == $data);
+					if(empty($data) && ! $selected && $k == $field['default']) {$selected = true;}
+					$html .= '<option ' . selected($selected, true, false) . ' value="' . esc_attr($k) . '">' . $v . '</option>';
 				}
 				$html .= '</select> ';
 			break;
 			case 'select_multi':
-				$html .= '<select name="' . esc_attr( $option_name ) . '[]" id="' . esc_attr( $field['id'] ) . '" multiple="multiple" ' . $this->attributes( $field ) . '>';
-				foreach( $field['options'] as $k => $v ) {
+				$html .= '<select name="' . esc_attr($option_name) . '[]" id="' . esc_attr($field['id']) . '" multiple="multiple" ' . $this->attributes($field) . '>';
+				foreach($field['options'] as $k => $v) {
 					$selected = false;
-					if( in_array( $k, $data ) ) {
+					if(in_array($k, $data)) {
 						$selected = true;
 					}
-					$html .= '<option ' . selected( $selected, true, false ) . ' value="' . esc_attr( $k ) . '">' . $v . '</option> ';
+					$html .= '<option ' . selected($selected, true, false) . ' value="' . esc_attr($k) . '">' . $v . '</option> ';
 				}
 				$html .= '</select> ';
 			break;
 		}
-		switch( $field['type'] ) {
+		switch($field['type']) {
 			case 'checkbox_multi':
 			case 'radio':
 			case 'select_multi':
-				$html .= apply_filters( 'esign/project/settings/fields/label', '<br/><span class="description">' . $field['description'] . '</span>', $field );
+				$html .= apply_filters('esign/project/settings/fields/label', '<br/><span class="description">' . $field['description'] . '</span>', $field);
 			break;
 			default:
-				$html .= apply_filters( 'esign/project/settings/fields/label', '<label for="' . esc_attr( $field['id'] ) . '"><span class="description">' . $field['description'] . '</span></label>' . "\n", $field );
+				$html .= apply_filters('esign/project/settings/fields/label', '<label for="' . esc_attr($field['id']) . '"><span class="description">' . $field['description'] . '</span></label>' . "\n", $field);
 			break;
 		}
 		echo $html;
@@ -212,15 +212,15 @@ class Option {
 	 * @param  array $data Inputted value
 	 * @return array       Validated value
 	 */
-	public function validate_fields( $data ) {
+	public function validate_fields($data) {
 		// $data array contains values to be saved:
 		// either sanitize/modify $data or return false
 		// to prevent the new options to be saved
 		// Sanitize fields, eg. cast number field to integer
 		// $data['number_field'] = (int) $data['number_field'];
 		// Validate fields, eg. don't save options if the password field is empty
-		// if ( $data['password_field'] == '' ) {
-		// 	add_settings_error( $this->general->slug, 'no-password', $this->general->no_password, 'error' );
+		// if ($data['password_field'] == '') {
+		// 	add_settings_error($this->general->slug, 'no-password', $this->general->no_password, 'error');
 		// 	return false;
 		// }
 		return $data;
@@ -234,12 +234,12 @@ class Option {
 		// If you don't need tabbed navigation just strip out everything between the <!-- Tab navigation --> tags.
 		?>
 	  <div class="wrap" id="<?php echo $this->general->slug; ?>">
-	  	<h2><?php echo wp_kses_post( $this->general->page_header ); ?></h2>
-	  	<p><?php echo wp_kses_post( $this->general->page_subheader ); ?></p>
+	  	<h2><?php echo wp_kses_post($this->general->page_header); ?></h2>
+	  	<p><?php echo wp_kses_post($this->general->page_subheader); ?></p>
 			<!-- Tab navigation starts -->
 			<h2 class="nav-tab-wrapper settings-tabs hide-if-no-js">
 				<?php
-				foreach( $this->settings as $section => $data ) {
+				foreach($this->settings as $section => $data) {
 					echo '<a href="#' . $section . '" class="nav-tab">' . $data['title'] . '</a>';
 				}
 				?>
@@ -247,9 +247,9 @@ class Option {
 			<?php $this->do_script_for_tabbed_nav(); ?>
 			<!-- Tab navigation ends -->
 			<form action="options.php" method="POST">
-						<?php settings_fields( $this->general->slug ); ?>
+						<?php settings_fields($this->general->slug); ?>
 						<div class="settings-container">
-						<?php do_settings_sections( $this->general->slug ); ?>
+						<?php do_settings_sections($this->general->slug); ?>
 					</div>
 						<?php submit_button(); ?>
 			</form>
@@ -289,10 +289,10 @@ class Option {
 		</script>
 	<?php
 	}
-	public function attributes( $field ) {
-		if( ! isset( $field[ 'attr' ] ) || ! is_array( $field[ 'attr' ] ) || count( $field[ 'attr' ] ) < 1 ) {return '';}
+	public function attributes($field) {
+		if(! isset($field['attr']) || ! is_array($field['attr']) || count($field['attr']) < 1) {return '';}
 		$html = '';
-		foreach( $field[ 'attr' ] as $attr => $value ) {
+		foreach($field['attr'] as $attr => $value) {
 			$html .= $attr . '="' . $value . '" ';
 		}
 		return $html;

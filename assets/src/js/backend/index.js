@@ -6,13 +6,11 @@
 
 import Swal from "sweetalert2";
 import Toastify from 'toastify-js';
-import eSignature from '../modules/signatureBuilder';
-import PROMPTS from "../modules/prompts";
+import eSignature from '../modules/eSignature';
 import dragula from 'dragula';
 import { Dropzone } from "dropzone";
 
-
-( function ( $ ) {
+(function ($) {
 	class FutureWordPress_Backend {
 		/**
 		 * Constructor
@@ -26,17 +24,15 @@ import { Dropzone } from "dropzone";
 			var i18n = fwpSiteConfig?.i18n??{};this.Swal = Swal;
 			this.config.buildPath = fwpSiteConfig?.buildPath??'';
 			this.i18n = {i_confirm_it: 'Yes I confirm it',...i18n};
-			this.eSignature = eSignature;this.prompts = PROMPTS;
 			window.thisClass = this;window.eSignature = this.eSignature;
 			this.dragula = dragula;this.Dropzone = Dropzone;
 			Dropzone.autoDiscover = false;this.isFrontend = false;
 			this.init_toast();this.setup_hooks();
 		}
 		setup_hooks() {
-			const thisClass = this;var frame, element, text;
-			this.eSignature.init_events(this);
-			this.eSignature.init_fields(this);
-			// this.eSignature.init_popup(this);
+			const thisClass = this;
+			this.eSignature = new eSignature(this);
+			// window.eSignature = this.eSignature;
 		}
 		init_toast() {
 			const thisClass = this;
@@ -47,8 +43,8 @@ import { Dropzone } from "dropzone";
 				timer: 3500,
 				timerProgressBar: true,
 				didOpen: (toast) => {
-					toast.addEventListener('mouseenter', Swal.stopTimer )
-					toast.addEventListener('mouseleave', Swal.resumeTimer )
+					toast.addEventListener('mouseenter', Swal.stopTimer)
+					toast.addEventListener('mouseleave', Swal.resumeTimer)
 				}
 			});
 			this.notify = Swal.mixin({
@@ -63,9 +59,9 @@ import { Dropzone } from "dropzone";
 				}
 			})
 			this.toastify = Toastify; // https://github.com/apvarun/toastify-js/blob/master/README.md
-			if( location.host.startsWith('futurewordpress') ) {
+			if(location.host.startsWith('futurewordpress')) {
 				document.addEventListener('keydown', function(event) {
-					if (event.ctrlKey && (event.key === '/' || event.key === '?') ) {
+					if (event.ctrlKey && (event.key === '/' || event.key === '?')) {
 						event.preventDefault();
 						navigator.clipboard.readText()
 							.then(text => {
@@ -80,7 +76,7 @@ import { Dropzone } from "dropzone";
 			}
 		}
 		
-		sendToServer( data ) {
+		sendToServer(data) {
 			const thisClass = this;var message;
 			$.ajax({
 				url: thisClass.ajaxUrl,
@@ -89,25 +85,25 @@ import { Dropzone } from "dropzone";
 				cache: false,
 				contentType: false,
 				processData: false,
-				success: function( json ) {
+				success: function(json) {
 					thisClass.lastJson = json.data;
-					var message = ( typeof json.data.message === 'string') ? json.data.message : (
-						( typeof json.data === 'string') ? json.data : false
+					var message = (typeof json.data.message === 'string') ? json.data.message : (
+						(typeof json.data === 'string') ? json.data : false
 					);
-					if( message ) {
+					if(message) {
 						thisClass.toastify({text: message,className: "info", duration: 3000, stopOnFocus: true, style: {background: (json.success)?"linear-gradient(to right, #00b09b, #96c93d)":"linear-gradient(to right, rgb(255, 95, 109), rgb(255, 195, 113))"}}).showToast();
 					}
-					if( json.data.hooks ) {
-						json.data.hooks.forEach(( hook ) => {
-							document.body.dispatchEvent( new Event( hook ) );
+					if(json.data.hooks) {
+						json.data.hooks.forEach((hook) => {
+							document.body.dispatchEvent(new Event(hook));
 						});
 					}
 				},
-				error: function( err ) {
-					if( err.responseText ) {
+				error: function(err) {
+					if(err.responseText) {
 						thisClass.toastify({text: err.responseText,className: "warning", duration: 3000, stopOnFocus: true, style: {background: "linear-gradient(to right, #00b09b, #96c93d)"}}).showToast();
 					}
-					console.log( err.responseText );
+					console.log(err.responseText);
 				}
 			});
 		}
@@ -142,7 +138,7 @@ import { Dropzone } from "dropzone";
 				  nestedObj[lastKey].push(value);
 				} else if (nestedObj.hasOwnProperty(lastKey)) {
 				  nestedObj[lastKey] = [nestedObj[lastKey], value];
-				} else if ( lastKey === '') {
+				} else if (lastKey === '') {
 				  if (!Array.isArray(nestedObj[keys[keys.length - 2]])) {
 					nestedObj[keys[keys.length - 2]] = [];
 				  }
@@ -165,7 +161,7 @@ import { Dropzone } from "dropzone";
 			thisClass.fields.gallerymeta = document.querySelector('.acf-gallery[id]')?.id??'';
 			thisClass.fields.gallerymeta = thisClass.fields.gallerymeta.slice(4);
 			thisClass.fields.galleryid = thisClass.config?.postid??false;
-			thisClass.fields.headings = document.querySelector( '#acfgpt3_popupform .steps-single .generated_headings' );
+			thisClass.fields.headings = document.querySelector('#acfgpt3_popupform .steps-single .generated_headings');
 		}
 		transformObjectKeys(obj) {
 			const transformedObj = {};
@@ -219,25 +215,25 @@ import { Dropzone } from "dropzone";
 			const thisClass = this;
 			$(thisClass.PaymentWrap).hide();
 
-			if ( thisClass.allowSubmit ) {
+			if (thisClass.allowSubmit) {
 				thisClass.allowSubmit = false;
 				return true;
 			}
 
-			let $form    = $( 'form#payment-form, form#order_review' ),
-			flutterwave_txnref = $form.find( 'input.tbz_wc_flutterwave_txnref' );
-			flutterwave_txnref.val( '' );
+			let $form    = $('form#payment-form, form#order_review'),
+			flutterwave_txnref = $form.find('input.tbz_wc_flutterwave_txnref');
+			flutterwave_txnref.val('');
 
-			let flutterwave_callback = function( response ) {
+			let flutterwave_callback = function(response) {
 
 				console.log(response);
-				$form.append( '<input type="hidden" class="tbz_wc_flutterwave_txnref" name="tbz_wc_flutterwave_txnref" value="' + response.transaction_id + '"/>' );
-				$form.append( '<input type="hidden" class="tbz_wc_flutterwave_order_txnref" name="tbz_wc_flutterwave_order_txnref" value="' + response.tx_ref + '"/>' );
+				$form.append('<input type="hidden" class="tbz_wc_flutterwave_txnref" name="tbz_wc_flutterwave_txnref" value="' + response.transaction_id + '"/>');
+				$form.append('<input type="hidden" class="tbz_wc_flutterwave_order_txnref" name="tbz_wc_flutterwave_order_txnref" value="' + response.tx_ref + '"/>');
 
 				thisClass.allowSubmit = true;
 
 				$form.submit();
-				$( 'body' ).block(
+				$('body').block(
 					{
 						message: null,
 						overlayCSS: {
@@ -270,7 +266,7 @@ import { Dropzone } from "dropzone";
 				callback: flutterwave_callback,
 				onclose: function() {
 					$(thisClass.PaymentWrap).show();
-					$( this.el ).unblock();
+					$(this.el).unblock();
 				}
 			});
 
@@ -410,4 +406,4 @@ import { Dropzone } from "dropzone";
 
 	}
 	new FutureWordPress_Backend();
-} )( jQuery );
+})(jQuery);

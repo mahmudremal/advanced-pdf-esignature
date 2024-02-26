@@ -39,6 +39,7 @@ class Ajax {
 					if($_user) {
 						$display_name = $_user->display_name;
 						$meta['fields'][$rowI]['data']['field']['user_name'] = $display_name;
+						$meta['fields'][$rowI]['signDone'] = false;
 					}
 				}
 			}
@@ -243,7 +244,7 @@ class Ajax {
 				}
 			}
 			if($dataset['pdf']) {
-				update_post_meta($_POST['template'], '__esign_builder', $dataset);
+				// update_post_meta($_POST['template'], '__esign_builder', $dataset);
 
 				$orders = [];
 				foreach($dataset['fields'] as $i => $row) {
@@ -289,7 +290,9 @@ class Ajax {
 					$updated = update_post_meta($post_id, '__esign_builder', $meta);
 					$noti_sent = $this->send_notification_to_next_user($post_id);
 					$args = ['message' => __('Successfully confirmed contract.', 'esignbinding'), 'hooks' => ['signature_confirmation_success']];
+
 					$args['message'] .= ($noti_sent)?__('Mail sent successfully.', 'esignbinding'):__('Mail failed to sent.', 'esignbinding');
+					
 					wp_send_json_success($args);
 				}
 			}
@@ -355,7 +358,7 @@ class Ajax {
 	public function get_all_users_for_this_sign($post_id) {
 		global $wpdb;
 		$_all_metas = $wpdb->get_results(
-			$wpdb->prepare( 
+			$wpdb->prepare(
 				"SELECT meta_key as _user, meta_value as _order FROM $wpdb->postmeta WHERE post_id = %d AND meta_key LIKE %s",
 				$post_id, '%' . $wpdb->esc_like('__esign_signer_') . '%'
 			)
@@ -372,7 +375,7 @@ class Ajax {
 	public function update_all_users_for_this_sign($post_id, $data) {
 		global $wpdb;
 		$wpdb->query(
-			$wpdb->prepare( 
+			$wpdb->prepare(
 				"DELETE FROM $wpdb->postmeta WHERE post_id = %d AND meta_key LIKE %s",
 				$post_id, '%' . $wpdb->esc_like('__esign_signer_') . '%'
 			)

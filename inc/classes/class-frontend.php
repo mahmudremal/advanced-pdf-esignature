@@ -109,7 +109,6 @@ class Frontend {
 				'#my-signature-templates', <?php echo json_encode($datatable); ?>
 			]);
 		</script>
-		
 		<?PHP
 	}
 

@@ -1,24 +1,12 @@
-// https://kinsta.com/blog/http-status-codes/
+/**
+ * Backend Script.
+ * 
+ * @package ESignBindingAddons
+ */
+
+
 // Scripts
 import './backend';
-// import './backend/notice';
-// import './backend/buttons';
-// import './modules/qrcode';
 
 // Styles
 import '../sass/admin.scss';
-
-// Images.
-// import '../img/flutterwave.png';
-
-// Icons.
-// import '../icons/date.svg';
-// import '../icons/time.svg';
-// import '../icons/signature.svg';
-
-import '../img/images/image-1.png';
-import '../img/images/image-2.png';
-import '../img/images/image-3.png';
-import '../img/images/image-4.png';
-import '../img/images/image-5.png';
-import '../img/images/image-6.png';
