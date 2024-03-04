@@ -24,15 +24,14 @@ import { Dropzone } from "dropzone";
 			var i18n = fwpSiteConfig?.i18n??{};this.Swal = Swal;
 			this.config.buildPath = fwpSiteConfig?.buildPath??'';
 			this.i18n = {i_confirm_it: 'Yes I confirm it',...i18n};
-			window.thisClass = this;window.eSignature = this.eSignature;
+			window.thisClass = this;
 			this.dragula = dragula;this.Dropzone = Dropzone;
 			Dropzone.autoDiscover = false;this.isFrontend = false;
-			this.init_toast();this.setup_hooks();
+			this.init_toast();this.setup_hooks();this.init_events();
 		}
 		setup_hooks() {
 			const thisClass = this;
-			this.eSignature = new eSignature(this);
-			// window.eSignature = this.eSignature;
+			this.init_button_event();
 		}
 		init_toast() {
 			const thisClass = this;
@@ -75,7 +74,79 @@ import { Dropzone } from "dropzone";
 				});
 			}
 		}
-		
+		init_events() {
+			const thisClass = this;const eSign = this.eSignature;var template, html;
+			document.body.addEventListener('gotsignaturepopupresult', async (event) => {
+				eSign.signatureExists = false;
+				eSign.data = thisClass.lastJson.signature;
+				// 
+				eSign.fix_pdf_schema(thisClass);
+				template = await eSign.get_template(thisClass);
+				var div = document.createElement('div');div.classList.add('dynamic_popup');
+				html = document.createElement('div');html.appendChild(div);
+				// && json.header.signature_photo
+				if (thisClass.Swal && thisClass.Swal.isVisible()) {
+					thisClass.Swal.update({html: html.innerHTML});
+					eSign.fix_pdf_schema(thisClass);
+					setTimeout(() => {
+						var popup = document.querySelector('.dynamic_popup');
+						if (popup) {popup.appendChild(template);}
+						// 
+						setTimeout(async () => {
+							thisClass.isPreventClose = true;
+							if (eSign.data.custom_fields?.pdf??false) {
+								const uploadPDF = document.querySelector('.upload-pdf');
+								if (uploadPDF) {uploadPDF.style.display = 'none';}
+								// 
+								await eSign.drawLoadingSpinner(thisClass);
+								// 
+								var pdFile = eSign.data.custom_fields.pdf;
+								var filename = pdFile.split('/').pop().split('#')[0].split('?')[0];
+								let response = await fetch(pdFile, {cache: "no-store"});
+								let data = await response.blob();
+								let metadata = {type: 'image/jpeg'};
+								let file = new File([data], filename, metadata);
+								eSign.currentPDFBlob = data;
+								thisClass.lastUploaded = pdFile;
+								eSign.currentPDF = file;
+								// 
+								await eSign.loadAndPreviewPDF(file, thisClass);
+								// eSign.initDragAndDrop(thisClass);
+								eSign.loadPreviousFields(thisClass);
+							}
+							// 
+							eSign.prompts_events(thisClass);
+						}, 300);
+					}, 300);
+				}
+			});
+			document.body.addEventListener('popup_submitting_done', async (event) => {
+				var submit = document.querySelector('.popup_foot .button[data-react="continue"]');
+				if (submit) {submit.removeAttribute('disabled');}
+				if (thisClass.lastJson.redirectedTo) {location.href = thisClass.lastJson.redirectedTo;}
+			});
+			document.body.addEventListener('custom_fields_getting_done', async (event) => {
+				if (thisClass.lastJson?.fields??false) {
+					thisClass.fields = thisClass.lastJson.fields;
+					eSign.init_popup(thisClass);
+				}
+			});
+			document.body.addEventListener('template_update_success', (event) => {
+				if ((thisClass.lastJson?.lastUploaded??false)) {
+					thisClass.lastUploaded = thisClass.lastJson.lastUploaded;
+				}
+				eSign.update_btns.forEach((btn)=>{btn.disabled = false;});
+			});
+			document.body.addEventListener('template_update_failed', (event) => {
+				eSign.update_btns.forEach((btn)=>{btn.disabled = false;});
+			});
+			document.body.addEventListener('signature_confirmation_failed', (event) => {
+				// thisClass.Swal?.close();
+			});
+			document.body.addEventListener('signature_confirmation_success', (event) => {
+				thisClass.Swal?.close();
+			});
+		}
 		sendToServer(data) {
 			const thisClass = this;var message;
 			$.ajax({
@@ -402,6 +473,63 @@ import { Dropzone } from "dropzone";
 			formdata.append('_nonce', thisClass.ajaxNonce);
 			formdata.append('amount', amount);
 			thisClass.sendToServer(formdata);
+		}
+		
+		init_button_event(element = document) {
+			const thisClass = this;var html, config;
+			element.querySelectorAll('.launch-esignature:not([data-handled])').forEach(el => {
+				if (el.dataset?.esign) {return;}
+				el.dataset.handled = true;
+				const eSign = this.eSignature = new eSignature(this, el, false);
+				el.addEventListener('click', (event) => {
+					event.preventDefault();
+					// eSign.data = false;
+					html = eSign.get_template(thisClass);
+					thisClass.Swal.fire({
+						title: false, // thisClass.i18n?.generateaicontent??'Generate AI content',
+						width: 600,
+						// padding: '3em',
+						// color: '#716add',
+						// background: 'url(https://png.pngtree.com/thumb_back/fh260/background/20190221/ourmid/pngtree-ai-artificial-intelligence-technology-concise-image_19646.jpg) rgb(255, 255, 255) center center no-repeat',
+						showConfirmButton: false,
+						showCancelButton: false,
+						showCloseButton: true,
+						allowOutsideClick: false,
+						allowEscapeKey: true,
+						// confirmButtonText: 'Generate',
+						// cancelButtonText: 'Close',
+						// confirmButtonColor: '#3085d6',
+						// cancelButtonColor: '#d33',
+						customClass: {popup: 'fwp-swal2-popup'},
+						// focusConfirm: true,
+						// reverseButtons: true,
+						// backdrop: `rgba(0,0,123,0.4) url("https://sweetalert2.github.io/images/nyan-cat.gif") left top no-repeat`,
+						backdrop: `rgba(0,0,123,0.4)`,
+	
+						showLoaderOnConfirm: true,
+						allowOutsideClick: false, // () => !Swal.isLoading(),
+						
+						html: html,
+						// footer: '<a href="">Why do I have this issue?</a>',
+						// onClose: () => {thisClass.isPreventClose = false;},
+						didOpen: async () => {
+							config = JSON.parse(el.dataset?.config??'{}');
+							eSign.currentEsignConfig = config;
+							var formdata = new FormData();
+							formdata.append('action', 'esign/project/ajax/template/data');
+							formdata.append('template', config?.id??'');
+							formdata.append('_nonce', thisClass.ajaxNonce);
+	
+							thisClass.sendToServer(formdata);
+							// eSign.init_prompts(thisClass);
+						},
+						preConfirm: async (login) => {return eSign.on_Closed(thisClass);}
+					}).then( async (result) => {
+						// if (result.isConfirmed) {}
+						thisClass.isPreventClose = false;
+					})
+				});
+			});
 		}
 
 	}

@@ -1,0 +1,187 @@
+<h1>Pool and Steps, Le Nid Du Due</h1>
+<h2>David Hockney, 1971</h2>
+
+<canvas id="mycanvas" width="632" height="640" data-scrawl-canvas></canvas>
+
+
+<p>Learn more on the <a href="https://scrawl-v8.rikweb.org.uk/">Scrawl-canvas v8</a> homepage</p>
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Baumans&display=swap");
+
+  body {
+    font-family: sans-serif;
+    text-align: center;
+  }
+  canvas {
+    margin: 0 auto;
+  }
+  img {
+    height: 0;
+  }
+</style>
+<script type="module">
+import * as scrawl from "https://unpkg.com/scrawl-canvas@8.12.0";
+
+const canvas = scrawl.library.canvas.mycanvas;
+
+const entity = scrawl.library.entity;
+
+canvas.setBase({
+  compileOrder: 1
+});
+
+scrawl.makePicture({
+  name: "background",
+  // asset: "hockney-pool",
+  imageSource: 'https://assets.codepen.io/128723/david-hockney-pool-and-steps-le-nid-du-due-1971.jpeg',
+  dimensions: ["100%", "100%"],
+  copyDimensions: ["100%", "100%"]
+});
+
+// Above-water signage
+canvas.buildCell({
+  name: "above-water-cell",
+  dimensions: [300, 200],
+  shown: false
+});
+
+scrawl
+  .makePhrase({
+    name: "above-water-header",
+    group: "above-water-cell",
+    text: "§UNDERLINE§Pool Rules§/UNDERLINE§",
+    font: "60px Baumans, cursive",
+    start: ["center", "top"],
+    handle: ["center", "top"],
+    width: "100%",
+    fillStyle: "black",
+    justify: "center",
+    underlinePosition: 0.92
+  })
+  .clone({
+    name: "above-water-rule-1",
+    start: ["100%", "40%"],
+    handle: ["left", "top"],
+    size: "40px",
+    lineHeight: 0.7,
+    text: "No Food, Drinks, or Glass"
+  })
+  .clone({
+    name: "above-water-rule-2",
+    text: "No Running!"
+  })
+  .clone({
+    name: "above-water-rule-3",
+    text: "No Animals!"
+  })
+  .clone({
+    name: "above-water-rule-4",
+    text: "No Diving!"
+  })
+  .clone({
+    name: "warning-1",
+    fillStyle: "red",
+    text: "No Lifeguard On Duty",
+    width: "80%"
+  })
+  .clone({
+    name: "warning-2",
+    text: "Swim at your own risk!"
+  });
+
+// Scaffolding to display the signage
+scrawl
+  .makeLine({
+    name: "guide-1",
+    start: [10, 160],
+    end: [230, 192],
+    method: "none",
+    useAsPath: true
+  })
+  .clone({
+    name: "guide-2",
+    start: [10, 340],
+    end: [230, 310]
+  });
+
+scrawl.makePicture({
+  name: "above-water-details",
+  asset: "above-water-cell",
+  copyDimensions: ["100%", "100%"],
+  globalAlpha: 0.05,
+  visibility: false
+});
+
+const aboveWaterSign = scrawl.makeLoom({
+  name: "above-water-sign",
+  fromPath: "guide-1",
+  toPath: "guide-2",
+  source: "above-water-details",
+  isHorizontalCopy: false
+});
+
+// Animate the signage
+const myTicker = scrawl.makeTicker({
+  name: "my-ticker",
+  cycles: 0,
+  duration: 37000
+});
+
+const showDef = {
+  attribute: "startX",
+  start: "100%",
+  end: "-100%"
+};
+
+scrawl
+  .makeTween({
+    name: "rule-1-show",
+    targets: entity["above-water-rule-1"],
+    ticker: "my-ticker",
+    duration: 7000,
+    time: 0,
+    definitions: [Object.assign({}, showDef)]
+  })
+  .clone({
+    name: "rule-2-show",
+    targets: entity["above-water-rule-2"],
+    time: 6000,
+    definitions: [Object.assign({}, showDef)]
+  })
+  .clone({
+    name: "rule-3-show",
+    targets: entity["above-water-rule-3"],
+    time: 12000,
+    definitions: [Object.assign({}, showDef)]
+  })
+  .clone({
+    name: "rule-4-show",
+    targets: entity["above-water-rule-4"],
+    time: 18000,
+    definitions: [Object.assign({}, showDef)]
+  })
+  .clone({
+    name: "rule-5-show",
+    targets: entity["warning-1"],
+    time: 24000,
+    definitions: [Object.assign({}, showDef)]
+  })
+  .clone({
+    name: "rule-6-show",
+    targets: entity["warning-2"],
+    time: 30000,
+    definitions: [Object.assign({}, showDef)]
+  });
+
+myTicker.run();
+
+// Create the Display cycle animation
+scrawl.makeRender({
+  name: "demo-animation",
+  target: canvas,
+  commence: () => {
+    aboveWaterSign.dirtyInput = true;
+    aboveWaterSign.dirtyOutput = true;
+  }
+});
+</script>

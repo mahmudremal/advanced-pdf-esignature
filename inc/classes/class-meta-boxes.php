@@ -53,10 +53,11 @@ class Meta_Boxes {
 		<div class="fwp__esign">
 			<div class="fwp__esign__header"></div>
 			<div class="fwp__esign__body">
-				<button type="button" class="fwp-launch-esignature-builder" data-config="<?php echo esc_attr(json_encode($json)); ?>"><?php esc_html_e('Open Signature Builder', 'esignbinding'); ?></button>
+				<button type="button" class="launch-esignature" data-config="<?php echo esc_attr(json_encode($json)); ?>"><?php esc_html_e('Open Signature Builder', 'esignbinding'); ?></button>
 			</div>
 			<div class="fwp__esign__footer"></div>
 		</div>
+		<script type="module">import * as scrawl from "https://unpkg.com/scrawl-canvas@8.12.0";window.scrawl = scrawl;</script>
 		<?php
 	}
 	/**

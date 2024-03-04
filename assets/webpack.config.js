@@ -22,12 +22,6 @@ const entry = {
 	backend: JS_DIR + '/admin.js',
 	frontend: JS_DIR + '/public.js',
 
-	// main: JS_DIR + '/main.js',
-	// single: JS_DIR + '/single.js',
-	// editor: JS_DIR + '/editor.js',
-	// blocks: JS_DIR + '/blocks.js',
-	// author: JS_DIR + '/author.js',
-	// search: JS_DIR + '/search.js',
 };
 
 const output = {

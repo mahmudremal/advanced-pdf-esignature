@@ -1,0 +1,307 @@
+<header>
+    <h1>Responsive header background image selector</h1>
+    <p>Drag the canvas by its bottom-right corner to change its dimensions</p>
+    <p>(Also: not a great fan of endless scrolls and carousels. Sorry.)</p>
+</header>
+<p>Selected image: <span id="image-selected">none</span></p>
+<p>Click to replace with: <span id="image-under-cursor">none</span></p>
+  
+<div class="canvas-container">
+    <canvas id="mycanvas" data-scrawl-canvas data-is-responsive="true" data-fit="contain" data-base-width="800" data-base-height="800"></canvas>
+</div>
+<style>
+  html {
+    font-size: 18px;
+  }
+  body {
+    font-family: sans-serif;
+  }
+  
+  #slideshow {
+    display: none;
+  }
+  
+  .canvas-container {
+    overflow: hidden;
+    resize: both;
+    border: 1px solid black;
+    width: 600px;
+    height: 600px;
+    min-height: 200px;
+    min-width: 200px;
+    max-height: 800px;
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .canvas-container::after {
+    position: absolute;
+    content: "";
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-bottom: 1em solid red;
+    border-left: 1em solid transparent;
+  }
+  
+  canvas {
+    background-color: darkslategray;
+  }
+  
+  header {
+    padding: 1rem;
+    text-shadow: 0 0 4px black;
+    color: white;
+  }
+  header > p {
+    font-style: italic;
+  }
+  span {
+    color: red;
+  }
+</style>
+
+
+<script type="module">
+import * as scrawl from "https://unpkg.com/scrawl-canvas@8.12.0";
+
+// Grab handles to the DOM elements we'll be updating
+const header = document.querySelector("header"),
+  selectedSpan = document.querySelector("#image-selected"),
+  replaceSpan = document.querySelector("#image-under-cursor");
+
+window.scrawl = scrawl;
+// canvas setup
+const artefacts = scrawl.library.artefact,
+  canvas = artefacts.mycanvas,
+  base = canvas.base,
+  baseGroup = scrawl.library.group[base.name];
+
+// For this demo we'll use a fixed-dimensions base canvas and fit it into the display canvas so all of the base always shows in the display
+canvas.set({
+    // We'll add some responsive stuff to make things interesting...
+    // - default canvas - roughly squarish - tiles 4x4
+    // - landscape/banner canvas - width double height - tiles 8x2
+    // - portrait/skyscraper canvas - width half height - tiles 2x8
+    breakToLandscape: 2,
+    breakToPortrait: 0.5,
+
+    actionLandscapeShape: () => {
+        canvas.setBase({
+            width: 1600,
+            height: 400
+        });
+        updateTilePositions("landscape");
+    },
+
+    actionPortraitShape: () => {
+        canvas.setBase({
+            width: 400,
+            height: 1600
+        });
+        updateTilePositions("portrait");
+    },
+
+    actionRectangleShape: () => {
+        canvas.setBase({
+            width: 800,
+            height: 800
+        });
+        updateTilePositions("rectangle");
+    }
+});
+
+// This function recalculates each tile's position when the canvas changes its shape between portrait, rectangular and landscape
+const updateTilePositions = (label) => {
+    switch (label) {
+        case "landscape":
+        slideshowKeys.forEach((key, index) => {
+            let tile = artefacts[key];
+            tile.set({
+            start: [`${Math.floor(index / 2) * 12.5}%`, `${(index % 2) * 50}%`]
+            });
+        });
+        break;
+
+        case "portrait":
+        slideshowKeys.forEach((key, index) => {
+            let tile = artefacts[key];
+            tile.set({
+            start: [`${Math.floor(index / 8) * 50}%`, `${(index % 8) * 12.5}%`]
+            });
+        });
+        break;
+
+        case "rectangle":
+        slideshowKeys.forEach((key, index) => {
+            let tile = artefacts[key];
+            tile.set({
+            start: [`${Math.floor(index / 4) * 25}%`, `${(index % 4) * 25}%`]
+            });
+        });
+        break;
+    }
+};
+
+// Grab the data we need from the slideshow <ul> element and its children
+const slideshowData = {
+    "half-lime": {
+        text: "Malesuada Quam",
+        alt: "half of a lime. ",
+        src: "https://source.unsplash.com/Nl7eLS8E2Ss/500x500"
+    },
+    "cut-citrus": {
+        text: "Lorem Ipsum",
+        alt: "cut citrus fruits. ",
+        src: "https://source.unsplash.com/ezSFnAFi9hY/500x500"
+    },
+    "sliced-mango": {
+        text: "Dolor Sit",
+        alt: "sliced mango. ",
+        src: "https://source.unsplash.com/TIGDsyy0TK4/500x500"
+    },
+    "blueberries": {
+        text: "Amet Consectetur",
+        alt: "a bunch of blueberries. ",
+        src: "https://source.unsplash.com/TdDtTu2rv4s/500x500"
+    },
+    "pineapple": {
+        text: "Adipiscing Elit",
+        alt: "a pineapple sitting on a table. ",
+        src: "https://source.unsplash.com/eudGUrDdBB0/500x500"
+    },
+    "frozen-raspberries": {
+        text: "Nunc Tortor",
+        alt: "frozen raspberries. ",
+        src: "https://source.unsplash.com/eJH4f1rlG7g/500x500"
+    },
+    "sliced-strawberry": {
+        text: "Metus Mollis",
+        alt: "a sliced strawberry. ",
+        src: "https://source.unsplash.com/24RUrLSW1HI/500x500"
+    },
+    "assorted-slices": {
+        text: "Congue Sagittis",
+        alt: "an arrangement of assorted sliced fruits. ",
+        src: "https://source.unsplash.com/h5yMpgOI5nI/500x500"
+    },
+    "sliced-watermelon": {
+        text: "Vestibulum Et",
+        alt: "sliced watermelons. ",
+        src: "https://source.unsplash.com/2TYrR2IB72s/500x500"
+    },
+    "grapefruit-lemon-pomegranite": {
+        text: "Donec Eget",
+        alt: "grapefruits, lemons, and pomegranates. ",
+        src: "https://source.unsplash.com/1cWZgnBhZRs/500x500"
+    },
+    "half-avocado": {
+        text: "Maecenas et Justo",
+        alt: "half of an avocado. ",
+        src: "https://source.unsplash.com/9aOswReDKPo/500x500"
+    },
+    "cherry": {
+        text: "Ultricies Sollicitudin",
+        alt: "a single cherry with stem. ",
+        src: "https://source.unsplash.com/3HhXWJzG5Ko/500x500"
+    },
+    "banana-bunch": {
+        text: "Gravida Nibh",
+        alt: "a bunch of bananas. ",
+        src: "https://source.unsplash.com/fczCr7MdE7U/500x500"
+    },
+    "three-pears": {
+        text: "Pellentesque Sapien",
+        alt: "three pears. ",
+        src: "https://source.unsplash.com/uI900SItAyY/500x500"
+    },
+    "assorted-peaches": {
+        text: "Suspendisse Vel",
+        alt: "a basket full of peaches next to a plate with sliced peaches. ",
+        src: "https://source.unsplash.com/0AynZdszfz0/500x500"
+    },
+    "bowl-of-avocados": {
+        text: "Mauris Consectetur",
+        alt: "a bowl of avocados. ",
+        src: "https://source.unsplash.com/C6JhUKs9q8M/500x500"
+    }
+};
+
+// Build the canvas-based background image selector
+const slideshowKeys = Object.keys(slideshowData);
+
+new Promise((resolve, reject) => {
+    const pictures = [];var picture = false;
+    slideshowKeys.forEach(async (key, index) => {
+        picture = (picture)?picture.clone({
+            name: key,
+            imageSource: slideshowData[key].src
+        }):await scrawl.makePicture({
+            name: key,
+            dimensions: [200, 200],
+            imageSource: slideshowData[key].src,
+            copyDimensions: ["100%", "100%"]
+        });
+        pictures.push(picture);
+    });
+    console.log('resolved');
+    setTimeout(() => {
+        resolve(pictures)
+    }, 3000);
+})
+.then(data => {
+    updateTilePositions("rectangle");
+    // This function checks the browser's current cursor position and updates the 'click to replace' text
+    const checkMousePosition = () => {
+        const baseHere = base.here;
+        baseGroup.setArtefacts({
+            globalAlpha: 0.75
+        });
+        if (baseHere.active) {
+            let tile = getHoveredArtefact();
+            if (tile) {
+                tile.set({globalAlpha: 1});
+                replaceSpan.innerText = slideshowData[tile.name].text;
+            }
+        } else {
+            replaceSpan.innerText = "none";
+        }
+    };
+
+    const getHoveredArtefact = () => {
+        const baseHere = base.here;
+        if (baseHere.active) {
+            let target = baseGroup.getArtefactAt(baseHere);
+            if (target && target.artefact) {
+                return target.artefact;
+            }
+        }
+        return false;
+    };
+
+    // Canvas display and animation
+    scrawl.makeRender({
+        name: "demo-animation",
+        target: canvas,
+        commence: checkMousePosition
+    });
+
+    // Add event listener to canvas to make the background image magic happen
+    scrawl.addNativeListener("click", () => {
+        const tile = getHoveredArtefact();
+
+        if (tile) {
+            console.log('Selected image:', slideshowData[tile.name].text);
+            selectedSpan.innerText = slideshowData[tile.name].text;
+            header.style.setProperty("background", `center / contain no-repeat url(${slideshowData[tile.name].src})`);
+            header.style.setProperty("background-size", "cover");
+        } else {
+            // No artiface clicked
+        }
+    }, canvas.domElement);
+})
+.catch(err => {});
+
+
+  </script>

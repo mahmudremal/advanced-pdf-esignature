@@ -14,7 +14,7 @@ class PROMPTS extends PDFUtils {
     get_template(thisClass) {
         const eSign = this;var json, html;
         html = document.createElement('div');html.classList.add('dynamic_popup');
-        if(eSign?.lastJson) {
+        if(eSign?.data) {
             eSign.checkif_signature_exists(thisClass);
             html.appendChild(eSign.generate_template(thisClass));
         } else {
@@ -25,7 +25,7 @@ class PROMPTS extends PDFUtils {
     init_individualFields(thisClass) {
         const eSign = this;
         var fields, card, single, handle, image;
-        // ${(eSign.lastJson.signature.custom_fields?.pdf??false)?`style="display: none;"`:''}
+        // ${(eSign.data.custom_fields?.pdf??false)?`style="display: none;"`:''}
         eSign.dropZoneHTML = `
             <div class="upload-pdf">
                 <div class="pdf-dropzone">
@@ -46,10 +46,9 @@ class PROMPTS extends PDFUtils {
                     <div id="signature-builder" class="esign-body">
                         <canvas id="contractCanvas">
                     </div>
-                    ${(thisClass.isFrontend && ! eSign.signatureExists)?``:`
+                    ${(thisClass.isFrontend && !eSign.signatureExists)?``:`
                     <button class="btn btn-primary pull-right ${(thisClass.isFrontend)?'update_esign_signature':`update_esign_template`}"><span>${(thisClass.isFrontend)?(eSign.i18n?.confirm_singing??'Confirm Signing'):(eSign.i18n?.save??'Save')}</span><div class="spinner-circular-tube"></div></button>
                     `}
-                    
                 </div>
                 ${(thisClass.isFrontend)?(
                     (!eSign.signatureExists)?'':`
@@ -119,7 +118,7 @@ class PROMPTS extends PDFUtils {
     }
     prompts_events(thisClass) {
         const eSign = this;
-
+        // 
         document.querySelectorAll('.pdf_builder__fields__settings__header button:not([data-handled])').forEach(el => {
             el.dataset.handled = true;
             el.addEventListener('click', (event) => {
@@ -188,7 +187,7 @@ class PROMPTS extends PDFUtils {
 
                             eSign.toEsign = eSign?.toEsign??{};
                             eSign.toEsign.pdfBlob = eSign.currentPDF;
-                            const fieldsToProcess = eSign.lastJson.signature.custom_fields.fields.filter(field =>
+                            const fieldsToProcess = eSign.data.custom_fields.fields.filter(field =>
                                 field?.enableSign && !field?.signDone
                             );
                             const result = await eSign.attachImageTextToPDF(thisClass, fieldsToProcess);
@@ -218,6 +217,17 @@ class PROMPTS extends PDFUtils {
                 });
             });
         });
+        // Init mouse pointer position
+        document.querySelectorAll('#signature-builder').forEach(element => {
+            element.addEventListener('mousemove', (event) => {
+                var rect = element.getBoundingClientRect();
+                event.pointerX = event.clientX - rect.left;
+                event.pointerY = event.clientY - rect.top;
+                // 
+                eSign.canvasPointer = event;
+            });
+        });
+        
         // eSign.init_drag_n_drop(thisClass);
         eSign.init_pdf_dropzone(thisClass);
         eSign.dragFromRight2Left(thisClass);
@@ -454,7 +464,7 @@ class PROMPTS extends PDFUtils {
                 try {
                     const index = await eSign.get_field_page_index(field, thisClass);
                     const pdfSelectedPage = pdfDoc.getPages()[index];
-                    const canvas = eSign.lastJson.signature.custom_fields.canvas[index];
+                    const canvas = eSign.data.custom_fields.canvas[index];
                     // Calculate image position and size
                     const canvasWidth = canvas.width;
                     const canvasHeight = canvas.height;
@@ -547,7 +557,7 @@ class PROMPTS extends PDFUtils {
     }
     checkif_signature_exists(thisClass) {
         const eSign = this;
-        var fieldsExists = ((eSign.lastJson?.signature)?.custom_fields)?.fields;
+        var fieldsExists = ((eSign?.data)?.custom_fields)?.fields;
         if(fieldsExists) {
             fieldsExists = fieldsExists?.map(row => {
                 row.enableSign = true;if(thisClass.isFrontend && thisClass.config.user_id != ((row?.data??{})?.field??{})?.user) {row.enableSign = false;}return row;
@@ -560,7 +570,7 @@ class PROMPTS extends PDFUtils {
         const eSign = this;
         let index = 0;
         let posY = field?.dy;
-        const canvases = (((eSign.lastJson?.signature)?.custom_fields)?.canvas);
+        const canvases = (((eSign?.data)?.custom_fields)?.canvas);
         if(field?.dy && canvases) {
             for(let i = 0; i < canvases.length; i++) {
                 var canvas = canvases[i];
@@ -581,7 +591,7 @@ class PROMPTS extends PDFUtils {
     }
     drawLoadingSpinner(thisClass) {
         const eSign = this;
-        const fieldsObj = (eSign.lastJson?.signature)?.custom_fields;
+        const fieldsObj = (eSign?.data)?.custom_fields;
         const canvasHeight = parseFloat(window.getComputedStyle(document.querySelector('.swal2-container.swal2-center>.swal2-popup.swal2-show.swal2-modal.fwp-swal2-popup')).getPropertyValue('height'));
         const canvas = document.querySelector('.pdf_builder__container #signature-builder canvas');
         if (!canvas) {

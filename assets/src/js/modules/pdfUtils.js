@@ -4,12 +4,14 @@ import SignaturePad from "signature_pad";
 import Pad from './signaturePad';
 import { format as date_formate } from 'date-fns';
 import canvasPdf from "./canvasPdf";
+import tippy from 'tippy.js';
 
 
 class PDFUtils extends canvasPdf {
   constructor(thisClass) {
     super(thisClass);
-    this.oneCanvas = true;
+    this.data = true;
+    this.oneCanvas = false;
     this.uploadedPDF = false;
     this.signatureExists = false;
     this.STOREDATA = {i18n: {}};
@@ -26,10 +28,10 @@ class PDFUtils extends canvasPdf {
   do_field(field, child = false, esitingData = {}) {
     const eSign = this;
     var fields, form, group, fieldset, input, label, span, option, head, image, others, body, div, info, tooltip, i = 0;
-    div = document.createElement('div');if(!child) {div.classList.add('pdf_fields__group');}
-    if((field?.heading??'') != '') {head = document.createElement('h2');head.innerHTML = eSign.str_replace(field?.heading??'');div.appendChild(head);}
+    div = document.createElement('div');if (!child) {div.classList.add('pdf_fields__group');}
+    if ((field?.heading??'') != '') {head = document.createElement('h2');head.innerHTML = eSign.str_replace(field?.heading??'');div.appendChild(head);}
     
-    if((field?.subtitle??'')!='') {
+    if ((field?.subtitle??'')!='') {
         info = document.createElement('p');
         info.innerHTML = eSign.str_replace(field?.subtitle??'');
         div.appendChild(info);
@@ -41,10 +43,12 @@ class PDFUtils extends canvasPdf {
     label = document.createElement('label');
     label.innerHTML = eSign.str_replace(field?.label??'');
     label.setAttribute('for',`field_${field?.fieldID??i}`);
-    if((field?.tooltip??'') != '') {
-      tooltip = document.createElement('span');tooltip.classList.add('pdf_fields__tooltip');
+    if ((field?.tooltip??'') != '') {
+      tooltip = document.createElement('span');// tooltip.classList.add('pdf_fields__tooltip');
       tooltip.setAttribute('tabindex', 1);tooltip.setAttribute('tooltip', field?.tooltip??'');
       tooltip.setAttribute('flow', 'up');tooltip.innerHTML = '?';label.appendChild(tooltip);
+      // 
+      tippy(tooltip, {content: field.tooltip});
     }
     
     switch (field.type) {
@@ -55,7 +59,7 @@ class PDFUtils extends canvasPdf {
             input.id = `field_${field?.fieldID??i}`;
             input.innerHTML = esitingData[field.fieldID];
             Object.keys(field?.attr??{}).forEach((key) => {input.setAttribute(key, field.attr[key])});
-            // if(field?.dataset??false) {input.dataset = field.dataset;}
+            // if (field?.dataset??false) {input.dataset = field.dataset;}
             input.dataset.fieldId = field.fieldID;
             break;
         case 'input':case 'text':case 'number':case 'date':case 'time':case 'local':case 'color':case 'range':
@@ -65,28 +69,28 @@ class PDFUtils extends canvasPdf {
             input.placeholder = eSign.str_replace(field?.placeholder??'');
             input.type = (field.type=='input')?'text':field.type;
             Object.keys(field?.attr??{}).forEach((key) => {input.setAttribute(key, field.attr[key])});
-            // if(field?.dataset??false) {input.dataset = field.dataset;}
+            // if (field?.dataset??false) {input.dataset = field.dataset;}
             input.dataset.fieldId = field.fieldID;// input.value = field?.value??'';
-            if(label) {fieldset.appendChild( label );}
-            if(input) {fieldset.appendChild( input );}
-            if(input || label) {div.appendChild(fieldset);}
+            if (label) {fieldset.appendChild( label );}
+            if (input) {fieldset.appendChild( input );}
+            if (input || label) {div.appendChild(fieldset);}
             break;
         case 'select':
             input = document.createElement('select');input.classList.add('form-control');
             input.name = 'field.'+field.fieldID;input.id = `field_${field?.fieldID??i}`;
-            // if(field?.dataset??false) {input.dataset = field.dataset;}
+            // if (field?.dataset??false) {input.dataset = field.dataset;}
             input.dataset.fieldId = field.fieldID;
             Object.keys(field?.attr??{}).forEach((key) => {input.setAttribute(key, field.attr[key])});
             (field?.options??[]).forEach((opt,i) =>  {
                 option = document.createElement('option');option.value=opt?.value??'';option.innerHTML=opt?.label??'';option.dataset.index = i;
-                if(esitingData[field.fieldID] == option.value) {
+                if (esitingData[field.fieldID] == option.value) {
                   option.setAttribute('selected', true);
                 }
                 input.appendChild(option);
             });
-            if(label) {fieldset.appendChild( label );}
-            if(input) {fieldset.appendChild( input );}
-            if(input || label) {div.appendChild(fieldset);}
+            if (label) {fieldset.appendChild( label );}
+            if (input) {fieldset.appendChild( input );}
+            if (input || label) {div.appendChild(fieldset);}
             break;
         case 'doll':case 'radio':case 'checkbox':
             input = document.createElement('div');input.classList.add('form-wrap');
@@ -94,21 +98,21 @@ class PDFUtils extends canvasPdf {
             field.type = (field.type == 'doll')?'radio':field.type;
             // field.options = field.options.reverse();
             Object.values(field.options).forEach((opt, optI) =>  {
-                if(opt && opt.label) {
+                if (opt && opt.label) {
                     label = document.createElement('label');label.classList.add('form-control-label', 'form-control-'+field.type);
                     // label.setAttribute('for', `field_${field?.fieldID??i}_${optI}`);
-                    if(opt.input) {label.classList.add('form-flexs');}
+                    if (opt.input) {label.classList.add('form-flexs');}
                     span = document.createElement('span');
-                    if(opt.imageUrl) {
+                    if (opt.imageUrl) {
                         image = document.createElement('img');image.src = opt.imageUrl;
                         image.alt = opt.label;label.appendChild(image);
                         label.classList.add('form-control-'+field.type+'__image');
                         input.classList.add('form-wrap__image');
-                        if((opt?.thumbUrl??false) && opt.thumbUrl != '') {
+                        if ((opt?.thumbUrl??false) && opt.thumbUrl != '') {
                             image.src = opt.thumbUrl;image.dataset.outfit = opt.imageUrl;
                         }
                     }
-                    if(!opt.input) {
+                    if (!opt.input) {
                         span.innerHTML = opt.label+(
                             (opt?.cost??false)?(
                             ' <strong>'+(thisClass.config?.currencySign??'$')+''+ parseFloat(opt.cost).toFixed(2)+'</strong>'
@@ -122,12 +126,12 @@ class PDFUtils extends canvasPdf {
                     }
                     option = document.createElement('input');option.value=opt.label;
                     option.name='field.'+field.fieldID+'.option'+((field.type == 'checkbox')?'.' + optI:'');
-                    if(option.value == esitingData[field.fieldID]) {option.setAttribute('checked', true);}
+                    if (option.value == esitingData[field.fieldID]) {option.setAttribute('checked', true);}
                     option.dataset.index = optI;option.dataset.fieldId = field.fieldID;
                     option.id=`field_${field?.fieldID??i}_${optI}`;option.type=field.type;
-                    if(field?.layer??false) {option.dataset.layer=field.layer;}
-                    if((opt?.cost??'') == '') {opt.cost = '0';}option.dataset.cost=opt.cost;
-                    if(child) {option.dataset.preview=child;}
+                    if (field?.layer??false) {option.dataset.layer=field.layer;}
+                    if ((opt?.cost??'') == '') {opt.cost = '0';}option.dataset.cost=opt.cost;
+                    if (child) {option.dataset.preview=child;}
                     label.appendChild(option);label.appendChild(span);input.appendChild(label);
                     fieldset.appendChild(input);div.appendChild(fieldset);
                 }
@@ -141,15 +145,15 @@ class PDFUtils extends canvasPdf {
             input.placeholder = eSign.str_replace(field?.placeholder??'');
             input.id = `field_${field?.fieldID??i}`;input.type = (field.type=='input')?'text':field.type;
             Object.keys(field?.attr??{}).forEach((key) => {input.setAttribute(key, field.attr[key])});
-            // if(field?.dataset??false) {input.dataset = field.dataset;}
+            // if (field?.dataset??false) {input.dataset = field.dataset;}
             input.dataset.fieldId = field.fieldID;
             var eye = document.createElement('div');
             eye.classList.add('input-group-append', 'toggle-password');
             eye.innerHTML = '<i class="fa fa-eye"></i>';
             group.appendChild(input);group.appendChild(eye);
-            if(label) {fieldset.appendChild(label);}
-            if(input) {fieldset.appendChild(group);}
-            if(input || label) {div.appendChild(fieldset);}
+            if (label) {fieldset.appendChild(label);}
+            if (input) {fieldset.appendChild(group);}
+            if (input || label) {div.appendChild(fieldset);}
             break;
         case 'confirm':
             input = document.createElement('div');input.classList.add('the-success-icon');
@@ -158,7 +162,7 @@ class PDFUtils extends canvasPdf {
             break;
         case 'voice':
             input = document.createElement('div');input.classList.add('do_recorder');
-            // if(field?.dataset??false) {input.dataset = field.dataset;}
+            // if (field?.dataset??false) {input.dataset = field.dataset;}
             input.innerHTML = field?.icon??'';input.dataset.cost = field?.cost??0;
             fieldset.appendChild(input);div.appendChild(fieldset);
             break;
@@ -204,7 +208,7 @@ class PDFUtils extends canvasPdf {
                     fieldID: (field?.fieldID??0)+'.'+(type?.fieldID??typeI),
                     ...inputs[type]
                 };
-                if(field[type] == 'on') {fields.appendChild(eSign.do_field(inputsArgs, true));}
+                if (field[type] == 'on') {fields.appendChild(eSign.do_field(inputsArgs, true));}
             });
             fieldset.appendChild(fields);div.appendChild(fieldset);
             break;
@@ -214,7 +218,7 @@ class PDFUtils extends canvasPdf {
             break;
     }
     i++;
-    if((field?.extra_fields??false)) {
+    if ((field?.extra_fields??false)) {
       field.extra_fields.forEach((extra) => {
         div.appendChild(eSign.do_field(extra, true));
       });
@@ -231,7 +235,7 @@ class PDFUtils extends canvasPdf {
     for(let pageNumber = 1; pageNumber <= numPages; pageNumber++) {
       const pagePromise = new Promise(async (resolve, reject) => {
         try {
-          if(eSign.oneCanvas) {
+          if (eSign.oneCanvas) {
             await pdf.getPage(pageNumber).then((page) => {
               eSign.canvasPdf_load_page(page);
               
@@ -263,7 +267,8 @@ class PDFUtils extends canvasPdf {
             // });
           } else {
             const page = await pdf.getPage(pageNumber);
-            const pdfCanvas = document.createElement('canvas');
+            // const pdfCanvas = document.createElement('canvas');
+            const pdfCanvas = document.querySelector('#contractCanvas');
             const viewport = page.getViewport({scale: 2});
             const context = pdfCanvas.getContext('2d');
             const renderContext = {canvasContext: context, viewport: viewport, textRenderingMode: "smooth"};
@@ -273,7 +278,7 @@ class PDFUtils extends canvasPdf {
             pdfCanvas.style.height = viewport.height + 'px';
             await page.render(renderContext).promise;
     
-            pdfPreview.appendChild(pdfCanvas);
+            // pdfPreview.appendChild(pdfCanvas);
             resolve(); // Resolve the promise
           }
         } catch (error) {reject(error);}
@@ -287,29 +292,38 @@ class PDFUtils extends canvasPdf {
   }
   addElementToPDF(field, position, thisClass, data = false) {
     const eSign = this;
-    if(thisClass.isFrontend && position?.signDone) {return;}
+    if (thisClass.isFrontend && position?.signDone) {return;}
     const config = JSON.parse(field.querySelector('.esign-fields__handle').dataset?.config??'{}');
-    if(!(thisClass?.fieldsData??false)) {thisClass.fieldsData = [];}
+    if (!(thisClass?.fieldsData??false)) {thisClass.fieldsData = [];}
     const args = {unique: (thisClass.fieldsData.length+1), ...config};
     thisClass.fieldsData.push(args);
     const addedElement = document.createElement('div');
     addedElement.classList.add('esign-body__single');
-    if(data?.enableSign) {
+    if (data?.enableSign) {
       data.fieldEL = addedElement;
-      addedElement.classList.add('esign-body__single__enabled');
+      addedElement.classList.add('esign-body__single__enabled', 
+        thisClass.isFrontend?'esign-body__single__front':'esign-body__single__back'
+      );
     }
     addedElement.dataset.type = data?.field??'';
     addedElement.dataset.storedOn = args.unique;
-    if(position.dx && (position?.canvas??false)) {}
-    // if(position.dx) {addedElement.style.left = position.dx + 'px';addedElement.dataset.x = position.dx;}
-    // if(position.dy) {addedElement.style.top = position.dy + 'px';addedElement.dataset.y = position.dy;}
-    if(position.height) {addedElement.dataset.height = parseFloat(position.height);}
-    if(position.width) {addedElement.dataset.width = parseFloat(position.width);}
-    if(position.height) {addedElement.style.height = position.height;}
-    if(position.width) {addedElement.style.width = position.width;}
-    if(position.dx) {addedElement.dataset.x = position.dx;}
-    if(position.dy) {addedElement.dataset.y = position.dy;}
-    if(position.dx || position.dy) {
+
+    var pointer = eSign?.canvasPointer;
+    if (pointer && !data) {
+      position.dx = pointer.pointerX;
+      position.dy = pointer.pointerY;
+    }
+
+    if (position.dx && (position?.canvas??false)) {}
+    // if (position.dx) {addedElement.style.left = position.dx + 'px';addedElement.dataset.x = position.dx;}
+    // if (position.dy) {addedElement.style.top = position.dy + 'px';addedElement.dataset.y = position.dy;}
+    if (position.height) {addedElement.dataset.height = parseFloat(position.height);}
+    if (position.width) {addedElement.dataset.width = parseFloat(position.width);}
+    if (position.height) {addedElement.style.height = position.height;}
+    if (position.width) {addedElement.style.width = position.width;}
+    if (position.dx) {addedElement.dataset.x = position.dx;}
+    if (position.dy) {addedElement.dataset.y = position.dy;}
+    if (position.dx || position.dy) {
       addedElement.style.transform = (
         (position.dx && !position.dy)?'translateX('+position.dx+'px)':(
           (!position.dx && position.dy)?'translateY('+position.dy+'px)':(
@@ -318,7 +332,7 @@ class PDFUtils extends canvasPdf {
         )
       );
     }
-    if(thisClass.isFrontend && !(data?.enableSign) && (data?.field??'') == 'sign') {
+    if (thisClass.isFrontend && !(data?.enableSign) && (data?.field??'') == 'sign') {
       addedElement.classList.add('esign-body__pattern');
       addedElement.title = thisClass.i18n?.notsignedyet??'User not signed yet!';
     }
@@ -333,21 +347,21 @@ class PDFUtils extends canvasPdf {
       </button>
       `}
     `;
-    if(thisClass.isFrontend) {
+    if (thisClass.isFrontend) {
       const currentDate = new Date();
-      if((data?.field??'') == 'date') {
+      if ((data?.field??'') == 'date') {
         const dateFormate = ((((data?.data??{})?.field??{})?.format??'') == '')?'M d, Y':(((data?.data??{})?.field??{})?.format??'');
         
         addedElement.innerHTML = date_formate(currentDate, dateFormate);
-      } else if((data?.field??'') == 'time') {
+      } else if ((data?.field??'') == 'time') {
         const dateFormate = ((((data?.data??{})?.field??{})?.format??'') == '')?'H:i:s':(((data?.data??{})?.field??{})?.format??'');
         addedElement.innerHTML = date_formate(currentDate, dateFormate);
       } else {}
     }
-    if(!thisClass.isFrontend) {init_dragging(addedElement);}
+    if (!thisClass.isFrontend) {eSign.init_dragging(addedElement);}
     addedElement.addEventListener('click', (event) => {
-      if(thisClass.isFrontend) {
-        if((data?.field??'') == 'sign' && data?.enableSign && !(data?.signDone)) {
+      if (thisClass.isFrontend) {
+        if ((data?.field??'') == 'sign' && data?.enableSign && !(data?.signDone)) {
           // alert('Signature poup is under development');
           thisClass.eSignVex = thisClass.vex.dialog.open({
             showCloseButton: true,
@@ -449,7 +463,7 @@ class PDFUtils extends canvasPdf {
         } else {}
       } else {
         const eSignBuilder = document.querySelector('.pdf_builder__fields');
-        if(!eSignBuilder) {return;}eSignBuilder.classList.add('settings_enabled');
+        if (!eSignBuilder) {return;}eSignBuilder.classList.add('settings_enabled');
         const stored = (thisClass?.fieldsData??[]).find((row) => row.unique == addedElement.dataset.storedOn);
         const field = (thisClass?.fields??[]).find((row) => row.id == stored.id);
         const esitingData = (data?.data??{})?.field??{};
@@ -457,14 +471,14 @@ class PDFUtils extends canvasPdf {
         var body, wrap, fieldHTML;
         body = document.querySelector('.pdf_builder__fields__settings__body');
         wrap = stored?.html??false;
-        if(!wrap) {
+        if (!wrap) {
           wrap = document.createElement('form');wrap.classList.add('pdf_fields');
           (field?.fields??[]).forEach((field) => {
             fieldHTML = eSign.do_field(field, false, esitingData);
             wrap.appendChild(fieldHTML);
           });
           stored.html = wrap;
-          if(data) {data.settingsEL = wrap;}
+          if (data) {data.settingsEL = wrap;}
           
           wrap.querySelectorAll('[data-field-id]').forEach((inputEl) => {
             switch(inputEl.dataset.fieldId) {
@@ -472,17 +486,17 @@ class PDFUtils extends canvasPdf {
                 break;
               case 'fontColor':
                 inputEl.addEventListener('change', (event) => {
-                  if(!data) {return;}
+                  if (!data) {return;}
                   var title = data.fieldEL?.firstElementChild;
-                  if(!title || !(title?.style)) {return;}
+                  if (!title || !(title?.style)) {return;}
                   title.style.color = event.target.value;
                 });
                 break;
               case 'fontSize':
                 inputEl.addEventListener('change', (event) => {
-                  if(!data) {return;}
+                  if (!data) {return;}
                   var title = data.fieldEL?.firstElementChild;
-                  if(!title || !(title?.style)) {return;}
+                  if (!title || !(title?.style)) {return;}
                   title.style.fontSize = event.target.value + 'px';
                 });
                 break;
@@ -499,16 +513,16 @@ class PDFUtils extends canvasPdf {
       trash.addEventListener('click', (event) => {
         event.preventDefault();
         var rusure = thisClass.i18n?.rusure??'Are you sure?';
-        if(confirm(rusure)) {
+        if (confirm(rusure)) {
           trash.parentElement.remove();
           document.querySelector('.pdf_builder__fields')?.classList.remove('settings_enabled');
-          if(data && data?.settingsEL) {data.settingsEL.remove();}
+          if (data && data?.settingsEL) {data.settingsEL.remove();}
         }
       });
     });
     // Append the added element to the canvas container
     document.querySelector('#signature-builder').appendChild(addedElement);
-    if(!thisClass.isFrontend) {setTimeout(() => {addedElement.click();}, 800);}
+    if (!thisClass.isFrontend) {setTimeout(() => {addedElement.click();}, 800);}
   }
   init_dragging(el) {
     interact(el)
@@ -655,26 +669,38 @@ class PDFUtils extends canvasPdf {
     });
     return str;
   }
-  previewPDFile(file, thisClass) {
+  async previewPDFile(file, thisClass) {
     const eSign = this;
     if (!file) {return;}
     
     const canvasContainer = document.getElementById('pdfContainer');
     const fileReader = new FileReader();
     // Initialize for canvasic contract
-    if(eSign.oneCanvas) {eSign.canvasPdf_init(thisClass);}
-    fileReader.onload = function () {
-        const typedArray = new Uint8Array(this.result);
+    if (eSign.oneCanvas) {await eSign.canvasPdf_init(thisClass);}
+    fileReader.onload = async (event = false) => {
+        const typedArray = event.target.result; // new Uint8Array(this.result);
+        
+        // reset pdf previous session objects
+        await eSign.canvasPdf_reset();
         // Load the PDF file using PDF.js
         pdfjsLib.getDocument(typedArray).promise.then(async (pdf) => {
           await eSign.renderPages(pdf.numPages, pdf, thisClass);
-        }).then(() => {
-          /**
-           * Start PDF functionality and start implementing events.
-           */
-          eSign.canvasPdf_load_pdf();
-          eSign.canvasPdf_events();
-        }).catch(function (error) {
+        }).then(async (data) => {
+          // Start PDF functionality
+          if (eSign.oneCanvas) {
+            return await eSign.canvasPdf_load_pdf();
+          }
+        }).then(async (data) => {
+          // start implementing events
+          if (eSign.oneCanvas) {
+            return await eSign.canvasPdf_events();
+          }
+        }).then(async (data) => {
+          // render layers
+          // if (eSign.oneCanvas) {
+          //   return await eSign.render_layers();
+          // }
+        }).catch(error => {
           console.error('Error loading PDF:', error);
         });
     };
@@ -682,34 +708,31 @@ class PDFUtils extends canvasPdf {
     fileReader.readAsArrayBuffer(file);
   }
   dragFromRight2Left(thisClass) {
+    const eSign = this;
     interact('.esign-fields__single').draggable({
       inertia: true, autoScroll: true,
       restrict: {
-          restriction: 'parent', endOnly: true,
-          elementRect: {top: 0, left: 0, bottom: 1, right: 1},
+        restriction: 'parent', endOnly: true,
+        elementRect: {top: 0, left: 0, bottom: 1, right: 1},
       },
       onend: function (event) {
-          const target = event.target;
-          const pdfContainer = document.querySelector('#signature-builder');
-          const dropPosition = {
-              // dx: event.pageX - pdfContainer.offsetLeft,
-              // dy: event.pageY - pdfContainer.offsetTop,
-          };
-          console.log({
-            dx: event.pageX - pdfContainer.offsetLeft,
-            dy: event.pageY - pdfContainer.offsetTop,
-          });
-          addElementToPDF(target, dropPosition, thisClass);
+        const target = event.target;
+        const pdfContainer = document.querySelector('#signature-builder');
+        const dropPosition = {
+          dx: event.pageX - pdfContainer.offsetLeft,
+          dy: event.pageY - pdfContainer.offsetTop,
+        };
+        eSign.addElementToPDF(target, dropPosition, thisClass);
       },
     });
   }
   loadPreviousFields(thisClass) {
     const eSign = this;
-    const custom_fields = eSign.lastJson.signature.custom_fields;
-    const fields = custom_fields.fields;const canvas = custom_fields.canvas;
+    const custom_fields = eSign.data.custom_fields;
+    const fields = custom_fields.fields;const canvas = custom_fields?.canvas;
     fields.forEach((row) => {
-      // if(row.enableSign) {
-        row.canvas = canvas[0];// console.log(row);
+      // if (row.enableSign) {
+        row.canvas = (canvas && canvas[0])?canvas[0]:false;// console.log(row);
         var fieldRow = thisClass.fields.find((rowf) => rowf.id==row.field);
         var field = document.createElement('div');field.classList.add('esign-fields__single');
         var handle = document.createElement('div');handle.classList.add('esign-fields__handle');
@@ -719,10 +742,11 @@ class PDFUtils extends canvasPdf {
     });
   }
   async init_eSignature(addedElement, thisClass) {
+    const eSign = this;
     thisClass.date_formate = date_formate;
     // Implement signature capturing using signature_pad
     var signatureCanvas = document.getElementById('signatureCanvas');
-    if((thisClass?.signaturePadEl)?.querySelector('canvas')) {
+    if ((thisClass?.signaturePadEl)?.querySelector('canvas')) {
       signatureCanvas.parentElement.insertBefore(
         thisClass.signaturePadEl.querySelector('canvas'), signatureCanvas
       );
@@ -742,10 +766,12 @@ class PDFUtils extends canvasPdf {
       // });
     
     }
+    // 
     new Pad(thisClass);
+    // 
     document.querySelectorAll('[data-esign-popup-proceed]').forEach((el) => {
       el.addEventListener('click', (event) => {
-        importSignature2Element(thisClass, addedElement);
+        eSign.importSignature2Element(thisClass, addedElement);
       });
     });
   }
@@ -796,7 +822,7 @@ class PDFUtils extends canvasPdf {
           // Use the pdf-lib and the addSignatureToPDF function from the previous example
           // to add the signature to the PDF
           const originalPdfBytes = '...'; // Load your original PDF bytes here
-          const modifiedPdfBytes = await addSignatureToPDF(originalPdfBytes, thisClass.signatureDataUrl);
+          const modifiedPdfBytes = await eSign.addSignatureToPDF(originalPdfBytes, thisClass.signatureDataUrl);
   
           // Now you have the modified PDF with the uploaded signature (modifiedPdfBytes)
           // You can save it, send it to the client, or use it as needed
@@ -807,14 +833,14 @@ class PDFUtils extends canvasPdf {
   }
   async importSignature2Element(thisClass, addedElement) {
     const eSign = this;
-    if(thisClass.signaturePad.isEmpty()) {
+    if (thisClass.signaturePad.isEmpty()) {
       var text = thisClass.i18n?.plsdosign??'Please provide a signature.';
       thisClass.toastify({text: text,className: "warning", duration: 3000, stopOnFocus: true, style: {background: "linear-gradient(to right, rgb(255 200 153), rgb(255 166 33))"}}).showToast();
     } else {
       thisClass.signatureDataUrl = thisClass.signaturePad.toDataURL('image/png');
       // console.log(thisClass.signatureDataUrl);
       // const originalPdfBytes = '...'; // Load your original PDF bytes here
-      // const modifiedPdfBytes = await addSignatureToPDF(originalPdfBytes, thisClass.signatureDataUrl);
+      // const modifiedPdfBytes = await eSign.addSignatureToPDF(originalPdfBytes, thisClass.signatureDataUrl);
   
       addedElement.querySelectorAll('img').forEach((img) => {img.remove();});
       const sign_image = document.createElement('img');

@@ -1,13 +1,7 @@
 // import Phaser from 'phaser';
-import {
-    library as L,
-    makeDragZone,
-    makeRender,
-    makeShape,
-    makeWheel,
-} from 'scrawl-canvas'
-import * as scrawl from 'scrawl-canvas';
-import { reportSpeed, killArtefact } from 'scrawl-canvas/source/core/utilities';
+// import * as scrawl from 'scrawl-canvas';
+
+// import { reportSpeed, killArtefact } from 'scrawl-canvas/source/core/utilities';
 
 const perSerPdf = {
     
@@ -15,7 +9,11 @@ const perSerPdf = {
 };
 class canvasPdf {
     constructor(thisClass) {
+        this.layers = [];
         this.namespace = 'esign';
+
+        window.eSign = this;
+        
         this.setup_canvas(thisClass);
     }
     setup_canvas(thisClass) {
@@ -26,71 +24,121 @@ class canvasPdf {
         this.pdfContext = false;
         this.viewport = false;
         this.page = false;
-        this.scrawl = scrawl;
+        this.scrawl = window?.scrawl;
         this.images = [];
         this.pdfPreview = false;
         this.pdfPages = [];
         this.currentPDF = false;
-        console.log('setup_canvas..');
     }
-    canvasPdf_name(name) {
+    name(name) {
         return `${this.namespace}-${name}`;
     }
-    canvasPdf_init(thisClass) {
+    async canvasPdf_init(thisClass) {
         const eSign = this;
         eSign.pdfPages = [];
-        scrawl.init(document.querySelector('#contractCanvas'));
-        eSign.canvas = scrawl.library.canvas?.contractCanvas??scrawl.getCanvas('contractCanvas');
-        eSign.canvas.setAsCurrentCanvas();
-        // eSign.images.sort((a, b) => a.order - b.order);
-        // let yOffset = 0;
-        // eSign.images.map((row, i)=> {row.yOffset = yOffset;yOffset +=  row.height;return row;});
-
-        // eSign.images = eSign.images.slice(0, 26);
-        
-        // const imageWidths = eSign.images.map(image => image.width).reduce((max, curr) => (max <= curr)?curr:max);
-        // const imageHeights = eSign.images.map(image => image.height).reduce((till, curr) => till + curr, 0);
-        // const canvasHeight = imageHeights;
-        // const canvasWidth = imageWidths;
-
-        // eSign.canvasPdf_load_pdf();
-        // eSign.canvasPdf_events();
-        
+        var canvas = document.querySelector('#contractCanvas');
+        if (canvas) {
+            // eSign.freezeEl = document.createElement('div');
+            // eSign.freezeEl.appendChild(canvas);
+            canvas.width = 800;canvas.height = 1200;
+            // canvas.dataset.scrawlCanvas = true;
+            // canvas.dataset.isResponsive = true;
+            // canvas.dataset.fit = 'contain';
+            // canvas.dataset.baseWidth = 800;
+            // canvas.dataset.baseHeight = 1200;
+            // eSign.canvas = canvas = eSign.freezeEl.querySelector('canvas');
+            // 
+            scrawl.init(canvas);
+            eSign.canvas = scrawl.library.canvas?.contractCanvas??scrawl.getCanvas('contractCanvas');
+            eSign.canvas.setAsCurrentCanvas();
+        }
+    }
+    canvasPdf_reset() {
+        this.layers = [];
+        this.pdfPages = [];
+        Object.values(scrawl.library.artefact).forEach(widget => widget.deregister());
+        scrawl.makeRender({
+            name: eSign.name('contract'),
+            target: eSign.canvas,
+        });
     }
     canvasPdf_load_page(page) {
         const eSign = this;
+        if (!page) {return;}
         eSign.pdfPages.push(page);
     }
-    canvasPdf_load_pdf() {
+    async canvasPdf_load_pdf() {
         const eSign = this;
         // scrawl.library.pdf.load(pdfUrl).then(pdf => {});
         // each pdfPages is a PDFPageProxy  object
+        eSign.canvas.height = eSign.pdfPages.map(pdf => pdf._pageInfo.view[3]).reduce((total, num) => total + num, 0);
+        var args = {
+            width: Math.max(...[800, ...eSign.pdfPages.map(pdf => pdf._pageInfo.view[2])]),
+            height: Math.max(...[800, ...eSign.pdfPages.map(pdf => pdf._pageInfo.view[3])])
+        };
+        eSign.canvas.width = args.width;
+        
         eSign.canvas.set({
-            width: Math.max(eSign.pdfPages.map(pdf => pdf._pageInfo.view[2])), // Set the desired width of the canvas
-            height: Math.max(eSign.pdfPages.map(pdf => pdf._pageInfo.view[3])), // Set the desired height of the canvas
-            scrollBound: true, // Enable scrolling within the canvas
-        });
-        eSign.pdfPages.forEach((page, index) => {
-            const newCell = eSign.canvas.addCell({
-                name: `page${index}`,
-                // width: eSign.canvas.width,
-                // height: eSign.canvas.height,
-                width: page._pageInfo.view[2],
-                height: page._pageInfo.view[3],
-            });
-            page.render({
-                canvas: newCell,
-                viewport: page.getViewport({scale: 1}),
-                canvasContext: newCell.domElement.getContext('2d'),
-            });
+            width: args.width,
+            height: args.height,
+            scrollBound: true,
         });
 
-        // const numPages = pdf.numPages;
-        // for (let i = 1; i <= numPages; i++) {
-        //     pdf.getPage(i).then((page) => {
-                
-        //     });
-        // }
+        const promises = await eSign.pdfPages.map(async (page) => {
+            return new Promise(async (resolve, reject) => {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = page._pageInfo.view[2];
+                canvas.height = page._pageInfo.view[3];
+                const renderTask = await page.render({
+                    canvasContext: context,
+                    viewport: page.getViewport({scale: 1}),
+                });
+                await renderTask.promise.then(async () => {
+                    await canvas.toBlob(async (blob) => {
+                        const blobUrl = await URL.createObjectURL(blob);
+                        // const screenshot = canvas.toDataURL('image/png');
+                        const cellArgs = {
+                            width: page._pageInfo.view[2],
+                            height: page._pageInfo.view[3],
+                        };
+                        // const newCell = eSign.canvas.addCell({
+                        //     ...cellArgs,
+                        //     name: `page${page._pageIndex}`,
+                        //     // width: eSign.canvas.width,
+                        //     // height: eSign.canvas.height,
+                        // });
+                        var scale = Math.max(1, (eSign.canvas.width / cellArgs.width));
+                        eSign.layers.push({
+                            page: page,
+                            scale: scale,
+                            // cell: newCell,
+                            image: blobUrl,
+                            width: cellArgs.width,
+                            height: cellArgs.height,
+                            pageIndex: page._pageIndex,
+                        });
+                        resolve(blobUrl);
+                    });
+                })
+                .catch((err) => {
+                    console.error(err)
+                    reject(err);
+                });
+            })
+            // .then(async () => {
+            // })
+            // .catch((err) => {
+            //     console.error(err)
+            // });
+        });
+        Promise.all(promises).then(async (files) => {
+            if (eSign.oneCanvas) {
+                return await eSign.render_layers();
+                // return await eSign.render_artifaces();
+                // return await eSign.canvasPdf_load_widgets();
+            }
+        });
     }
     canvasPdf_events() {
         const eSign = this;
@@ -100,16 +148,49 @@ class canvasPdf {
         // });
         
         
-        eSign.test_area();
     }
-    canvasPdf_load_widgets() {
+    async canvasPdf_load_widgets() {
         const eSign = this;const canvas = eSign.canvas;
-        const name = (n) => eSign.canvasPdf_name(n);
+        const name = (n) => eSign.name(n);
         // 
         canvas.set({
             cursor: 'auto',
             backgroundColor: 'honeydew',
         }).setAsCurrentCanvas();
+        const group = scrawl.makeGroup({
+            name: 'widgetGroup',
+            host: canvas,
+        });
+        const block = scrawl.makeBlock({
+            width: 100,
+            height: 50,
+            start: ['center', 'center'],
+            fillStyle: 'lightblue',
+            strokeStyle: 'black',
+            lineWidth: 2,
+            method: 'fillAndDraw',
+            group: group,
+            // Make the block draggable
+            events: {
+                start: function () {
+                    this.set({ zIndex: 1 }); // Bring block to the front when dragging starts
+                },
+                move: function () {
+                    this.set({
+                        startX: this.start.x + this.state.currentDragDelta.x,
+                        startY: this.start.y + this.state.currentDragDelta.y,
+                    });
+                },
+            },
+        });
+        // Render the canvas
+        scrawl.makeRender({
+            name: 'widgetRender',
+            target: canvas,
+        });
+
+        return;
+        
         const box = scrawl.makeBlock({
             name: name('box'),
             width: 100,
@@ -227,79 +308,498 @@ class canvasPdf {
             updateOnStart: setCursorTo.grabbing,
             updateOnEnd: setCursorTo.pointer,
         });
-        // console.log()
         scrawl.makeRender({
             name: name('animation'),
             target: canvas,
         });
     }
-    test_area() {
+    canvasPdf_preview() {
         const eSign = this;
-        window.eSign = eSign;window.scrawl = scrawl;
-        // 
-        const widgetBox = scrawl.makeRectangle({
-            name: eSign.canvasPdf_name('myRectangle'),
-            startX: 50,
-            startY: 50,
-            width: 200,
-            height: 100,
-            strokeStyle: 'black',
-            fillStyle: 'red'
-        });
-        eSign.widgetBox = widgetBox;
-        widgetBox.set({drag: true});
-        widgetBox.set({resize: true});
-        console.log(widgetBox);
-
-        // const group = scrawl.makeGroup({
-        //     name: eSign.canvasPdf_name('clip-group'),
-        //     host: eSign.canvasPdf_name('cell'),
-        //     order: 0,
-        // });
-        window.group = eSign.canvas.get('baseGroup');
-        group.addArtefacts(widgetBox);
-        // eSign.canvas.add(group);
-
-        eSign.canvas.buildCell({
-            name: eSign.canvasPdf_name('cell-pattern'),
-            width: 50,
-            height: 50,
-            backgroundColor: 'lightblue',
-            shown: false,
-            useAsPattern: true,
-        });
-        eSign.canvas.base.set({
-            compileOrder: 1,
-        });
-        scrawl.makePattern({
-            name: eSign.canvasPdf_name('water-pattern'),
-            imageSource: 'https://scrawl.rikweb.org.uk/demo/img/water.png',
-        
-        })
-        scrawl.makeBlock({
-            name: eSign.canvasPdf_name('cell-pattern-block'),
-            group: eSign.canvasPdf_name('cell-pattern'),
-            width: 40,
-            height: 40,
-            startX: 'center',
-            startY: 'center',
-            handleX: 'center',
-            handleY: 'center',
-        
-            method: 'fill',
-        
-            fillStyle: eSign.canvasPdf_name('water-pattern'),
-
-            delta: {
-                roll: -0.3
+        document.querySelectorAll('#signature-builder').forEach(ground => ground.appendChild(eSign.canvas.cloneNode(true)));
+    }
+    slideshow_data() {
+        return {
+            "cut-citrus": {
+                "text": "Lorem Ipsum",
+                "alt": "cut citrus fruits. ",
+                "src": "https://source.unsplash.com/ezSFnAFi9hY/500x500"
             },
-        });
+            "sliced-mango": {
+                "text": "Dolor Sit",
+                "alt": "sliced mango. ",
+                "src": "https://source.unsplash.com/TIGDsyy0TK4/500x500"
+            },
+            "blueberries": {
+                "text": "Amet Consectetur",
+                "alt": "a bunch of blueberries. ",
+                "src": "https://source.unsplash.com/TdDtTu2rv4s/500x500"
+            },
+            "pineapple": {
+                "text": "Adipiscing Elit",
+                "alt": "a pineapple sitting on a table. ",
+                "src": "https://source.unsplash.com/eudGUrDdBB0/500x500"
+            },
+            "frozen-raspberries": {
+                "text": "Nunc Tortor",
+                "alt": "frozen raspberries. ",
+                "src": "https://source.unsplash.com/eJH4f1rlG7g/500x500"
+            },
+            "sliced-strawberry": {
+                "text": "Metus Mollis",
+                "alt": "a sliced strawberry. ",
+                "src": "https://source.unsplash.com/24RUrLSW1HI/500x500"
+            },
+            "assorted-slices": {
+                "text": "Congue Sagittis",
+                "alt": "an arrangement of assorted sliced fruits. ",
+                "src": "https://source.unsplash.com/h5yMpgOI5nI/500x500"
+            },
+            "sliced-watermelon": {
+                "text": "Vestibulum Et",
+                "alt": "sliced watermelons. ",
+                "src": "https://source.unsplash.com/2TYrR2IB72s/500x500"
+            },
+            "grapefruit-lemon-pomegranite": {
+                "text": "Donec Eget",
+                "alt": "grapefruits, lemons, and pomegranates. ",
+                "src": "https://source.unsplash.com/1cWZgnBhZRs/500x500"
+            },
+            "half-avocado": {
+                "text": "Maecenas et Justo",
+                "alt": "half of an avocado. ",
+                "src": "https://source.unsplash.com/9aOswReDKPo/500x500"
+            },
+            "half-lime": {
+                "text": "Malesuada Quam",
+                "alt": "half of a lime. ",
+                "src": "https://source.unsplash.com/Nl7eLS8E2Ss/500x500"
+            },
+            "cherry": {
+                "text": "Ultricies Sollicitudin",
+                "alt": "a single cherry with stem. ",
+                "src": "https://source.unsplash.com/3HhXWJzG5Ko/500x500"
+            },
+            "banana-bunch": {
+                "text": "Gravida Nibh",
+                "alt": "a bunch of bananas. ",
+                "src": "https://source.unsplash.com/fczCr7MdE7U/500x500"
+            },
+            "three-pears": {
+                "text": "Pellentesque Sapien",
+                "alt": "three pears. ",
+                "src": "https://source.unsplash.com/uI900SItAyY/500x500"
+            },
+            "assorted-peaches": {
+                "text": "Suspendisse Vel",
+                "alt": "a basket full of peaches next to a plate with sliced peaches. ",
+                "src": "https://source.unsplash.com/0AynZdszfz0/500x500"
+            },
+            "bowl-of-avocados": {
+                "text": "Mauris Consectetur",
+                "alt": "a bowl of avocados. ",
+                "src": "https://source.unsplash.com/C6JhUKs9q8M/500x500"
+            }
+        };
+    }
+    async render_layers(renderOnly = false) {
+        const eSign = this;eSign.group = {widgets: {}};const canvas = eSign.canvas;
+        const name = window.name = (n) => eSign.name(n);
 
+        if (!renderOnly) {
+            const setCursorTo = {
+                auto: () => canvas.set({css: {cursor: 'auto'}}),
+                pointer: () => canvas.set({css: {cursor: 'pointer'}}),
+                grabbing: () => canvas.set({css: {cursor: 'grabbing'}})
+            };
+            eSign.canvas.set({
+                cursor: 'auto',
+                checkForEntityHover: true,
+                includeInTabNavigation: true,
+                onEntityNoHover: setCursorTo.auto,
+                onEntityHover: setCursorTo.pointer,
+
+                fit: "cover",
+                checkForResize: true,
+                ignoreCanvasCssDimensions: true,
+                baseMatchesCanvasDimensions: true
+            }).setBase({
+                compileOrder: 1
+            }).setAsCurrentCanvas();
+            // 
+            eSign.group.pages = scrawl.makeGroup({
+                order: 0,
+                host: eSign.canvas.base.name,
+                name: name('pages'),
+            });
+            eSign.group.text = scrawl.makeGroup({
+                order: 1,
+                host: eSign.canvas.base.name,
+                name: name('text'),
+            });
+            eSign.group.widgets[name('widget-1')] = scrawl.makeGroup({
+                order: 2,
+                host: eSign.canvas.base.name,
+                name: name('widget-1'),
+            });
+            var pghooked = false;
+            const indexes = eSign.layers.map(async (row, index) => {
+                pghooked = (pghooked)?await pghooked.clone({
+                    handleX: 100,
+                    width: row.width,
+                    height: row.height,
+                    // imageSource: row.image,
+                    startY: pghooked.start[1] + pghooked.dimensions[1],
+                    handleY: pghooked.handle[0] + pghooked.dimensions[1],
+                    name: name('page-' + index), // row?.pageIndex??
+                }):await scrawl.makePicture({
+                    name: name('page-' + index), // row?.pageIndex??
+                    imageSource: 'http://localhost:8040/esignature/wp-content/plugins/advanced-pdf-esignature/assets/page.png', // row.image,
+                    
+                    width: row.width,
+                    height: row.height,
+                    
+                    copyWidth: row.width,
+                    copyHeight: row.height,
+                    
+                    startX: 10,
+                    startY: 10,
+                    handleX: 10,
+                    handleY: 10,
+                    dimensions: [row.width, row.height],
+                    // copyDimensions: ['100%', '100%'],
+                    
+                    group: name('pages'),
+
+                    onEnter: (event) => {alert('Hi there')},
+                    onUp: (event) => {alert('Hi there')},
+                    onDown: (event) => {alert('Hi there')},
+                    onLeave: (event) => {alert('Hi there')}
+                });
+                return row?.pageIndex??index;
+            });
+            scrawl.makeGradient({
+                name: name('linear1'),
+                endX: '100%',
+                colors: [
+                    [0, 'pink'],
+                    [999, 'darkgreen']
+                ],
+            });
+            /*
+            scrawl.makePhrase({
+                name: name('label'),
+                text: 'Hello, world!',
+                font: '4.5em bold Garamond, sans-serif',
+                width: '100%',
+                justify: 'center',
+            
+                start: ['center', 250],
+                handle: ['center', 'center'],
+                fillStyle: 'lightblue',
+                lineWidth: 2,
+                strokeStyle: 'blue',
+                method: 'fillThenDraw',
+                group: eSign.group.widgets[name('widget-1')]
+
+            });
+            */
+            scrawl.makeBlock({
+                width: 200,
+                height: 150,
+                lineWidth: 4,
+                startX: 100,
+                startY: 250,
+                name: name('block-1-box'),
+                strokeStyle: 'coral',
+                method: 'fillAndDraw',
+                memoizeFilterOutput: true,
+                fillStyle: name('linear1'),
+                lockFillStyleToEntity: true,
+                group: eSign.group.widgets[name('widget-1')]
+            });
+            scrawl.makePhrase({
+                name: name('block-1-text'),
+            
+                text: 'Remal Mahmud',
+                font: 'bold 40px Garamond, serif',
+            
+                startX: '14%',
+                startY: '28%',
+                handleX: 'center',
+                handleY: 'center',
+            
+                fillStyle: 'green',
+                strokeStyle: 'gold',
+            
+                lineWidth: 2,
+                lineJoin: 'round',
+                shadowOffsetX: 2,
+                shadowOffsetY: 2,
+                shadowBlur: 2,
+                shadowColor: 'black',
+            
+                showBoundingBox: true,
+                boundingBoxColor: 'red',
         
-        // widgetBox.addTo(eSign.canvas);
-        // widgetBox.addListener('up', () => {
-        //     alert('Box clicked!');
-        // });
+                group: eSign.group.widgets[name('widget-1')]
+            });
+
+            // positioning
+            scrawl.library.artefact[name('block-1-box')].set({
+                height: 60, width: 200, strokeStyle: 'gray', lineWidth: 2,
+                start: [100, 100], fillStyle: 'gray'
+            });
+            scrawl.library.artefact[name('block-1-text')].set({
+                font: 'bold 22px Garamond, serif', width: 160, start: [200, 135],
+                fillStyle: 'black', strokeStyle: 'none', lineWidth: 0,
+                shadowBlur: 0, shadowOffsetX: 0, shadowOffsetY: 0,
+                showBoundingBox: false
+            });
+
+            
+            scrawl.makeDragZone({
+                zone: eSign.canvas,
+                endOn: ['up', 'leave'],
+                exposeCurrentArtefact: true,
+                preventTouchDefaultWhenDragging: true,
+                reactionHooks: ['myDragBehavior']
+            });
+            scrawl.makeAction({
+                name: 'myDragBehavior',
+                method: (artefact) => {
+                    console.log(artefact.start, artefact.state);
+                    artefact.set({
+                        startX: artefact.start.x + artefact.state.currentDragDelta.x,
+                        startY: artefact.start.y + artefact.state.currentDragDelta.y,
+                    });
+                },
+            });
+        }
+        // Finally Render contents
+        scrawl.makeRender({
+            name: name('contract'),
+            target: eSign.canvas,
+        });
+    }
+    render_artifaces() {
+        const eSign = this;
+        const artefacts = scrawl.library.artefact,
+        canvas = this.canvas,
+        base = canvas.base,
+        baseGroup = scrawl.library.group[base.name];
+
+        // For this demo we'll use a fixed-dimensions base canvas and fit it into the display canvas so all of the base always shows in the display
+        canvas.set({
+            breakToLandscape: 2,
+            breakToPortrait: 0.5,
+            actionLandscapeShape: () => {
+                canvas.setBase({
+                    width: 1600,
+                    height: 400
+                });
+                updateTilePositions("landscape");
+            },
+            actionPortraitShape: () => {
+                canvas.setBase({
+                    width: 400,
+                    height: 1600
+                });
+                updateTilePositions("portrait");
+            },
+            actionRectangleShape: () => {
+                canvas.setBase({
+                    width: 800,
+                    height: 800
+                });
+                updateTilePositions("rectangle");
+            }
+        });
+        // 
+        const updateTilePositions = (label) => {
+            switch (label) {
+                case "landscape":
+                slideshowKeys.forEach((key, index) => {
+                    let tile = artefacts[key];
+                    tile.set({
+                    start: [`${Math.floor(index / 2) * 12.5}%`, `${(index % 2) * 50}%`]
+                    });
+                });
+                break;
+
+                case "portrait":
+                slideshowKeys.forEach((key, index) => {
+                    let tile = artefacts[key];
+                    tile.set({
+                    start: [`${Math.floor(index / 8) * 50}%`, `${(index % 8) * 12.5}%`]
+                    });
+                });
+                break;
+
+                case "rectangle":
+                slideshowKeys.forEach((key, index) => {
+                    let tile = artefacts[key];
+                    tile.set({
+                    start: [`${Math.floor(index / 4) * 25}%`, `${(index % 4) * 25}%`]
+                    });
+                });
+                break;
+            }
+        };
+        // 
+        const slideshowData = {
+            "half-lime": {
+                text: "Malesuada Quam",
+                alt: "half of a lime. ",
+                src: "https://source.unsplash.com/Nl7eLS8E2Ss/500x500"
+            },
+            "cut-citrus": {
+                text: "Lorem Ipsum",
+                alt: "cut citrus fruits. ",
+                src: "https://source.unsplash.com/ezSFnAFi9hY/500x500"
+            },
+            "sliced-mango": {
+                text: "Dolor Sit",
+                alt: "sliced mango. ",
+                src: "https://source.unsplash.com/TIGDsyy0TK4/500x500"
+            },
+            "blueberries": {
+                text: "Amet Consectetur",
+                alt: "a bunch of blueberries. ",
+                src: "https://source.unsplash.com/TdDtTu2rv4s/500x500"
+            },
+            "pineapple": {
+                text: "Adipiscing Elit",
+                alt: "a pineapple sitting on a table. ",
+                src: "https://source.unsplash.com/eudGUrDdBB0/500x500"
+            },
+            "frozen-raspberries": {
+                text: "Nunc Tortor",
+                alt: "frozen raspberries. ",
+                src: "https://source.unsplash.com/eJH4f1rlG7g/500x500"
+            },
+            "sliced-strawberry": {
+                text: "Metus Mollis",
+                alt: "a sliced strawberry. ",
+                src: "https://source.unsplash.com/24RUrLSW1HI/500x500"
+            },
+            "assorted-slices": {
+                text: "Congue Sagittis",
+                alt: "an arrangement of assorted sliced fruits. ",
+                src: "https://source.unsplash.com/h5yMpgOI5nI/500x500"
+            },
+            "sliced-watermelon": {
+                text: "Vestibulum Et",
+                alt: "sliced watermelons. ",
+                src: "https://source.unsplash.com/2TYrR2IB72s/500x500"
+            },
+            "grapefruit-lemon-pomegranite": {
+                text: "Donec Eget",
+                alt: "grapefruits, lemons, and pomegranates. ",
+                src: "https://source.unsplash.com/1cWZgnBhZRs/500x500"
+            },
+            "half-avocado": {
+                text: "Maecenas et Justo",
+                alt: "half of an avocado. ",
+                src: "https://source.unsplash.com/9aOswReDKPo/500x500"
+            },
+            "cherry": {
+                text: "Ultricies Sollicitudin",
+                alt: "a single cherry with stem. ",
+                src: "https://source.unsplash.com/3HhXWJzG5Ko/500x500"
+            },
+            "banana-bunch": {
+                text: "Gravida Nibh",
+                alt: "a bunch of bananas. ",
+                src: "https://source.unsplash.com/fczCr7MdE7U/500x500"
+            },
+            "three-pears": {
+                text: "Pellentesque Sapien",
+                alt: "three pears. ",
+                src: "https://source.unsplash.com/uI900SItAyY/500x500"
+            },
+            "assorted-peaches": {
+                text: "Suspendisse Vel",
+                alt: "a basket full of peaches next to a plate with sliced peaches. ",
+                src: "https://source.unsplash.com/0AynZdszfz0/500x500"
+            },
+            "bowl-of-avocados": {
+                text: "Mauris Consectetur",
+                alt: "a bowl of avocados. ",
+                src: "https://source.unsplash.com/C6JhUKs9q8M/500x500"
+            }
+        };
+        // 
+        const slideshowKeys = Object.keys(slideshowData);
+        // 
+        new Promise((resolve, reject) => {
+            const pictures = [];var picture = false;
+            slideshowKeys.forEach(async (key, index) => {
+                picture = (picture)?await picture.clone({
+                    name: key,
+                    imageSource: slideshowData[key].src
+                }):await scrawl.makePicture({
+                    name: key,
+                    dimensions: [200, 200],
+                    imageSource: slideshowData[key].src,
+                    copyDimensions: ["100%", "100%"]
+                });
+                pictures.push(picture);
+            });
+            setTimeout(() => {
+                console.log('resolved');
+                resolve(pictures)
+            }, 3000);
+        })
+        .then(data => {
+            updateTilePositions("rectangle");
+            // This function checks the browser's current cursor position and updates the 'click to replace' text
+            let lastPointerLocation = false;
+            const checkMousePosition = () => {
+                const baseHere = base.here;
+                baseGroup.setArtefacts({
+                    globalAlpha: 0.75
+                });
+                if (baseHere.active) {
+                    let tile = getHoveredArtefact();
+                    if (tile) {
+                        if (lastPointerLocation !== tile.name) {
+                            tile.set({globalAlpha: 1});
+                            console.log('Pointer At:', slideshowData[tile.name].text);
+                        }
+                    }
+                }
+            };
+
+            const getHoveredArtefact = () => {
+                const baseHere = base.here;
+                if (baseHere.active) {
+                    let target = baseGroup.getArtefactAt(baseHere);
+                    if (target && target.artefact) {
+                        return target.artefact;
+                    }
+                }
+                return false;
+            };
+
+            // Canvas display and animation
+            scrawl.makeRender({
+                name: "demo-animation",
+                target: canvas,
+                commence: checkMousePosition
+            });
+
+            // Add event listener to canvas to make the background image magic happen
+            scrawl.addNativeListener("click", () => {
+                const tile = getHoveredArtefact();
+
+                if (tile) {
+                    console.log('Selected image:', slideshowData[tile.name].text);
+                } else {
+                    // No artiface clicked
+                }
+            }, canvas.domElement);
+        })
+        .catch(err => {});
     }
 }
 export default canvasPdf;

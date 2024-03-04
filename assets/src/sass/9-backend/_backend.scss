@@ -138,9 +138,10 @@ body {
     margin-bottom: 20px;
     border-radius: 10px;
     canvas {
-      // width: 100%;
-      // height: auto;
-      // max-width: 100%;
+      margin-left: 5px;
+      margin-right: 5px;
+      box-shadow: 0 0 10px #333;
+      // max-width: calc(100% - 10px);
     }
   }
   .active {
@@ -243,7 +244,9 @@ body {
         justify-content: space-between;
         border: 0.5px dashed #a5a5a5;
         
-        display: none;
+        // &__front {
+        //   display: none;
+        // }
         
         @include mq($until: 550px) {
           padding: 3px 5px;
@@ -370,6 +373,9 @@ body {
         user-select: none;
         color: #333;
         border-color: #ccc;
+      }
+      &__image {
+        height: 50px;
       }
     }
     &__settings {

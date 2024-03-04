@@ -45,11 +45,18 @@ class Ajax {
 			}
 		}
 
+		$authod_id = get_the_author($_POST['template']);
+
 		$json = [
 			'hooks' => ['gotsignaturepopupresult'],
 			'signature' => [
-				'toast' => false, // '<strong>' . count($requested) . '</strong> people requested this service in the last 10 minutes!',
-				'custom_fields' => $meta
+				'custom_fields'	=> $meta,
+				'title'			=> get_the_title($_POST['template']),
+				'author'		=> [
+					'id'		=> $authod_id,
+					'name'		=> get_the_author_meta('display_name', $authod_id)
+				],
+				'toast'			=> false, // '<strong>' . count($requested) . '</strong> people requested this service in the last 10 minutes!',
 			],
 		];
 		wp_send_json_success($json);
@@ -244,7 +251,7 @@ class Ajax {
 				}
 			}
 			if($dataset['pdf']) {
-				// update_post_meta($_POST['template'], '__esign_builder', $dataset);
+				update_post_meta($_POST['template'], '__esign_builder', $dataset);
 
 				$orders = [];
 				foreach($dataset['fields'] as $i => $row) {
@@ -285,7 +292,8 @@ class Ajax {
 				// $allowed_users = $this->get_all_users_for_this_sign($post_id);
 				// $args['user'] = $allowed_user;
 				$upload_path = str_replace([site_url('/'), '/'], [ABSPATH, '\\'], $meta['pdf']);
-				$uploaded = move_uploaded_file($_FILES['pdf']['tmp_name'], $upload_path);
+				// $uploaded = move_uploaded_file($_FILES['pdf']['tmp_name'], $upload_path);
+				$uploaded = false;
 				if($uploaded) {
 					$updated = update_post_meta($post_id, '__esign_builder', $meta);
 					$noti_sent = $this->send_notification_to_next_user($post_id);
