@@ -11,7 +11,10 @@ class Project {
 	protected function __construct() {
 		global $eSign_Log;$eSign_Log					= Log::get_instance();
 		global $eSign_Ajax;$eSign_Ajax					= Ajax::get_instance();
+		global $eSign_Files;$eSign_Files				= Files::get_instance();
+		global $eSign_Nonce;$eSign_Nonce				= Nonce::get_instance();
 		global $eSign_Menus;$eSign_Menus				= Menus::get_instance();
+		global $eSign_Esign;$eSign_Esign				= Esign::get_instance();
 		global $eSign_Mailer;$eSign_Mailer				= Mailer::get_instance();
 		global $eSign_Assets;$eSign_Assets				= Assets::get_instance();
 		global $eSign_Restapi;$eSign_Restapi			= Restapi::get_instance();

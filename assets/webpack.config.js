@@ -21,7 +21,8 @@ const SRC_DIR = path.resolve( __dirname, 'src' );
 const entry = {
 	backend: JS_DIR + '/admin.js',
 	frontend: JS_DIR + '/public.js',
-
+	date_formate: JS_DIR + '/date_formate.js',
+	interact: JS_DIR + '/interact.js',
 };
 
 const output = {

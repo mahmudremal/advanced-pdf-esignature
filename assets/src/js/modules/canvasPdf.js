@@ -1,12 +1,8 @@
 // import Phaser from 'phaser';
-// import * as scrawl from 'scrawl-canvas';
-
+// import * as eSign.scrawl from 'scrawl-canvas';
 // import { reportSpeed, killArtefact } from 'scrawl-canvas/source/core/utilities';
 
-const perSerPdf = {
-    
-    
-};
+
 class canvasPdf {
     constructor(thisClass) {
         this.layers = [];
@@ -48,16 +44,17 @@ class canvasPdf {
             // canvas.dataset.baseHeight = 1200;
             // eSign.canvas = canvas = eSign.freezeEl.querySelector('canvas');
             // 
-            scrawl.init(canvas);
-            eSign.canvas = scrawl.library.canvas?.contractCanvas??scrawl.getCanvas('contractCanvas');
+            eSign.scrawl.init(canvas);
+            eSign.canvas = eSign.scrawl.library.canvas?.contractCanvas??eSign.scrawl.getCanvas('contractCanvas');
             eSign.canvas.setAsCurrentCanvas();
         }
     }
     canvasPdf_reset() {
+        const eSign = this;
         this.layers = [];
         this.pdfPages = [];
-        Object.values(scrawl.library.artefact).forEach(widget => widget.deregister());
-        scrawl.makeRender({
+        Object.values(eSign.scrawl.library.artefact).forEach(widget => widget.deregister());
+        eSign.scrawl.makeRender({
             name: eSign.name('contract'),
             target: eSign.canvas,
         });
@@ -69,14 +66,16 @@ class canvasPdf {
     }
     async canvasPdf_load_pdf() {
         const eSign = this;
-        // scrawl.library.pdf.load(pdfUrl).then(pdf => {});
+        // eSign.scrawl.library.pdf.load(pdfUrl).then(pdf => {});
         // each pdfPages is a PDFPageProxy  object
         eSign.canvas.height = eSign.pdfPages.map(pdf => pdf._pageInfo.view[3]).reduce((total, num) => total + num, 0);
         var args = {
             width: Math.max(...[800, ...eSign.pdfPages.map(pdf => pdf._pageInfo.view[2])]),
             height: Math.max(...[800, ...eSign.pdfPages.map(pdf => pdf._pageInfo.view[3])])
         };
-        eSign.canvas.width = args.width;
+        eSign.canvasArgs = args;
+
+        console.log(eSign)
         
         eSign.canvas.set({
             width: args.width,
@@ -157,11 +156,11 @@ class canvasPdf {
             cursor: 'auto',
             backgroundColor: 'honeydew',
         }).setAsCurrentCanvas();
-        const group = scrawl.makeGroup({
+        const group = eSign.scrawl.makeGroup({
             name: 'widgetGroup',
             host: canvas,
         });
-        const block = scrawl.makeBlock({
+        const block = eSign.scrawl.makeBlock({
             width: 100,
             height: 50,
             start: ['center', 'center'],
@@ -184,14 +183,14 @@ class canvasPdf {
             },
         });
         // Render the canvas
-        scrawl.makeRender({
+        eSign.scrawl.makeRender({
             name: 'widgetRender',
             target: canvas,
         });
 
         return;
         
-        const box = scrawl.makeBlock({
+        const box = eSign.scrawl.makeBlock({
             name: name('box'),
             width: 100,
             height: 100,
@@ -199,7 +198,7 @@ class canvasPdf {
             startY: 100,
             fillStyle: 'yellow',
         });
-        scrawl.makeBlock({
+        eSign.scrawl.makeBlock({
             name: name('box-relative'),
             width: '20%',
             height: '20%',
@@ -210,7 +209,7 @@ class canvasPdf {
             fillStyle: 'black',
             handle: ['70%', '70%'],
         });
-        scrawl.makeBlock({
+        eSign.scrawl.makeBlock({
             name: 'my-block',
             dimensions: [30,50], 
             start: ['55%',100],
@@ -226,7 +225,7 @@ class canvasPdf {
             strokeStyle: 'moccasin',
             method: 'fillThenDraw'
         });
-        scrawl.makePhrase({
+        eSign.scrawl.makePhrase({
             name: name('label'),
             text: 'Hello, world!',
             font: '4.5em bold Garamond, sans-serif',
@@ -240,7 +239,7 @@ class canvasPdf {
             strokeStyle: 'blue',
             method: 'fillThenDraw'
         });
-        scrawl.makePicture({
+        eSign.scrawl.makePicture({
             name: name('image'),
             // asset: "river",
             imageSource: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/128723/river-300.jpg',
@@ -262,7 +261,7 @@ class canvasPdf {
             onLeave: (event) => {alert('Hi there')}
         });
 
-        scrawl.makeWheel({
+        eSign.scrawl.makeWheel({
             name: name('disc-1'),
             radius: '12%',
             start: ['17%', 'center'],
@@ -282,7 +281,7 @@ class canvasPdf {
             fillStyle: 'yellow',
             strokeStyle: 'orange',
         });
-        scrawl.makeGroup({
+        eSign.scrawl.makeGroup({
             name: name('discs'),
         }).addArtefacts(
             name('disc-1'),
@@ -299,7 +298,7 @@ class canvasPdf {
             onEntityHover: setCursorTo.pointer,
             onEntityNoHover: setCursorTo.auto,
         });
-        scrawl.makeDragZone({
+        eSign.scrawl.makeDragZone({
             zone: canvas,
             endOn: ['up', 'leave'],
             collisionGroup: name('discs'),
@@ -308,7 +307,7 @@ class canvasPdf {
             updateOnStart: setCursorTo.grabbing,
             updateOnEnd: setCursorTo.pointer,
         });
-        scrawl.makeRender({
+        eSign.scrawl.makeRender({
             name: name('animation'),
             target: canvas,
         });
@@ -426,17 +425,17 @@ class canvasPdf {
                 compileOrder: 1
             }).setAsCurrentCanvas();
             // 
-            eSign.group.pages = scrawl.makeGroup({
+            eSign.group.pages = eSign.scrawl.makeGroup({
                 order: 0,
                 host: eSign.canvas.base.name,
                 name: name('pages'),
             });
-            eSign.group.text = scrawl.makeGroup({
+            eSign.group.text = eSign.scrawl.makeGroup({
                 order: 1,
                 host: eSign.canvas.base.name,
                 name: name('text'),
             });
-            eSign.group.widgets[name('widget-1')] = scrawl.makeGroup({
+            eSign.group.widgets[name('widget-1')] = eSign.scrawl.makeGroup({
                 order: 2,
                 host: eSign.canvas.base.name,
                 name: name('widget-1'),
@@ -451,7 +450,7 @@ class canvasPdf {
                     startY: pghooked.start[1] + pghooked.dimensions[1],
                     handleY: pghooked.handle[0] + pghooked.dimensions[1],
                     name: name('page-' + index), // row?.pageIndex??
-                }):await scrawl.makePicture({
+                }):await eSign.scrawl.makePicture({
                     name: name('page-' + index), // row?.pageIndex??
                     imageSource: 'http://localhost:8040/esignature/wp-content/plugins/advanced-pdf-esignature/assets/page.png', // row.image,
                     
@@ -477,7 +476,7 @@ class canvasPdf {
                 });
                 return row?.pageIndex??index;
             });
-            scrawl.makeGradient({
+            eSign.scrawl.makeGradient({
                 name: name('linear1'),
                 endX: '100%',
                 colors: [
@@ -486,7 +485,7 @@ class canvasPdf {
                 ],
             });
             /*
-            scrawl.makePhrase({
+            eSign.scrawl.makePhrase({
                 name: name('label'),
                 text: 'Hello, world!',
                 font: '4.5em bold Garamond, sans-serif',
@@ -503,7 +502,7 @@ class canvasPdf {
 
             });
             */
-            scrawl.makeBlock({
+            eSign.scrawl.makeBlock({
                 width: 200,
                 height: 150,
                 lineWidth: 4,
@@ -517,7 +516,7 @@ class canvasPdf {
                 lockFillStyleToEntity: true,
                 group: eSign.group.widgets[name('widget-1')]
             });
-            scrawl.makePhrase({
+            eSign.scrawl.makePhrase({
                 name: name('block-1-text'),
             
                 text: 'Remal Mahmud',
@@ -545,11 +544,11 @@ class canvasPdf {
             });
 
             // positioning
-            scrawl.library.artefact[name('block-1-box')].set({
+            eSign.scrawl.library.artefact[name('block-1-box')].set({
                 height: 60, width: 200, strokeStyle: 'gray', lineWidth: 2,
                 start: [100, 100], fillStyle: 'gray'
             });
-            scrawl.library.artefact[name('block-1-text')].set({
+            eSign.scrawl.library.artefact[name('block-1-text')].set({
                 font: 'bold 22px Garamond, serif', width: 160, start: [200, 135],
                 fillStyle: 'black', strokeStyle: 'none', lineWidth: 0,
                 shadowBlur: 0, shadowOffsetX: 0, shadowOffsetY: 0,
@@ -557,14 +556,14 @@ class canvasPdf {
             });
 
             
-            scrawl.makeDragZone({
+            eSign.scrawl.makeDragZone({
                 zone: eSign.canvas,
                 endOn: ['up', 'leave'],
                 exposeCurrentArtefact: true,
                 preventTouchDefaultWhenDragging: true,
                 reactionHooks: ['myDragBehavior']
             });
-            scrawl.makeAction({
+            eSign.scrawl.makeAction({
                 name: 'myDragBehavior',
                 method: (artefact) => {
                     console.log(artefact.start, artefact.state);
@@ -576,17 +575,17 @@ class canvasPdf {
             });
         }
         // Finally Render contents
-        scrawl.makeRender({
+        eSign.scrawl.makeRender({
             name: name('contract'),
             target: eSign.canvas,
         });
     }
     render_artifaces() {
         const eSign = this;
-        const artefacts = scrawl.library.artefact,
+        const artefacts = eSign.scrawl.library.artefact,
         canvas = this.canvas,
         base = canvas.base,
-        baseGroup = scrawl.library.group[base.name];
+        baseGroup = eSign.scrawl.library.group[base.name];
 
         // For this demo we'll use a fixed-dimensions base canvas and fit it into the display canvas so all of the base always shows in the display
         canvas.set({
@@ -737,7 +736,7 @@ class canvasPdf {
                 picture = (picture)?await picture.clone({
                     name: key,
                     imageSource: slideshowData[key].src
-                }):await scrawl.makePicture({
+                }):await eSign.scrawl.makePicture({
                     name: key,
                     dimensions: [200, 200],
                     imageSource: slideshowData[key].src,
@@ -782,14 +781,14 @@ class canvasPdf {
             };
 
             // Canvas display and animation
-            scrawl.makeRender({
+            eSign.scrawl.makeRender({
                 name: "demo-animation",
                 target: canvas,
                 commence: checkMousePosition
             });
 
             // Add event listener to canvas to make the background image magic happen
-            scrawl.addNativeListener("click", () => {
+            eSign.scrawl.addNativeListener("click", () => {
                 const tile = getHoveredArtefact();
 
                 if (tile) {

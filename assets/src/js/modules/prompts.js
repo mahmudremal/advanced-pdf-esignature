@@ -3,7 +3,7 @@
  */
 // import { PDFDocument, rgb, degrees, SVGPath, drawSvgPath, StandardFonts } from 'pdf-lib';
 // import PDFJSExpress from "@pdftron/pdfjs-express";
-import { PDFDocument, rgb, values } from 'pdf-lib';
+// import { PDFDocument, rgb, values } from 'pdf-lib';
 // import {loadPreviousFields, addElementToPDF, init_dragging, dragFromRight2Left, previewPDFile, init_eSignature} from './pdfUtils';
 import PDFUtils from './pdfUtils';
 // import interact from 'interactjs';
@@ -30,11 +30,11 @@ class PROMPTS extends PDFUtils {
             <div class="upload-pdf">
                 <div class="pdf-dropzone">
                     <form class="pdf-dropzone__form needsclick" action="/upload">
-                    <div class="dz-message needsclick">
-                        <h1 class="svelte-12uhhij">${eSign.i18n?.upload_pdf??'Upload PDF'}</h1>
-                        <p>${eSign.i18n?.dropdf_subtitle??'Drop PDF document here or click to upload.'}<p>
-                        <span class="note needsclick">${eSign.i18n?.upload_pdf_details??'PDF file will generate a preview and you\'ll be forwarded to Signature builder screen.'}</span>
-                    </div>
+                        <div class="dz-message needsclick">
+                            <h1 class="svelte-12uhhij">${eSign.i18n?.upload_pdf??'Upload PDF'}</h1>
+                            <p>${eSign.i18n?.dropdf_subtitle??'Drop PDF document here or click to upload.'}<p>
+                            <span class="note needsclick">${eSign.i18n?.upload_pdf_details??'PDF file will generate a preview and you\'ll be forwarded to Signature builder screen.'}</span>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -44,7 +44,7 @@ class PROMPTS extends PDFUtils {
             <div class="pdf_builder__row ${(thisClass.isFrontend)?'pdf_builder__frontend':''}">
                 <div class="pdf_builder__builder ${(thisClass.isFrontend && !eSign.signatureExists)?'w-full':''}">
                     <div id="signature-builder" class="esign-body">
-                        <canvas id="contractCanvas">
+                        <canvas id="contractCanvas" class="${(thisClass.isFrontend)?'canvas__frontend':'canvas__backend'}">
                     </div>
                     ${(thisClass.isFrontend && !eSign.signatureExists)?``:`
                     <button class="btn btn-primary pull-right ${(thisClass.isFrontend)?'update_esign_signature':`update_esign_template`}"><span>${(thisClass.isFrontend)?(eSign.i18n?.confirm_singing??'Confirm Signing'):(eSign.i18n?.save??'Save')}</span><div class="spinner-circular-tube"></div></button>
@@ -190,26 +190,36 @@ class PROMPTS extends PDFUtils {
                             const fieldsToProcess = eSign.data.custom_fields.fields.filter(field =>
                                 field?.enableSign && !field?.signDone
                             );
+                            // console.log(fieldsToProcess);
                             const result = await eSign.attachImageTextToPDF(thisClass, fieldsToProcess);
-                            if(true) {
-                                thisClass.vex.dialog.open({
+                            // window.open(eSign.toEsign.pdfURL);
+                            // 
+                            if(false) {
+                                thisClass.vex.dialog.confirm({
                                     message: 'Signature Attached Preview',
-                                    className: 'signature-preview',
-                                    // unsafeContent:
-                                    input: `<embed src="${eSign.toEsign.pdfURL}"/>`,
+                                    className: 'signature-preview', // input: '',
+                                    unsafeContent: `<embed src="${eSign.toEsign.pdfURL}"/>`,
                                     overlayClosesOnClick: true,
                                     callback: async (agree) => {
-                                        if(agree) {
-                                            // window.open(eSign.toEsign.pdfURL);
-                                            var formdata = new FormData();
-                                            formdata.append('pdf', eSign.toEsign.pdfBlob, eSign.currentPDF.name);
-                                            formdata.append('template', eSign.currentEsignConfig.id);
-                                            formdata.append('action', 'esign/project/ajax/signing/confirm');
-                                            formdata.append('_nonce', thisClass.ajaxNonce);
-                                            thisClass.sendToServer(formdata);
-                                        }
+                                        console.log(agree);
                                     }
                                 });
+                            }
+
+                            /**
+                             * Submit Contract with signatures
+                             */
+                            if(agree) {
+                                var formdata = new FormData();
+                                formdata.append('pdf', eSign.toEsign.pdfBlob, eSign.currentPDF.name);
+                                formdata.append('template', eSign.currentEsignConfig.id);
+                                formdata.append('action', 'esign/project/ajax/signing/confirm');
+                                (eSign.attachments??[]).forEach(file => {
+                                    formdata.append('attach', file.name, file);
+                                });
+                                
+                                formdata.append('_nonce', thisClass.ajaxNonce);
+                                thisClass.sendToServer(formdata);
                             }
                             
                         }
@@ -457,7 +467,7 @@ class PROMPTS extends PDFUtils {
         try {
             // Load the PDF blob
             const pdfData = await pdfBlob.arrayBuffer();
-            const pdfDoc = await PDFDocument.load(pdfData);
+            const pdfDoc = await thisClass.PDFLib.PDFDocument.load(pdfData);
     
             // await Promise.all(fields.map(new Promise(async (resolve, reject) {
             await Promise.all(fields.map(async (field) => {
@@ -470,6 +480,7 @@ class PROMPTS extends PDFUtils {
                     const canvasHeight = canvas.height;
                     // const posY = ;
                     const posY = eSign?.indexedPosY??parseFloat(field.fieldEL.dataset.y);
+                    // console.log(posY, [canvasWidth, canvasHeight])
                     const position = {
                         x: parseFloat(field.fieldEL.dataset.x) / canvasWidth * pdfSelectedPage.getWidth(),
                         y: pdfSelectedPage.getHeight() - posY / canvasHeight * pdfSelectedPage.getHeight(),
@@ -477,22 +488,29 @@ class PROMPTS extends PDFUtils {
                         width: (parseFloat(field.fieldEL.dataset.width) / canvasWidth) * pdfSelectedPage.getWidth(),
                         height: (parseFloat(field.fieldEL.dataset.height) / canvasHeight) * pdfSelectedPage.getHeight(),
                     };
+                    // 
                     position.height--;position.width--;
-                    position.y = position.y - position.height - 10;
-                    position.x = position.x + 10;
+                    position.y = position.y - position.height - 0;
+                    position.x = position.x + 0;
                     position.y = Math.abs(position.y);
-                    
+                    // 
                     switch (field?.field) {
                         case 'sign':
                             const imagePath = thisClass.signatureDataUrl;
                             const imageBytes = await fetch(imagePath).then((response) => response.arrayBuffer());
                             const image = await pdfDoc.embedPng(imageBytes);
-                            pdfSelectedPage.drawImage(image, {
+                            const drawArgs = {
                                 x: position.x,
                                 y: position.y,
                                 width: position.width,
                                 height: position.height
-                            });
+                            };
+                            
+                            if (Object.values(drawArgs).includes(NaN)) {
+                                console.log(drawArgs, position);
+                                throw new Error('One r more of the Parameter is not a number!');
+                            }
+                            await pdfSelectedPage.drawImage(image, drawArgs);
                             return true;
                             break;
                         case 'date':
@@ -509,7 +527,7 @@ class PROMPTS extends PDFUtils {
                                 x: position.x,
                                 y: position.y,
                                 size: fontSize,
-                                color: rgb(...fontColor)
+                                color: thisClass.PDFLib.rgb(...fontColor)
                             });
                             break;
                         default:
@@ -589,11 +607,13 @@ class PROMPTS extends PDFUtils {
             // esignSingle.style.transform = `translate(${desiredWidth}px, ${esignSingle.dataset.y}px)`;
         });
     }
-    drawLoadingSpinner(thisClass) {
+    drawLoadingSpinner(thisClass, canvas = false) {
         const eSign = this;
         const fieldsObj = (eSign?.data)?.custom_fields;
-        const canvasHeight = parseFloat(window.getComputedStyle(document.querySelector('.swal2-container.swal2-center>.swal2-popup.swal2-show.swal2-modal.fwp-swal2-popup')).getPropertyValue('height'));
-        const canvas = document.querySelector('.pdf_builder__container #signature-builder canvas');
+        const canvasHeight = parseFloat(window.getComputedStyle(
+            (canvas)?canvas:document.querySelector('.swal2-container.swal2-center>.swal2-popup.swal2-show.swal2-modal.fwp-swal2-popup')
+        ).getPropertyValue('height'));
+        canvas = (canvas)?canvas:document.querySelector('.pdf_builder__container #signature-builder canvas');
         if (!canvas) {
             var message = eSign.i18n?.canvas_not_found??'Canvas not found';
             thisClass.toastify({text: message,className: "info", duration: 3000, stopOnFocus: true, style: {background: 'linear-gradient(to right, rgb(255, 95, 109), rgb(255, 195, 113))'}}).showToast();
@@ -653,5 +673,6 @@ class PROMPTS extends PDFUtils {
         
         requestAnimationFrame(eSign.drawFrame(args));
     }
+    
 }
 export default PROMPTS;

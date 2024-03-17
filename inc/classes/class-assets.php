@@ -73,7 +73,7 @@ class Assets {
 	public function siteConfig($args) {
 		return wp_parse_args([
 			'ajaxUrl'    		=> admin_url('admin-ajax.php'),
-			'ajax_nonce' 		=> wp_create_nonce('esign/project/verify/nonce'),
+			'ajax_nonce' 		=> apply_filters('esign/project/nonce/create', false, false),
 			'is_admin' 			=> is_admin(),
 			'buildPath'  		=> ESIGNBINDING_ADDONS_BUILD_URI,
 			'template_id'  		=> get_the_id(),

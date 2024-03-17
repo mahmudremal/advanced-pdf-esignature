@@ -44,6 +44,9 @@ class Ajax {
 				}
 			}
 		}
+		if (isset($meta['pdf'])) {
+			$meta['pdf'] = preg_replace("/^http:/i", "https:", $meta['pdf']);
+		}
 
 		$authod_id = get_the_author($_POST['template']);
 
@@ -280,25 +283,28 @@ class Ajax {
 		// wp_send_json_error($args);
 		$post_id = (int) $_POST['template'];
 		$meta = get_post_meta($post_id, '__esign_builder', true);
-		$args['meta'] = $meta;
 		if($meta && isset($_FILES['pdf'])) {
 			$is_changed = false;
-			foreach($meta['fields'] as $i => $field) {
-				if(isset($field['data']) && isset($field['data']['field']) && isset($field['data']['field']['user']) && (int) $field['data']['field']['user'] == get_current_user_id()) {
+			foreach($meta['fields'] as $i => $widget) {
+				if(isset($widget['data']) && isset($widget['data']['field']) && isset($widget['data']['field']['user']) && intval($widget['data']['field']['user']) == get_current_user_id()) {
 					$meta['fields'][$i]['signDone'] = true;$is_changed = true;
 				}
 			}
+			// 
+			$args['meta'] = $meta;
+			// 
 			if($is_changed) {
 				// $allowed_users = $this->get_all_users_for_this_sign($post_id);
 				// $args['user'] = $allowed_user;
 				$upload_path = str_replace([site_url('/'), '/'], [ABSPATH, '\\'], $meta['pdf']);
-				// $uploaded = move_uploaded_file($_FILES['pdf']['tmp_name'], $upload_path);
-				$uploaded = false;
+				$uploaded = move_uploaded_file($_FILES['pdf']['tmp_name'], $upload_path);
+				// $uploaded = false;
 				if($uploaded) {
 					$updated = update_post_meta($post_id, '__esign_builder', $meta);
 					$noti_sent = $this->send_notification_to_next_user($post_id);
 					$args = ['message' => __('Successfully confirmed contract.', 'esignbinding'), 'hooks' => ['signature_confirmation_success']];
 
+					$args['message'] .= ' ';
 					$args['message'] .= ($noti_sent)?__('Mail sent successfully.', 'esignbinding'):__('Mail failed to sent.', 'esignbinding');
 					
 					wp_send_json_success($args);

@@ -33,13 +33,13 @@
   10% { transform: scale(1.1); }
   20% { transform: scale(1); }
 }
-.fwp-dropzone-field, .fwp-dropzone-field * {
+.pdf-dropzone, .pdf-dropzone * {
   box-sizing: border-box;
 }
-.fwp-dropzone-field {
-  // --image-size: 120px;
-  // --image_border-radius: 20px;
-  // --background-image: '';
+.pdf-dropzone {
+  --image-size: 80px;
+  --image_border-radius: 15px;
+  --background-image: '';
   // @include background( "../icons/drag-n-drop.svg" );
   &:not(.dz-started) {
     background-repeat: no-repeat;
@@ -95,8 +95,9 @@
     position: relative;
     display: inline-block;
     vertical-align: top;
-    margin: 16px;
-    min-height: 100px;
+    margin: 10px;
+    max-height: 80px;
+    max-width: 80px;
     &:hover {
       // Making sure that always the hovered preview element is on top
       z-index: 1;
@@ -127,16 +128,21 @@
       // cursor: pointer;
       // border: none;
 
-      position: absolute;
-      top: -10px;
-      right: -10px;
-      left: unset;
-      bottom: unset;
-      height: 30px;
-      width: 30px;
       z-index: 2;
+      top: -10px;
+      left: unset;
+      width: 20px;
+      right: -10px;
+      height: 20px;
+      bottom: unset;
+      display: flex;
+      cursor: pointer;
+      position: absolute;
       background: #fff;
       border-radius: 30px;
+      align-items: center;
+      align-content: center;
+      justify-content: center;
       border: 0.3px solid #ddd;
       box-shadow: 0.2px 0.2px 1px #eee;
       svg, img {
@@ -154,19 +160,19 @@
       opacity: 1;
     }
     .dz-details {
-      --background-color: #444;
-      z-index: 1;
-      position: absolute;
       top: 0;
       left: 0;
       opacity: 0;
+      z-index: 1;
+      padding: 5px;
+      --width: 80px;
       font-size: 13px;
       min-width: 100%;
       max-width: 100%;
-      padding: 2em 1em;
+      position: absolute;
       text-align: center;
+      --background-color: #444;
       color: rgba(0, 0, 0, 0.9);
-      --width: 120px;
       line-height: 150%;
       .dz-size {
         margin-bottom: 1em;
@@ -218,13 +224,13 @@
       }
     }
     .dz-image {
-      border-radius: var(--image_border-radius);
+      z-index: 1;
+      display: block;
       overflow: hidden;
+      position: relative;
       width: var(--image-size);
       height: var(--image-size);
-      position: relative;
-      display: block;
-      z-index: 1;
+      border-radius: var(--image_border-radius);
       img {
         display: block;
         width: 120px;
@@ -345,7 +351,7 @@
         content: '';
         position: absolute;
         top: -6px;
-        left: calc(var(--width) / 2) - 6px;
+        left: calc(calc(var(--width) / 2) - 6px);
         width: 0; 
         height: 0; 
         border-left: 6px solid transparent;
@@ -354,46 +360,4 @@
       }
     }
   }
-}
-.fwp-tabs {
-  &__container, &__wrap {
-    width: 100%;
-  }
-  &__navs {
-    display: flex;
-    flex-wrap: wrap;
-    column-gap: 10px;
-    background: #ddd;
-    padding: 5px 10px;
-    color: #333;
-    text-transform: uppercase;
-    font-weight: 400;
-    font-family: arial, sans-serif;
-    font-size: 15px;
-    .active {
-      font-weight: 600;
-    }
-  }
-  &__nav-item {
-    cursor: pointer;
-  }
-  &__tabs-field {
-    border: none;
-    border-top: .5px solid #eee;
-    box-shadow: 0 0 12px #eee;
-  }
-  &__content {
-    display: none;
-    min-height: 200px;
-    &.active {
-      display: block;
-    }
-  }
-}
-
-
-#fwp-videojs-record-field, .fwp-videojs-playing-field {
-  width: 100%;
-  // min-height: 99%;
-  max-height: 100%;
 }

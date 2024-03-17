@@ -4,14 +4,6 @@
 @import "icons";
 @import "map";
 
-.do_flutterwave_submit {
-  line-height: initial;
-}
-.payment-status-content > .row {
-  @include mq($until: medium) {
-    flex-direction: row-reverse;
-  }
-}
-.d-none {
-  display: none;
+#preview_contract {
+    width: 100%;
 }

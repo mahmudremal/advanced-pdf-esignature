@@ -31,5 +31,10 @@
 @import "modules/micromodal";
 @import "9-backend/backend";
 @import "8-frontend/frontend";
+@import '../../node_modules/sass-math/math';
+
+@import "modules/dropzone"
+
 
 // @import "../library/css/icons.css";
+// @import '~tippy.js/dist/tippy.css';

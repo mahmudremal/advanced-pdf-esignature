@@ -4,18 +4,21 @@
  * @package ESignBindingAddons
  */
 
-import Swal from "sweetalert2";
-import Toastify from 'toastify-js';
+// import Swal from "sweetalert2";
+// import Toastify from 'toastify-js';
 import eSignature from '../modules/eSignature';
-import dragula from 'dragula';
-import { Dropzone } from "dropzone";
-import DataTable from 'datatables.net';
+// import dragula from 'dragula';
+// import { Dropzone } from "dropzone";
+// import DataTable from 'datatables.net';
+// import tippy from "tippy.js";
 // import "regenerator-runtime/runtime";
-const vex = require('vex-js');
-vex.registerPlugin(require('vex-dialog'));
-vex.defaultOptions.className = 'vex-theme-os'; // Choose a theme for the modal appearance
-vex.defaultOptions.overlayClosesOnClick = false; // Disable closing on outside click
-
+// const vex = require('vex-js');
+// const vexDialog = require('vex-dialog');
+// vex.registerPlugin(vexDialog);
+// vex.defaultOptions.className = 'vex-theme-os'; // Choose a theme for the modal appearance
+// vex.defaultOptions.overlayClosesOnClick = false; // Disable closing on outside click
+import CanvasLoader from "../modules/loader";
+import Assets from "../modules/assets";
 
 ( function ( $ ) {
 	class FutureWordPress_Frontend {
@@ -28,23 +31,33 @@ vex.defaultOptions.overlayClosesOnClick = false; // Disable closing on outside c
 			this.ajaxNonce = fwpSiteConfig?.ajax_nonce??'';
 			this.profile = fwpSiteConfig?.profile??false;
 			this.lastAjax = false;this.noToast = true;
-			var i18n = fwpSiteConfig?.i18n??{};this.Swal = Swal;
+			var i18n = fwpSiteConfig?.i18n??{};
 			this.config.buildPath = fwpSiteConfig?.buildPath??'';
 			this.i18n = {i_confirm_it: 'Yes I confirm it',...i18n};
-			this.dragula = dragula;this.Dropzone = Dropzone;
-			this.DataTable = DataTable;this.isFrontend = true;
-			Dropzone.autoDiscover = false;this.vex = vex;
+			// this.dragula = dragula;
+			// this.DataTable = DataTable;
+			this.isFrontend = true;
+			// this.Dropzone = Dropzone;
+			// Dropzone.autoDiscover = false;
+			// this.vex = vex;
+			// this.tippy = tippy;
+			this.Assets = new Assets(this);
 			this.toEsign = {};window.thisClass = this;
-			this.init_toast();this.setup_hooks();
-			this.init_datable();this.init_micromodel();
+			// this.init_toast();
+			this.setup_hooks();
+			// this.init_datable();
+			this.init_micromodel();
 			this.init_events();
+			this.init_single_esign();
 		}
 		setup_hooks() {
 		}
 		
 		init_events() {
-			const thisClass = this;const eSign = this.eSignature;var template, html;
+			const thisClass = this;var eSign = this.eSignature;var template, html;
 			document.body.addEventListener('gotsignaturepopupresult', async (event) => {
+				// console.log(eSign, thisClass.eSignature);
+				eSign = thisClass.eSignature;
 				eSign.signatureExists = false;
 				eSign.data = thisClass.lastJson.signature;
 				// 
@@ -117,47 +130,37 @@ vex.defaultOptions.overlayClosesOnClick = false; // Disable closing on outside c
 		}
 		init_toast() {
 			const thisClass = this;
-			this.toast = Swal.mixin({
-				toast: true,
-				position: 'top-end',
-				showConfirmButton: false,
-				timer: 3500,
-				timerProgressBar: true,
-				didOpen: (toast) => {
-					toast.addEventListener('mouseenter', Swal.stopTimer )
-					toast.addEventListener('mouseleave', Swal.resumeTimer )
-				}
-			});
-			this.notify = Swal.mixin({
-				toast: true,
-				position: 'bottom-start',
-				showConfirmButton: false,
-				timer: 6000,
-				willOpen: (toast) => {
-				  // Offset the toast message based on the admin menu size
-				  var dir = 'rtl' === document.dir ? 'right' : 'left'
-				  toast.parentElement.style[dir] = document.getElementById('adminmenu')?.offsetWidth + 'px'??'30px'
-				}
-			})
-			this.toastify = Toastify; // https://github.com/apvarun/toastify-js/blob/master/README.md
-			if( location.host.startsWith('futurewordpress') ) {
-				document.addEventListener('keydown', function(event) {
-					if (event.ctrlKey && (event.key === '/' || event.key === '?') ) {
-						event.preventDefault();
-						navigator.clipboard.readText()
-							.then(text => {
-								CVTemplate.choosen_template = text.replace('`', '');
-								// thisClass.update_cv();
-							})
-							.catch(err => {
-								console.error('Failed to read clipboard contents: ', err);
-							});
+			if (this?.Swal && (!(this?.toast) || !(this?.notify))) {
+				this.toast = thisClass.Swal.mixin({
+					toast: true,
+					position: 'top-end',
+					showConfirmButton: false,
+					timer: 3500,
+					timerProgressBar: true,
+					didOpen: (toast) => {
+						toast.addEventListener('mouseenter', thisClass.Swal.stopTimer )
+						toast.addEventListener('mouseleave', thisClass.Swal.resumeTimer )
+					}
+				});
+				this.notify = thisClass.Swal.mixin({
+					toast: true,
+					position: 'bottom-start',
+					showConfirmButton: false,
+					timer: 6000,
+					willOpen: (toast) => {
+					  // Offset the toast message based on the admin menu size
+					  var dir = 'rtl' === document.dir ? 'right' : 'left'
+					  toast.parentElement.style[dir] = document.getElementById('adminmenu')?.offsetWidth + 'px'??'30px'
 					}
 				});
 			}
+			
+			if (this?.Toastify && !(this?.toastify)) {
+				this.toastify = this.Toastify; // https://github.com/apvarun/toastify-js/blob/master/README.md
+			}
 		}
 		
-		sendToServer( data ) {
+		sendToServer(data) {
 			const thisClass = this;var message;
 			$.ajax({
 				url: thisClass.ajaxUrl,
@@ -326,16 +329,16 @@ vex.defaultOptions.overlayClosesOnClick = false; // Disable closing on outside c
 		}
 
 		init_datable() {
-			const thisClass = this;var html, config;
+			const thisClass = this;
+			thisClass.launchBtns = [];
 			if(window.do_datatable) {
 				window.do_datatable.forEach(table => {
 					var [id, rows] = table;
 					document.querySelectorAll(id).forEach(tablEl => {
-						var table = new DataTable(id, rows);
+						var table = new thisClass.DataTable(id, rows);
 						// table.on('init', () => {
 						// 	console.log('init.dt');
-						thisClass.init_button_event(tablEl);
-						
+						thisClass.launchBtns.push(tablEl);
 						// });
 					});
 				});
@@ -344,58 +347,76 @@ vex.defaultOptions.overlayClosesOnClick = false; // Disable closing on outside c
 		init_micromodel() {
 			const thisClass = this;
 		}
-		init_button_event(element = document) {
+		init_launch_buttons() {
 			const thisClass = this;var html, config;
-			element.querySelectorAll('.launch-esignature:not([data-handled])').forEach(el => {
-				el.dataset.handled = true;
-				const eSign = this.eSignature = new eSignature(this, el, false);
-				el.addEventListener('click', (event) => {
-					event.preventDefault();
-					// eSign.data = false;
-					html = eSign.get_template(thisClass);
-					thisClass.Swal.fire({
-						title: false, // thisClass.i18n?.generateaicontent??'Generate AI content',
-						width: 600,
-						// padding: '3em',
-						// color: '#716add',
-						// background: 'url(https://png.pngtree.com/thumb_back/fh260/background/20190221/ourmid/pngtree-ai-artificial-intelligence-technology-concise-image_19646.jpg) rgb(255, 255, 255) center center no-repeat',
-						showConfirmButton: false,
-						showCancelButton: false,
-						showCloseButton: true,
-						allowOutsideClick: false,
-						allowEscapeKey: true,
-						// confirmButtonText: 'Generate',
-						// cancelButtonText: 'Close',
-						// confirmButtonColor: '#3085d6',
-						// cancelButtonColor: '#d33',
-						customClass: {popup: 'fwp-swal2-popup'},
-						// focusConfirm: true,
-						// reverseButtons: true,
-						// backdrop: `rgba(0,0,123,0.4) url("https://sweetalert2.github.io/images/nyan-cat.gif") left top no-repeat`,
-						backdrop: `rgba(0,0,123,0.4)`,
-	
-						showLoaderOnConfirm: true,
-						allowOutsideClick: false, // () => !Swal.isLoading(),
-						
-						html: html,
-						// footer: '<a href="">Why do I have this issue?</a>',
-						// onClose: () => {thisClass.isPreventClose = false;},
-						didOpen: async () => {
-							config = JSON.parse(el.dataset?.config??'{}');
-							eSign.currentEsignConfig = config;
-							var formdata = new FormData();
-							formdata.append('action', 'esign/project/ajax/template/data');
-							formdata.append('template', config?.id??'');
-							formdata.append('_nonce', thisClass.ajaxNonce);
-	
-							thisClass.sendToServer(formdata);
-							// eSign.init_prompts(thisClass);
-						},
-						preConfirm: async (login) => {return eSign.on_Closed(thisClass);}
-					}).then( async (result) => {
-						// if (result.isConfirmed) {}
-						thisClass.isPreventClose = false;
-					})
+
+			if (!(thisClass?.PDFLib && thisClass?.date_formate && thisClass?.SignaturePad)) {return;}
+			
+			thisClass.launchBtns.forEach(element => {
+				element.querySelectorAll('.launch-esignature:not([data-handled])').forEach(el => {
+					el.dataset.handled = true;
+					const eSign = thisClass.eSignature = new eSignature(this, el, false);
+					el.addEventListener('click', (event) => {
+						event.preventDefault();
+						// eSign.data = false;
+						html = eSign.get_template(thisClass);
+						thisClass.Swal.fire({
+							title: false, // thisClass.i18n?.generateaicontent??'Generate AI content',
+							width: 600,
+							// padding: '3em',
+							// color: '#716add',
+							// background: 'url(https://png.pngtree.com/thumb_back/fh260/background/20190221/ourmid/pngtree-ai-artificial-intelligence-technology-concise-image_19646.jpg) rgb(255, 255, 255) center center no-repeat',
+							showConfirmButton: false,
+							showCancelButton: false,
+							showCloseButton: true,
+							allowOutsideClick: false,
+							allowEscapeKey: true,
+							// confirmButtonText: 'Generate',
+							// cancelButtonText: 'Close',
+							// confirmButtonColor: '#3085d6',
+							// cancelButtonColor: '#d33',
+							customClass: {popup: 'fwp-swal2-popup'},
+							// focusConfirm: true,
+							// reverseButtons: true,
+							// backdrop: `rgba(0,0,123,0.4) url("https://sweetalert2.github.io/images/nyan-cat.gif") left top no-repeat`,
+							backdrop: `rgba(0,0,123,0.4)`,
+		
+							showLoaderOnConfirm: true,
+							allowOutsideClick: false, // () => !Swal.isLoading(),
+							
+							html: html,
+							// footer: '<a href="">Why do I have this issue?</a>',
+							// onClose: () => {thisClass.isPreventClose = false;},
+							didOpen: async () => {
+								config = JSON.parse(el.dataset?.config??'{}');
+								eSign.currentEsignConfig = config;
+								var formdata = new FormData();
+								formdata.append('action', 'esign/project/ajax/template/data');
+								formdata.append('template', config?.id??'');
+								formdata.append('_nonce', thisClass.ajaxNonce);
+		
+								thisClass.sendToServer(formdata);
+								// eSign.init_prompts(thisClass);
+							},
+							preConfirm: async (login) => {return eSign.on_Closed(thisClass);}
+						}).then( async (result) => {
+							// if (result.isConfirmed) {}
+							thisClass.isPreventClose = false;
+						})
+					});
+				});
+			});
+		}
+		init_single_esign() {
+			const thisClass = this;
+			thisClass.esings = [];
+			// document
+			document.querySelectorAll('#preview_contract').forEach(canvas => {
+				
+				thisClass.esings.push({
+					element: canvas,
+					assets: canvas.dataset.contract,
+					object: new CanvasLoader(canvas, {})
 				});
 			});
 		}

@@ -44,7 +44,8 @@ class Frontend {
 		return $items;
 	}
 	public function woocommerce_account_esignature_endpoint() {
-		global $wpdb;global $eSign_Ajax;$signings = [];
+		global $wpdb;global $eSign_Ajax;global $eSign_Esign;
+		$signings = [];
 
 		$_all_posts = get_posts([
 			'fields'			=> 'ids',
@@ -74,13 +75,9 @@ class Frontend {
 			)
 		);
 		// print_r($lists);
+		$eSign_Esign->print_assets();
 		?>
-		<link rel="stylesheet" href="https://github.hubspot.com/vex/dist/css/vex.css" />
-		<link rel="stylesheet" href="https://github.hubspot.com/vex/dist/css/vex-theme-os.css" />
-		<!-- <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script> -->
-		<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-		<script type="module">import * as scrawl from "https://unpkg.com/scrawl-canvas@8.12.0";window.scrawl = scrawl;</script>
-
+		
 		<table id="my-signature-templates" class="display" width="100%"></table>
 		<script>
 			<?php
@@ -91,7 +88,8 @@ class Frontend {
 					wp_date('M d, Y', strtotime($row->post_date)),
 					sprintf('%s%s%s', '<span class="bg-success p-2 text-light rounded">', __('Important', 'esignbinding'), '</span>'),
 					sprintf('%s%s%s', '<span class="bg-danger p-2 text-light rounded">', __('Pending', 'esignbinding'), '</span>'),
-					sprintf('%s%s%s', '<button class="bg-default p-1 rounded launch-esignature" data-config="'.esc_attr(json_encode(['id' => $row->ID])).'" type="button">', __('Launch', 'esignbinding'), '</button>')
+					sprintf('%s%s%s', '<button class="bg-default p-1 rounded launch-esignature" data-config="'.esc_attr(json_encode(['id' => $row->ID])).'" type="button">', __('Launch', 'esignbinding'), '</button>') . 
+					sprintf('%s%s%s', '<a class="bg-default p-1 rounded linked-esignature" href="' . get_the_permalink($row->ID) . '" target="_blank">', __('Launch', 'esignbinding'), '</a>')
 				];
 			}
 			$datatable = [

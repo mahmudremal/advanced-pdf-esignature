@@ -1,10 +1,10 @@
-import interact from 'interactjs';
-import { PDFDocument, rgb, degrees, SVGPath, drawSvgPath, StandardFonts } from 'pdf-lib';
-import SignaturePad from "signature_pad";
+// import interact from 'interactjs';
+// import {PDFDocument, rgb, degrees, SVGPath, drawSvgPath, StandardFonts} from 'pdf-lib';
+// import SignaturePad from "signature_pad";
 import Pad from './signaturePad';
-import { format as date_formate } from 'date-fns';
+// import {format as date_formate} from 'date-fns';
 import canvasPdf from "./canvasPdf";
-import tippy from 'tippy.js';
+// import tippy from 'tippy.js';
 
 
 class PDFUtils extends canvasPdf {
@@ -14,18 +14,19 @@ class PDFUtils extends canvasPdf {
     this.oneCanvas = false;
     this.uploadedPDF = false;
     this.signatureExists = false;
+    // thisClass.date_formate = date_formate;
     this.STOREDATA = {i18n: {}};
     // 
     this.setup_i18n(thisClass);
     this.setup_hooks(thisClass);
-  }
+ }
   setup_hooks(thisClass) {
-  }
+ }
   setup_i18n(thisClass) {
     this.i18n = thisClass.i18n;
-  }
+ }
 
-  do_field(field, child = false, esitingData = {}) {
+  do_field(field, child = false, esitingData = {}, thisClass) {
     const eSign = this;
     var fields, form, group, fieldset, input, label, span, option, head, image, others, body, div, info, tooltip, i = 0;
     div = document.createElement('div');if (!child) {div.classList.add('pdf_fields__group');}
@@ -35,7 +36,7 @@ class PDFUtils extends canvasPdf {
         info = document.createElement('p');
         info.innerHTML = eSign.str_replace(field?.subtitle??'');
         div.appendChild(info);
-    }
+   }
     
     input = label = false;
     fieldset = document.createElement('fieldset');
@@ -48,8 +49,8 @@ class PDFUtils extends canvasPdf {
       tooltip.setAttribute('tabindex', 1);tooltip.setAttribute('tooltip', field?.tooltip??'');
       tooltip.setAttribute('flow', 'up');tooltip.innerHTML = '?';label.appendChild(tooltip);
       // 
-      tippy(tooltip, {content: field.tooltip});
-    }
+      thisClass.tippy(tooltip, {content: field.tooltip});
+   }
     
     switch (field.type) {
         case 'textarea':
@@ -85,7 +86,7 @@ class PDFUtils extends canvasPdf {
                 option = document.createElement('option');option.value=opt?.value??'';option.innerHTML=opt?.label??'';option.dataset.index = i;
                 if (esitingData[field.fieldID] == option.value) {
                   option.setAttribute('selected', true);
-                }
+               }
                 input.appendChild(option);
             });
             if (label) {fieldset.appendChild( label );}
@@ -110,20 +111,20 @@ class PDFUtils extends canvasPdf {
                         input.classList.add('form-wrap__image');
                         if ((opt?.thumbUrl??false) && opt.thumbUrl != '') {
                             image.src = opt.thumbUrl;image.dataset.outfit = opt.imageUrl;
-                        }
-                    }
+                       }
+                   }
                     if (!opt.input) {
                         span.innerHTML = opt.label+(
                             (opt?.cost??false)?(
                             ' <strong>'+(thisClass.config?.currencySign??'$')+''+ parseFloat(opt.cost).toFixed(2)+'</strong>'
                             ):''
                         );
-                    } else {
+                   } else {
                         others = document.createElement('input');others.type='text';
                         others.name='field.'+field.fieldID+'.others';others.placeholder=opt.label;
                         others.dataset.fieldId = field.fieldID;others.dataset.index = optI;
                         span.appendChild(others);
-                    }
+                   }
                     option = document.createElement('input');option.value=opt.label;
                     option.name='field.'+field.fieldID+'.option'+((field.type == 'checkbox')?'.' + optI:'');
                     if (option.value == esitingData[field.fieldID]) {option.setAttribute('checked', true);}
@@ -134,7 +135,7 @@ class PDFUtils extends canvasPdf {
                     if (child) {option.dataset.preview=child;}
                     label.appendChild(option);label.appendChild(span);input.appendChild(label);
                     fieldset.appendChild(input);div.appendChild(fieldset);
-                }
+               }
             });
             break;
         case 'password':
@@ -170,7 +171,9 @@ class PDFUtils extends canvasPdf {
             fields = document.createElement('div');fields.classList.add('form-fields', 'form-pdf_fields__group', 'form-pdf_fields__group__'+(field.type).replaceAll(' ', ''));
             (field?.groups??[]).forEach((group, groupI) =>  {
                 group.fieldID = (field?.fieldID??0)+'.'+(group?.fieldID??groupI);
-                fields.appendChild(eSign.do_field(group, true));
+                fields.appendChild(
+                  eSign.do_field(group, true, {}, thisClass)
+                );
             });
             fieldset.appendChild(fields);div.appendChild(fieldset);
             break;
@@ -183,32 +186,36 @@ class PDFUtils extends canvasPdf {
                     // label: STOREDATA.i18n?.teddyname??'DubiDo\'s Name',
                     placeholder: STOREDATA.i18n?.teddyfullname??'Teddy full Name',
                     dataset: {title: STOREDATA.i18n?.teddyfullname??'Teddy full Name'}
-                },
+               },
                 teddy_birth: {
                     type: 'date', // default: new Date().toLocaleDateString('en-US'),
                     // label: STOREDATA.i18n?.teddybirth??'DubiDo\'s Birthday',
                     placeholder: STOREDATA.i18n?.teddybirth??'Birth date',
                     dataset: {title: STOREDATA.i18n?.teddybirth??'Birth date'}
-                },
+               },
                 teddy_sender: {
                     type: 'text',
                     // label: STOREDATA.i18n?.sendersname??'Sender\'s Name',
                     placeholder: STOREDATA.i18n?.sendersname??'Sender\'s Name',
                     dataset: {title: STOREDATA.i18n?.sendersname??'Sender\'s Name'}
-                },
+               },
                 teddy_reciever: {
                     type: 'text',
                     // label: STOREDATA.i18n?.recieversname??'Reciever\'s Name',
                     placeholder: STOREDATA.i18n?.recieversname??'Reciever\'s Name',
                     dataset: {title: STOREDATA.i18n?.recieversname??'Reciever\'s Name'}
-                }
-            };
+               }
+           };
             Object.keys(inputs).forEach((type, typeI) => {
                 inputsArgs = {
                     fieldID: (field?.fieldID??0)+'.'+(type?.fieldID??typeI),
                     ...inputs[type]
-                };
-                if (field[type] == 'on') {fields.appendChild(eSign.do_field(inputsArgs, true));}
+               };
+                if (field[type] == 'on') {
+                  fields.appendChild(
+                    eSign.do_field(inputsArgs, true, {}, thisClass)
+                  );
+                }
             });
             fieldset.appendChild(fields);div.appendChild(fieldset);
             break;
@@ -216,13 +223,15 @@ class PDFUtils extends canvasPdf {
             // console.log('Failed implimenting '+field.type);
             input = label = false;
             break;
-    }
+   }
     i++;
     if ((field?.extra_fields??false)) {
       field.extra_fields.forEach((extra) => {
-        div.appendChild(eSign.do_field(extra, true));
+        div.appendChild(
+          eSign.do_field(extra, true, {}, thisClass)
+        );
       });
-    }
+   }
     return div;
   }
   async renderPages(numPages, pdf, thisClass) {
@@ -258,14 +267,14 @@ class PDFUtils extends canvasPdf {
               //     width: viewport.width, height: viewport.height,
               //     // width: 200, height: 250, 
               //     canvas: canvas, xOffset: xOffset, yOffset: yOffset
-              //   });
+              //  });
                 resolve();
-              // });
+              //});
             });
             // pdfCanvas.toBlob((blob) => {
             //   const dataUrl = URL.createObjectURL(blob);
-            // });
-          } else {
+            //});
+         } else {
             const page = await pdf.getPage(pageNumber);
             // const pdfCanvas = document.createElement('canvas');
             const pdfCanvas = document.querySelector('#contractCanvas');
@@ -280,16 +289,16 @@ class PDFUtils extends canvasPdf {
     
             // pdfPreview.appendChild(pdfCanvas);
             resolve(); // Resolve the promise
-          }
-        } catch (error) {reject(error);}
+         }
+       } catch (error) {reject(error);}
       });
   
       promises.push(pagePromise);
-    }
+   }
     // Wait for all page promises to resolve
     await Promise.all(promises);
     return true;
-  }
+ }
   addElementToPDF(field, position, thisClass, data = false) {
     const eSign = this;
     if (thisClass.isFrontend && position?.signDone) {return;}
@@ -304,7 +313,7 @@ class PDFUtils extends canvasPdf {
       addedElement.classList.add('esign-body__single__enabled', 
         thisClass.isFrontend?'esign-body__single__front':'esign-body__single__back'
       );
-    }
+   }
     addedElement.dataset.type = data?.field??'';
     addedElement.dataset.storedOn = args.unique;
 
@@ -312,30 +321,39 @@ class PDFUtils extends canvasPdf {
     if (pointer && !data) {
       position.dx = pointer.pointerX;
       position.dy = pointer.pointerY;
-    }
+   }
 
+    const canvasWidth = 1190.55;
+    const canvasHeight = 1683.78;
+    
     if (position.dx && (position?.canvas??false)) {}
-    // if (position.dx) {addedElement.style.left = position.dx + 'px';addedElement.dataset.x = position.dx;}
-    // if (position.dy) {addedElement.style.top = position.dy + 'px';addedElement.dataset.y = position.dy;}
-    if (position.height) {addedElement.dataset.height = parseFloat(position.height);}
-    if (position.width) {addedElement.dataset.width = parseFloat(position.width);}
-    if (position.height) {addedElement.style.height = position.height;}
-    if (position.width) {addedElement.style.width = position.width;}
+    if (position.dx) {addedElement.style.left = (thisClass.isFrontend)?`${((100 / canvasWidth) * position.dx)}%`:`${position.dx}px`;}
+    if (position.dy) {addedElement.style.top = (thisClass.isFrontend)?`${((100 / canvasHeight) * position.dy)}%`:`${position.dy}px`;}
+
+    if (position?.height) {addedElement.dataset.height = parseFloat(position.height);}
+    if (position?.width) {addedElement.dataset.width = parseFloat(position.width);}
+    if (position?.height) {addedElement.style.height = position.height;}
+    // if (position.width) {addedElement.style.width = position.width;}
+
+    if (position.width) {addedElement.style.width = (thisClass.isFrontend)?`${
+      ((100 / canvasWidth) * parseFloat(position.width.replaceAll('px', '')))
+   }%`:position.width;}
+    
     if (position.dx) {addedElement.dataset.x = position.dx;}
     if (position.dy) {addedElement.dataset.y = position.dy;}
     if (position.dx || position.dy) {
-      addedElement.style.transform = (
-        (position.dx && !position.dy)?'translateX('+position.dx+'px)':(
-          (!position.dx && position.dy)?'translateY('+position.dy+'px)':(
-            (position.dx && position.dy)?'translate('+position.dx+'px, '+position.dy+'px)':'unset'
-          )
-        )
-      );
-    }
+      // addedElement.style.transform = (
+      //   (position.dx && !position.dy)?'translateX('+position.dx+'px)':(
+      //     (!position.dx && position.dy)?'translateY('+position.dy+'px)':(
+      //       (position.dx && position.dy)?'translate('+position.dx+'px, '+position.dy+'px)':'unset'
+      //     )
+      //   )
+      // );
+   }
     if (thisClass.isFrontend && !(data?.enableSign) && (data?.field??'') == 'sign') {
       addedElement.classList.add('esign-body__pattern');
       addedElement.title = thisClass.i18n?.notsignedyet??'User not signed yet!';
-    }
+   }
     addedElement.innerHTML = `
       <div class="esign-body__single__title" style="color: ${((data?.data)?.field)?.fontColor};font-size: ${((data?.data)?.field)?.fontSize}px;">${
         (thisClass.isFrontend && !(data?.enableSign) && (data?.field??'') == 'sign')?(
@@ -351,13 +369,12 @@ class PDFUtils extends canvasPdf {
       const currentDate = new Date();
       if ((data?.field??'') == 'date') {
         const dateFormate = ((((data?.data??{})?.field??{})?.format??'') == '')?'M d, Y':(((data?.data??{})?.field??{})?.format??'');
-        
-        addedElement.innerHTML = date_formate(currentDate, dateFormate);
-      } else if ((data?.field??'') == 'time') {
+        addedElement.innerHTML = thisClass.date_formate(currentDate, dateFormate);
+     } else if ((data?.field??'') == 'time') {
         const dateFormate = ((((data?.data??{})?.field??{})?.format??'') == '')?'H:i:s':(((data?.data??{})?.field??{})?.format??'');
-        addedElement.innerHTML = date_formate(currentDate, dateFormate);
-      } else {}
-    }
+        addedElement.innerHTML = thisClass.date_formate(currentDate, dateFormate);
+     } else {}
+   }
     if (!thisClass.isFrontend) {eSign.init_dragging(addedElement);}
     addedElement.addEventListener('click', (event) => {
       if (thisClass.isFrontend) {
@@ -382,29 +399,35 @@ class PDFUtils extends canvasPdf {
                       <div class="signature-pad__header">
                         <div class="signature-pad__actions">
 
-                          <span class="dashicons dashicons-color-picker">
+                          <span class="dashicons dashicons-color-picker" data-content="Change pen color">
                             <input type="color" class="button" data-action="change-color" title="Change color" data-title="Color">
                           </span>
-                          <span class="dashicons dashicons-admin-appearance">
+                          <span class="dashicons dashicons-admin-appearance" data-content="Change background color">
                             <input type="color" class="button" data-action="change-background-color" title="Change background color" data-title="BG">
                           </span>
-                          <span class="dashicons dashicons-align-wide">
+                          <span class="dashicons dashicons-align-wide" data-content="Change width">
                             <button type="button" class="button" data-action="change-width">Change width</button>
                           </span>
-                          <span class="dashicons dashicons-upload">
+                          <span class="dashicons dashicons-upload" data-content="Upload Signature">
                             <input type="file" class="button" data-action="change-uploaded" title="Upload Signature" data-title="Upload" accept="image/*">
                           </span>
-                          <span class="dashicons dashicons-trash">
+                          <span class="dashicons dashicons-trash" data-content="Clear">
                             <button type="button" class="button clear" data-action="clear">Clear</button>
                           </span>
-                          <span class="dashicons dashicons-undo">
+                          <span class="dashicons dashicons-undo" data-content="Undo">
                             <button type="button" class="button" data-action="undo">Undo</button>
+                          </span>
+                          <span class="dashicons dashicons-paperclip" data-content="Attachments">
+                            <button type="button" class="button" data-action="attachments">Attachments</button>
                           </span>
                             
                         </div>
                       </div>
                       <div class="signature-pad__body">
                         <canvas class="modal__content__canvas" id="signatureCanvas"></canvas>
+                        <div class="modal__content__attachments">
+                          ${eSign?.dropZoneHTML??''}
+                        </div>
                       </div>
                       <div class="signature-pad__footer">
                         <div class="description">Sign above</div>
@@ -437,21 +460,27 @@ class PDFUtils extends canvasPdf {
                 className: 'vex-dialog-button-primary',
                 click: function () {
                   eSign.importSignature2Element(thisClass, addedElement);
-                },
-              },
+               },
+             },
               {
                 text: 'Cancel',
                 type: 'button',
                 className: 'vex-dialog-button-secondary',
                 click: function () {
                   thisClass.vex.close(thisClass.eSignVex);
-                },
-              },
+               },
+             },
             ],
+            afterOpen: () => {
+              document.querySelectorAll('.signature-pad__actions .dashicons[data-content]:not([data-tippyhandled])').forEach(elem => {
+                elem.dataset.tippyhandled = true;
+                thisClass.tippy(elem, {arrow: true, content: elem.dataset.content});
+              });
+           }
             // callback: function (data = false) {
             //   // Handle the modal closing (optional)
             //   // console.log('Modal closed', data);
-            // },
+            //},
           });
           
           setTimeout(() => {
@@ -459,9 +488,9 @@ class PDFUtils extends canvasPdf {
             document.querySelectorAll('[data-esign-popup-close]').forEach((el) => {
               el.addEventListener('click', (e) => {thisClass.vex.close(thisClass.eSignVex);});
             });
-          }, 500);
-        } else {}
-      } else {
+         }, 500);
+       } else {}
+     } else {
         const eSignBuilder = document.querySelector('.pdf_builder__fields');
         if (!eSignBuilder) {return;}eSignBuilder.classList.add('settings_enabled');
         const stored = (thisClass?.fieldsData??[]).find((row) => row.unique == addedElement.dataset.storedOn);
@@ -474,7 +503,7 @@ class PDFUtils extends canvasPdf {
         if (!wrap) {
           wrap = document.createElement('form');wrap.classList.add('pdf_fields');
           (field?.fields??[]).forEach((field) => {
-            fieldHTML = eSign.do_field(field, false, esitingData);
+            fieldHTML = eSign.do_field(field, false, esitingData, thisClass);
             wrap.appendChild(fieldHTML);
           });
           stored.html = wrap;
@@ -502,12 +531,12 @@ class PDFUtils extends canvasPdf {
                 break;
               default:
                 break;
-            }
+           }
           });
-        }
+       }
         // Push it on FIELD BODY
         body.innerHTML = '';body.appendChild(stored.html);
-      }
+     }
     });
     addedElement.querySelectorAll('.remove').forEach((trash) => {
       trash.addEventListener('click', (event) => {
@@ -517,18 +546,18 @@ class PDFUtils extends canvasPdf {
           trash.parentElement.remove();
           document.querySelector('.pdf_builder__fields')?.classList.remove('settings_enabled');
           if (data && data?.settingsEL) {data.settingsEL.remove();}
-        }
+       }
       });
     });
     // Append the added element to the canvas container
     document.querySelector('#signature-builder').appendChild(addedElement);
     if (!thisClass.isFrontend) {setTimeout(() => {addedElement.click();}, 800);}
-  }
+ }
   init_dragging(el) {
     interact(el)
     .resizable({
       // resize from all edges and corners
-      edges: { left: true, right: true, bottom: true, top: true },
+      edges: {left: true, right: true, bottom: true, top: true},
       listeners: {
         move (event) {
           var target = event.target
@@ -543,13 +572,14 @@ class PDFUtils extends canvasPdf {
           x += event.deltaRect.left
           y += event.deltaRect.top
   
-          target.style.transform = 'translate(' + x + 'px,' + y + 'px)'
+          target.style.left =  `${x}px`;target.style.top =  `${y}px`;
+          // target.style.transform =  `translate(${x}px, ${y}px)`; // 'translate(' + x + 'px,' + y + 'px)'
   
           target.setAttribute('data-x', x)
           target.setAttribute('data-y', y)
           // target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
-        }
-      },
+       }
+     },
       modifiers: [
         // keep the edges inside the parent
         interact.modifiers.restrictEdges({
@@ -565,7 +595,7 @@ class PDFUtils extends canvasPdf {
       inertia: true
     })
     .draggable({
-      listeners: { move: window.dragMoveListener },
+      listeners: {move: window.dragMoveListener},
       inertia: true,
       modifiers: [
         interact.modifiers.restrictRect({
@@ -576,99 +606,31 @@ class PDFUtils extends canvasPdf {
       restrict: {
           restriction: 'parent', endOnly: true,
           elementRect: {top: 0, left: 0, bottom: 1, right: 1},
-      },
+     },
       onmove: function (event) {
           const target = event.target;const pdfCanvas = document.querySelector('#signature-builder');
           const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
           const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-  
+          // 
+          // console.log('onmove', event);
+          // 
           // Update the element's position
-          target.style.transform = `translate(${x}px, ${y}px)`;
+          target.style.left =  `${x}px`;target.style.top =  `${y}px`;
+          // target.style.transform = `translate(${x}px, ${y}px)`;
   
           // Store the new position
           target.setAttribute('data-x', x);
           target.setAttribute('data-y', y);
-      },
+     },
     })
-  }
-  initDragAndDropFeature(el) {
-    interact(el)
-    .resizable({
-      // resize from all edges and corners
-      edges: { left: true, right: true, bottom: true, top: true },
-  
-      listeners: {
-        move (event) {
-          var target = event.target
-          var x = (parseFloat(target.getAttribute('data-x')) || 0)
-          var y = (parseFloat(target.getAttribute('data-y')) || 0)
-  
-          // update the element's style
-          target.style.width = event.rect.width + 'px'
-          target.style.height = event.rect.height + 'px'
-  
-          // translate when resizing from top or left edges
-          x += event.deltaRect.left
-          y += event.deltaRect.top
-  
-          target.style.transform = 'translate(' + x + 'px,' + y + 'px)'
-  
-          target.setAttribute('data-x', x)
-          target.setAttribute('data-y', y)
-          target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
-        }
-      },
-      modifiers: [
-        // keep the edges inside the parent
-        interact.modifiers.restrictEdges({
-          outer: 'parent'
-        }),
-  
-        // minimum size
-        interact.modifiers.restrictSize({
-          min: { width: 100, height: 50 }
-        })
-      ],
-  
-      inertia: true
-    })
-    .draggable({
-      listeners: { move: window.dragMoveListener },
-      inertia: true,
-      modifiers: [
-        interact.modifiers.restrictRect({
-          restriction: 'parent',
-          endOnly: true
-        })
-      ],
-      restrict: {
-          restriction: 'parent', endOnly: true,
-          elementRect: {top: 0, left: 0, bottom: 1, right: 1},
-      },
-      onmove: function (event) {
-          const target = event.target;const pdfCanvas = document.querySelector('#pdfCanvas');
-          const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-          const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-  
-          console.log([
-            event.dx, event.dy, pdfCanvas.clientWidth, pdfCanvas.clientHeight
-          ]);
-          // Update the element's position
-          target.style.transform = `translate(${x}px, ${y}px)`;
-  
-          // Store the new position
-          target.setAttribute('data-x', x);
-          target.setAttribute('data-y', y);
-      },
-    })
-  }
+ }
   str_replace(str) {
     const searchNeedles = {'product.name': ''};
     Object.keys(searchNeedles).forEach((needle) =>  {
         str = str.replaceAll(`{{${needle}}}`, searchNeedles[needle]);
     });
     return str;
-  }
+ }
   async previewPDFile(file, thisClass) {
     const eSign = this;
     if (!file) {return;}
@@ -689,24 +651,24 @@ class PDFUtils extends canvasPdf {
           // Start PDF functionality
           if (eSign.oneCanvas) {
             return await eSign.canvasPdf_load_pdf();
-          }
+         }
         }).then(async (data) => {
           // start implementing events
           if (eSign.oneCanvas) {
             return await eSign.canvasPdf_events();
-          }
+         }
         }).then(async (data) => {
           // render layers
           // if (eSign.oneCanvas) {
           //   return await eSign.render_layers();
-          // }
+          //}
         }).catch(error => {
           console.error('Error loading PDF:', error);
         });
-    };
+   };
   
     fileReader.readAsArrayBuffer(file);
-  }
+ }
   dragFromRight2Left(thisClass) {
     const eSign = this;
     interact('.esign-fields__single').draggable({
@@ -714,18 +676,18 @@ class PDFUtils extends canvasPdf {
       restrict: {
         restriction: 'parent', endOnly: true,
         elementRect: {top: 0, left: 0, bottom: 1, right: 1},
-      },
+     },
       onend: function (event) {
         const target = event.target;
         const pdfContainer = document.querySelector('#signature-builder');
         const dropPosition = {
           dx: event.pageX - pdfContainer.offsetLeft,
           dy: event.pageY - pdfContainer.offsetTop,
-        };
+       };
         eSign.addElementToPDF(target, dropPosition, thisClass);
-      },
+     },
     });
-  }
+ }
   loadPreviousFields(thisClass) {
     const eSign = this;
     const custom_fields = eSign.data.custom_fields;
@@ -738,12 +700,11 @@ class PDFUtils extends canvasPdf {
         var handle = document.createElement('div');handle.classList.add('esign-fields__handle');
         handle.dataset.config = JSON.stringify({id: fieldRow?.id??'', title: fieldRow?.title??''});
         field.appendChild(handle);var position = row;eSign.addElementToPDF(field, position, thisClass, row);
-      // }
+      //}
     });
-  }
+ }
   async init_eSignature(addedElement, thisClass) {
     const eSign = this;
-    thisClass.date_formate = date_formate;
     // Implement signature capturing using signature_pad
     var signatureCanvas = document.getElementById('signatureCanvas');
     if ((thisClass?.signaturePadEl)?.querySelector('canvas')) {
@@ -751,8 +712,8 @@ class PDFUtils extends canvasPdf {
         thisClass.signaturePadEl.querySelector('canvas'), signatureCanvas
       );
       signatureCanvas.remove();signatureCanvas = document.getElementById('signatureCanvas');
-    } else {
-      thisClass.signaturePad = new SignaturePad(signatureCanvas, {
+   } else {
+      thisClass.signaturePad = new thisClass.SignaturePad(signatureCanvas, {
         // backgroundColor: 'rgb(255, 255, 255)',
         // penWidth: 2, minWidth: 2, maxWidth: 4
       });
@@ -763,18 +724,18 @@ class PDFUtils extends canvasPdf {
       // thisClass.signaturePad.resizeCanvas({
       //   width: 500, // Your desired width
       //   height: 300, // Your desired height
-      // });
+      //});
     
-    }
+   }
     // 
-    new Pad(thisClass);
+    thisClass.Pad = new Pad(thisClass);
     // 
     document.querySelectorAll('[data-esign-popup-proceed]').forEach((el) => {
       el.addEventListener('click', (event) => {
         eSign.importSignature2Element(thisClass, addedElement);
       });
     });
-  }
+ }
   async addSignatureToPDF(pdfBytes, signatureDataUrl) {
     const eSign = this;
     const pdfDoc = await PDFDocument.load(pdfBytes);
@@ -797,7 +758,7 @@ class PDFUtils extends canvasPdf {
     // Serialize the PDF with the signature added
     const modifiedPdfBytes = await pdfDoc.save();
     return modifiedPdfBytes;
-  }
+ }
   async upload_esignature(thisClass) {
     const eSign = this;
     // <input type="file" id="signatureInput" accept="image/*">
@@ -826,17 +787,17 @@ class PDFUtils extends canvasPdf {
   
           // Now you have the modified PDF with the uploaded signature (modifiedPdfBytes)
           // You can save it, send it to the client, or use it as needed
-        };
-      }
+       };
+     }
     });
     
-  }
+ }
   async importSignature2Element(thisClass, addedElement) {
     const eSign = this;
     if (thisClass.signaturePad.isEmpty()) {
       var text = thisClass.i18n?.plsdosign??'Please provide a signature.';
       thisClass.toastify({text: text,className: "warning", duration: 3000, stopOnFocus: true, style: {background: "linear-gradient(to right, rgb(255 200 153), rgb(255 166 33))"}}).showToast();
-    } else {
+   } else {
       thisClass.signatureDataUrl = thisClass.signaturePad.toDataURL('image/png');
       // console.log(thisClass.signatureDataUrl);
       // const originalPdfBytes = '...'; // Load your original PDF bytes here
@@ -851,7 +812,7 @@ class PDFUtils extends canvasPdf {
       thisClass.signaturePadEl = document.createElement('div');
       thisClass.signaturePadEl.appendChild(thisClass.signaturePad.canvas);
       thisClass.vex.close(thisClass.eSignVex);
-    }
-  }
+   }
+ }
 }
 export default PDFUtils;
