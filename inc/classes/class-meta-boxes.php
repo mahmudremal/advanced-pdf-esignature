@@ -48,12 +48,21 @@ class Meta_Boxes {
 	 * @return void
 	 */
 	public function custom_meta_box_html($post) {
+		global $eSign_Esign;
 		$json = ['id' => $post->ID];
+		$eSing = get_post_meta(get_the_ID(), '__esign_builder', true);
+		// if (!$eSing || !isset($eSing['pdf']) || empty($eSing['pdf'])) {return;}
+		if (isset($eSing['pdf'])) {
+			$eSing['pdf'] = preg_replace("/^http:/i", "https:", $eSing['pdf']);
+		}
+		$eSign_Esign->print_assets();
 		?>
 		<div class="fwp__esign">
-			<div class="fwp__esign__header"></div>
-			<div class="fwp__esign__body">
+			<div class="fwp__esign__header">
 				<button type="button" class="launch-esignature" data-config="<?php echo esc_attr(json_encode($json)); ?>"><?php esc_html_e('Open Signature Builder', 'esignbinding'); ?></button>
+			</div>
+			<div class="fwp__esign__body">
+				<canvas id="preview_contract" data-contract="<?php echo (isset($eSing['pdf']) && !empty($eSing['pdf']))?esc_url($eSing['pdf']):''; ?>" width="800" height="1200" data-config="<?php echo esc_attr(json_encode($json)); ?>"></canvas>
 			</div>
 			<div class="fwp__esign__footer"></div>
 		</div>

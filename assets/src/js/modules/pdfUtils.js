@@ -3,14 +3,17 @@
 // import SignaturePad from "signature_pad";
 import Pad from './signaturePad';
 // import {format as date_formate} from 'date-fns';
-import canvasPdf from "./canvasPdf";
+// import canvasPdf from "./canvasPdf";
 // import tippy from 'tippy.js';
+import Events from "./events"
 
 
-class PDFUtils extends canvasPdf {
+// extends canvasPdf
+class PDFUtils extends Events {
   constructor(thisClass) {
     super(thisClass);
     this.data = true;
+    this.widgets = [];
     this.oneCanvas = false;
     this.uploadedPDF = false;
     this.signatureExists = false;
@@ -19,12 +22,12 @@ class PDFUtils extends canvasPdf {
     // 
     this.setup_i18n(thisClass);
     this.setup_hooks(thisClass);
- }
+  }
   setup_hooks(thisClass) {
- }
+  }
   setup_i18n(thisClass) {
     this.i18n = thisClass.i18n;
- }
+  }
 
   do_field(field, child = false, esitingData = {}, thisClass) {
     const eSign = this;
@@ -82,6 +85,7 @@ class PDFUtils extends canvasPdf {
             // if (field?.dataset??false) {input.dataset = field.dataset;}
             input.dataset.fieldId = field.fieldID;
             Object.keys(field?.attr??{}).forEach((key) => {input.setAttribute(key, field.attr[key])});
+            if (field?.options && field.options == 'users') {field.options = eSign.database.users;}
             (field?.options??[]).forEach((opt,i) =>  {
                 option = document.createElement('option');option.value=opt?.value??'';option.innerHTML=opt?.label??'';option.dataset.index = i;
                 if (esitingData[field.fieldID] == option.value) {
@@ -238,7 +242,7 @@ class PDFUtils extends canvasPdf {
     const eSign = this;
     const pdfPreview = document.querySelector('#signature-builder');
     // pdfPreview.querySelectorAll('canvas').forEach((el) => {el.remove();});
-    const promises = [];
+    const promises = [];eSign.pdfCanvases = [];
     eSign.pdfPreview = pdfPreview;
     let xOffset = 0; let yOffset = 0;
     for(let pageNumber = 1; pageNumber <= numPages; pageNumber++) {
@@ -276,283 +280,280 @@ class PDFUtils extends canvasPdf {
             //});
          } else {
             const page = await pdf.getPage(pageNumber);
-            // const pdfCanvas = document.createElement('canvas');
-            const pdfCanvas = document.querySelector('#contractCanvas');
-            const viewport = page.getViewport({scale: 2});
+            const pdfCanvas = document.createElement('canvas');
+            // const pdfCanvas = document.querySelector('#contractCanvas');
+            const pageViewport = page.getViewport({scale: 2});
             const context = pdfCanvas.getContext('2d');
-            const renderContext = {canvasContext: context, viewport: viewport, textRenderingMode: "smooth"};
-            pdfCanvas.width = viewport.width;
-            pdfCanvas.height = viewport.height;
-            pdfCanvas.style.width = viewport.width + 'px';
-            pdfCanvas.style.height = viewport.height + 'px';
+            const renderContext = {canvasContext: context, viewport: pageViewport, textRenderingMode: "smooth"};
+            pdfCanvas.dataset.pageOrder = pageNumber;
+            pdfCanvas.width = pageViewport.width;
+            pdfCanvas.height = pageViewport.height;
+            pdfCanvas.style.width = pageViewport.width + 'px';
+            pdfCanvas.style.height = pageViewport.height + 'px';
             await page.render(renderContext).promise;
     
-            // pdfPreview.appendChild(pdfCanvas);
+            eSign.pdfCanvases.push({
+              order: pageNumber,
+              canvas: pdfCanvas
+            });
+            // eSign.pdfPreview.appendChild(pdfCanvas);
             resolve(); // Resolve the promise
          }
        } catch (error) {reject(error);}
       });
   
       promises.push(pagePromise);
-   }
+    }
     // Wait for all page promises to resolve
-    await Promise.all(promises);
+    await Promise.all(promises).then(res => {
+      eSign.pdfCanvases = eSign.pdfCanvases.sort((a, b) => a.order - b.order);
+      const pdfCanvas = document.querySelector('#contractCanvas');
+      eSign.renderMultipleCanvases(
+        eSign.pdfCanvases, // .map(row => row.canvas)
+        pdfCanvas
+      );
+      return pdfCanvas;
+    }).then(pdfCanvas => {
+      // Add event listener to detect mouse movements on the destination canvas
+      const totalHeight = eSign.pdfCanvases.map(page => page.canvas.height).reduce((accumulator, currentValue) => accumulator + currentValue)
+      const maxWidth = Math.max(0, ...eSign.pdfCanvases.map(page => page.canvas.width));
+      const cssRatio = [1, totalHeight/maxWidth];
+      pdfCanvas.style.aspectRatio = cssRatio.join('/');
+      eSign.canvas = {
+        rect: {},
+        width: maxWidth,
+        element: pdfCanvas,
+        height: totalHeight,
+        cssRatio: cssRatio,
+        ratio: {width: 1, height: 1},
+        bounding: () => pdfCanvas.getBoundingClientRect()
+      };
+      
+      eSign.canvas.ratio = {
+        update: () => {
+          const canvasRect = eSign.canvas.bounding();
+          eSign.canvas.ratio.width = canvasRect.width / eSign.canvas.width;
+          eSign.canvas.ratio.height = canvasRect.height / eSign.canvas.height;
+          return eSign.canvas.ratio;
+        },
+      };
+      eSign.canvas.ratio.update();
+      pdfCanvas.addEventListener('mousemove', event => {
+        eSign.event_mousemove(event, thisClass);
+      });
+      pdfCanvas.addEventListener('click', event => {
+        eSign.event_mouseclick(event, thisClass);
+      });
+      return pdfCanvas;
+    }).then(pdfCanvas => {
+      eSign.loadPreviousFields(thisClass);
+    });
     return true;
- }
-  addElementToPDF(field, position, thisClass, data = false) {
+  }
+  renderMultipleCanvases(canvasRows, destinationCanvas) {
     const eSign = this;
+    // Get the context of the destination canvas
+    const destCtx = destinationCanvas.getContext('2d');
+    // Find the maximum width and total height of all canvasRows
+    let maxWidth = 0;
+    eSign.totalHeight = 0;
+    canvasRows.forEach(canvasRow => {
+      if (canvasRow.canvas.width > maxWidth) {
+        maxWidth = canvasRow.canvas.width;
+      }
+      eSign.totalHeight += canvasRow.canvas.height;
+    });
+    // Set the destination canvas width and height
+    destinationCanvas.width = maxWidth;
+    destinationCanvas.height = eSign.totalHeight;
+    // Loop through each source canvas
+    let offsetY = 0;
+    canvasRows.forEach(canvasRow => {
+      // Calculate the horizontal position for centering
+      canvasRow.offsetX = (maxWidth - canvasRow.canvas.width) / 2;
+      canvasRow.offsetY = offsetY;
+      canvasRow.maxWidth = maxWidth;
+      // Get the context of the source canvas
+      const ctx = canvasRow.canvas.getContext('2d');
+      // Draw the contents of the source canvas onto the destination canvas
+      destCtx.drawImage(canvasRow.canvas, canvasRow.offsetX, canvasRow.offsetY);
+      // Update the Y offset for the next canvas
+      offsetY += canvasRow.canvas.height;
+    });
+  }
+  addElementToPDF(field, position, thisClass, data = false) {
+    const eSign = this;const widget = (data)?data:{};widget.args = widget.args || {};
     if (thisClass.isFrontend && position?.signDone) {return;}
+    // 
+    // let's fix position objects methods
+    position.height = (typeof position.height == 'string')?parseFloat(position.height.replace('px', '')):position.height;
+    position.width = (typeof position.width == 'string')?parseFloat(position.width.replace('px', '')):position.width;
     const config = JSON.parse(field.querySelector('.esign-fields__handle').dataset?.config??'{}');
     if (!(thisClass?.fieldsData??false)) {thisClass.fieldsData = [];}
     const args = {unique: (thisClass.fieldsData.length+1), ...config};
     thisClass.fieldsData.push(args);
-    const addedElement = document.createElement('div');
-    addedElement.classList.add('esign-body__single');
-    if (data?.enableSign) {
-      data.fieldEL = addedElement;
-      addedElement.classList.add('esign-body__single__enabled', 
-        thisClass.isFrontend?'esign-body__single__front':'esign-body__single__back'
-      );
-   }
-    addedElement.dataset.type = data?.field??'';
-    addedElement.dataset.storedOn = args.unique;
 
-    var pointer = eSign?.canvasPointer;
-    if (pointer && !data) {
-      position.dx = pointer.pointerX;
-      position.dy = pointer.pointerY;
-   }
-
-    const canvasWidth = 1190.55;
-    const canvasHeight = 1683.78;
-    
-    if (position.dx && (position?.canvas??false)) {}
-    if (position.dx) {addedElement.style.left = (thisClass.isFrontend)?`${((100 / canvasWidth) * position.dx)}%`:`${position.dx}px`;}
-    if (position.dy) {addedElement.style.top = (thisClass.isFrontend)?`${((100 / canvasHeight) * position.dy)}%`:`${position.dy}px`;}
-
-    if (position?.height) {addedElement.dataset.height = parseFloat(position.height);}
-    if (position?.width) {addedElement.dataset.width = parseFloat(position.width);}
-    if (position?.height) {addedElement.style.height = position.height;}
-    // if (position.width) {addedElement.style.width = position.width;}
-
-    if (position.width) {addedElement.style.width = (thisClass.isFrontend)?`${
-      ((100 / canvasWidth) * parseFloat(position.width.replaceAll('px', '')))
-   }%`:position.width;}
-    
-    if (position.dx) {addedElement.dataset.x = position.dx;}
-    if (position.dy) {addedElement.dataset.y = position.dy;}
-    if (position.dx || position.dy) {
-      // addedElement.style.transform = (
-      //   (position.dx && !position.dy)?'translateX('+position.dx+'px)':(
-      //     (!position.dx && position.dy)?'translateY('+position.dy+'px)':(
-      //       (position.dx && position.dy)?'translate('+position.dx+'px, '+position.dy+'px)':'unset'
-      //     )
-      //   )
-      // );
-   }
-    if (thisClass.isFrontend && !(data?.enableSign) && (data?.field??'') == 'sign') {
-      addedElement.classList.add('esign-body__pattern');
-      addedElement.title = thisClass.i18n?.notsignedyet??'User not signed yet!';
-   }
-    addedElement.innerHTML = `
-      <div class="esign-body__single__title" style="color: ${((data?.data)?.field)?.fontColor};font-size: ${((data?.data)?.field)?.fontSize}px;">${
-        (thisClass.isFrontend && !(data?.enableSign) && (data?.field??'') == 'sign')?(
-          ((data?.data)?.field)?.user_name??'Pending Sign'
-        ):(args?.title??'eSignature')}</div>
-      ${(thisClass.isFrontend)?``:`
-      <button type="button" class="btn btn-default btn-xs remove">
-        <span class="dashicons-before dashicons-trash"></span>
-      </button>
-      `}
-    `;
     if (thisClass.isFrontend) {
-      const currentDate = new Date();
-      if ((data?.field??'') == 'date') {
-        const dateFormate = ((((data?.data??{})?.field??{})?.format??'') == '')?'M d, Y':(((data?.data??{})?.field??{})?.format??'');
-        addedElement.innerHTML = thisClass.date_formate(currentDate, dateFormate);
-     } else if ((data?.field??'') == 'time') {
-        const dateFormate = ((((data?.data??{})?.field??{})?.format??'') == '')?'H:i:s':(((data?.data??{})?.field??{})?.format??'');
-        addedElement.innerHTML = thisClass.date_formate(currentDate, dateFormate);
-     } else {}
-   }
-    if (!thisClass.isFrontend) {eSign.init_dragging(addedElement);}
-    addedElement.addEventListener('click', (event) => {
-      if (thisClass.isFrontend) {
-        if ((data?.field??'') == 'sign' && data?.enableSign && !(data?.signDone)) {
-          // alert('Signature poup is under development');
-          thisClass.eSignVex = thisClass.vex.dialog.open({
-            showCloseButton: true,
-            escapeButtonCloses: false,
-            overlayClosesOnClick: false,
-            unsafeMessage: `
-            <!-- <div class="modal micromodal-slide is-open" id="modal-esignature" aria-hidden="true">
-              <div class="modal__overlay" tabindex="-1"> -->
-                <!-- Removed data-micromodal-close attribute from the overlay to disable closing on outside click -->
-                <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
-                <div class="modal__header">
-                  <h2 class="modal__title" id="modal-1-title">E-Signature Pad.</h2>
-                </div>
-                <div class="modal__content" id="modal-1-content">
-                  <div class="modal__content__wrap">
-                    
-                    <div id="signature-pad" class="signature-pad">
-                      <div class="signature-pad__header">
-                        <div class="signature-pad__actions">
+      const canvas = (widget.args?.ctx && widget.args.ctx?.canvas)?widget.args.ctx.canvas:eSign.canvas.element;
+      const ctx = widget.args.ctx || canvas.getContext('2d');
+      widget.bBox = {
+        topLeft:      {x: widget.dx, y: widget.dy},
+        bottomLeft:   {x: widget.dx, y: widget.dy + widget.height},
+        topRight:     {x: widget.dx + widget.width, y: widget.dy},
+        bottomRight:  {x: widget.dx + widget.width, y: widget.dy + widget.height}
+      };
+      widget.onClick = (event, widget, thisClass) => {
+        eSign.launch_signature_operation(event, widget, thisClass);
+      };
+      widget.args = {
+        borderStyle: 'dotted',
+        boxTitle: args.title,
+        borderColor: 'blue',
+        fontFamily: 'Arial',
+        borderGap: [3, 3],
+        isPreview: false,
+        borderWidth: 1,
+        fontSize: 20,
+        ...widget.args,
+        ctx: ctx
+      };
+      eSign.widgets.push(widget);
+      // Set background color
+      ctx.fillStyle = 'lightblue';
+      ctx.fillRect(widget.dx, widget.dy, widget.width, widget.height);
+      // Set border color and draw the border
+      ctx.strokeStyle = widget.args.borderColor;
+      ctx.lineWidth = widget.args.borderWidth;
+      switch (widget.args.borderStyle) {
+        case 'dotted':
+          ctx.setLineDash(widget.args.borderGap);
+          break;
+        default:
+          break;
+      }
+      ctx.strokeRect(widget.dx, widget.dy, widget.width, widget.height);
+      // Set the text
+      ctx.font = `${widget.args.fontSize}px ${widget.args.fontFamily}`;
+      ctx.fillStyle = '#000';
+      ctx.fillText(
+        widget.args.boxTitle,
+        widget.dx + (widget.width / 5),
+        widget.dy + (widget.height / 1.5)
+      );
+      if (widget.args?.isPreview) {
+        switch (widget.args.isPreview.type) {
+          case 'image':
+            const image = new Image();
+            image.src = widget.args.isPreview.image;
+            image.onload = function() {
+              if (widget.data.field?.clearRect) {
+                ctx.clearRect(widget.dx, widget.dy, widget.width, widget.height);
+              }
+              ctx.drawImage(image, widget.dx, widget.dy, widget.width, widget.height);
+            };
+            break;
+          case 'canvas':
+            if (widget.data.field?.clearRect) {
+              ctx.clearRect(widget.dx, widget.dy, widget.width, widget.height);
+            }
+            ctx.drawImage(widget.args.isPreview.canvas, widget.dx, widget.dy, widget.width, widget.height);
+            break;
+          default:
+            break;
+        }
+      }
+    } else {
+      const addedElement = document.createElement('div');
+      addedElement.classList.add('esign-body__single');
+      if (data?.enableSign) {
+        data.fieldEL = addedElement;
+        addedElement.classList.add('esign-body__single__enabled', 
+          thisClass.isFrontend?'esign-body__single__front':'esign-body__single__back'
+        );
+    }
+      addedElement.dataset.type = data?.field??'';
+      addedElement.dataset.storedOn = args.unique;
 
-                          <span class="dashicons dashicons-color-picker" data-content="Change pen color">
-                            <input type="color" class="button" data-action="change-color" title="Change color" data-title="Color">
-                          </span>
-                          <span class="dashicons dashicons-admin-appearance" data-content="Change background color">
-                            <input type="color" class="button" data-action="change-background-color" title="Change background color" data-title="BG">
-                          </span>
-                          <span class="dashicons dashicons-align-wide" data-content="Change width">
-                            <button type="button" class="button" data-action="change-width">Change width</button>
-                          </span>
-                          <span class="dashicons dashicons-upload" data-content="Upload Signature">
-                            <input type="file" class="button" data-action="change-uploaded" title="Upload Signature" data-title="Upload" accept="image/*">
-                          </span>
-                          <span class="dashicons dashicons-trash" data-content="Clear">
-                            <button type="button" class="button clear" data-action="clear">Clear</button>
-                          </span>
-                          <span class="dashicons dashicons-undo" data-content="Undo">
-                            <button type="button" class="button" data-action="undo">Undo</button>
-                          </span>
-                          <span class="dashicons dashicons-paperclip" data-content="Attachments">
-                            <button type="button" class="button" data-action="attachments">Attachments</button>
-                          </span>
-                            
-                        </div>
-                      </div>
-                      <div class="signature-pad__body">
-                        <canvas class="modal__content__canvas" id="signatureCanvas"></canvas>
-                        <div class="modal__content__attachments">
-                          ${eSign?.dropZoneHTML??''}
-                        </div>
-                      </div>
-                      <div class="signature-pad__footer">
-                        <div class="description">Sign above</div>
-                        <div class="signature-pad__actions">
-                          <div class="column disabled">
-                            <button type="button" class="button save" data-action="save-png">Save as PNG</button>
-                            <button type="button" class="button save" data-action="save-jpg">Save as JPG</button>
-                            <button type="button" class="button save" data-action="save-svg">Save as SVG</button>
-                            <button type="button" class="button save" data-action="save-svg-with-background">Save as SVG with background</button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-  
-  
-                  </div>
-                </div>
-                <div class="modal__footer">
-                  <button class="modal__btn modal__btn-primary" data-esign-popup-proceed="true">Continue</button>
-                  <button class="modal__btn" data-esign-popup-close="true" aria-label="Close this dialog window">Close</button>
-                </div>
-                </div>
-              <!-- </div>
-            </div> -->
-            `,
-            buttons: [
-              {
-                text: 'OK',
-                type: 'button',
-                className: 'vex-dialog-button-primary',
-                click: function () {
-                  eSign.importSignature2Element(thisClass, addedElement);
-               },
-             },
-              {
-                text: 'Cancel',
-                type: 'button',
-                className: 'vex-dialog-button-secondary',
-                click: function () {
-                  thisClass.vex.close(thisClass.eSignVex);
-               },
-             },
-            ],
-            afterOpen: () => {
-              document.querySelectorAll('.signature-pad__actions .dashicons[data-content]:not([data-tippyhandled])').forEach(elem => {
-                elem.dataset.tippyhandled = true;
-                thisClass.tippy(elem, {arrow: true, content: elem.dataset.content});
-              });
-           }
-            // callback: function (data = false) {
-            //   // Handle the modal closing (optional)
-            //   // console.log('Modal closed', data);
-            //},
-          });
-          
-          setTimeout(() => {
-            eSign.init_eSignature(addedElement, thisClass);
-            document.querySelectorAll('[data-esign-popup-close]').forEach((el) => {
-              el.addEventListener('click', (e) => {thisClass.vex.close(thisClass.eSignVex);});
-            });
-         }, 500);
-       } else {}
-     } else {
-        const eSignBuilder = document.querySelector('.pdf_builder__fields');
-        if (!eSignBuilder) {return;}eSignBuilder.classList.add('settings_enabled');
-        const stored = (thisClass?.fieldsData??[]).find((row) => row.unique == addedElement.dataset.storedOn);
-        const field = (thisClass?.fields??[]).find((row) => row.id == stored.id);
-        const esitingData = (data?.data??{})?.field??{};
-  
-        var body, wrap, fieldHTML;
-        body = document.querySelector('.pdf_builder__fields__settings__body');
-        wrap = stored?.html??false;
-        if (!wrap) {
-          wrap = document.createElement('form');wrap.classList.add('pdf_fields');
-          (field?.fields??[]).forEach((field) => {
-            fieldHTML = eSign.do_field(field, false, esitingData, thisClass);
-            wrap.appendChild(fieldHTML);
-          });
-          stored.html = wrap;
-          if (data) {data.settingsEL = wrap;}
-          
-          wrap.querySelectorAll('[data-field-id]').forEach((inputEl) => {
-            switch(inputEl.dataset.fieldId) {
-              case 'format':
-                break;
-              case 'fontColor':
-                inputEl.addEventListener('change', (event) => {
-                  if (!data) {return;}
-                  var title = data.fieldEL?.firstElementChild;
-                  if (!title || !(title?.style)) {return;}
-                  title.style.color = event.target.value;
-                });
-                break;
-              case 'fontSize':
-                inputEl.addEventListener('change', (event) => {
-                  if (!data) {return;}
-                  var title = data.fieldEL?.firstElementChild;
-                  if (!title || !(title?.style)) {return;}
-                  title.style.fontSize = event.target.value + 'px';
-                });
-                break;
-              default:
-                break;
-           }
-          });
-       }
-        // Push it on FIELD BODY
-        body.innerHTML = '';body.appendChild(stored.html);
-     }
-    });
-    addedElement.querySelectorAll('.remove').forEach((trash) => {
-      trash.addEventListener('click', (event) => {
-        event.preventDefault();
-        var rusure = thisClass.i18n?.rusure??'Are you sure?';
-        if (confirm(rusure)) {
-          trash.parentElement.remove();
-          document.querySelector('.pdf_builder__fields')?.classList.remove('settings_enabled');
-          if (data && data?.settingsEL) {data.settingsEL.remove();}
-       }
+      var pointer = eSign?.canvasPointer;
+      if (pointer && !data) {
+        position.dx = pointer.pointerX;
+        position.dy = pointer.pointerY;
+      }
+
+      const canvasWidth = eSign.canvas.width;
+      const canvasHeight = eSign.canvas.height;
+      
+      if (position.dx && (position?.canvas??false)) {}
+      if (position.dx) {addedElement.style.left = (thisClass.isFrontend)?`${((100 / canvasWidth) * position.dx)}%`:`${position.dx}px`;}
+      if (position.dy) {addedElement.style.top = (thisClass.isFrontend)?`${((100 / canvasHeight) * position.dy)}%`:`${position.dy}px`;}
+
+      if (position?.height) {addedElement.dataset.height = position.height;}
+      if (position?.width) {addedElement.dataset.width = position.width;}
+      if (position?.height) {addedElement.style.height = `${position.height * eSign.canvas.ratio.height}px`;}
+      if (position.width) {addedElement.style.width = `${position.width * eSign.canvas.ratio.width}px`;}
+
+      if (position.width) {addedElement.style.width = (thisClass.isFrontend)?`${((100 / canvasWidth) * position.width)}%`:position.width;}
+      
+      if (position.dx) {addedElement.dataset.x = position.dx;}
+      if (position.dy) {addedElement.dataset.y = position.dy;}
+      if (position.dx || position.dy) {
+        // addedElement.style.transform = (
+        //   (position.dx && !position.dy)?'translateX('+position.dx+'px)':(
+        //     (!position.dx && position.dy)?'translateY('+position.dy+'px)':(
+        //       (position.dx && position.dy)?'translate('+position.dx+'px, '+position.dy+'px)':'unset'
+        //     )
+        //   )
+        // );
+      }
+      if (thisClass.isFrontend && !(data?.enableSign) && (data?.field??'') == 'sign') {
+        addedElement.classList.add('esign-body__pattern');
+        addedElement.title = thisClass.i18n?.notsignedyet??'User not signed yet!';
+    }
+      addedElement.innerHTML = `
+        <div class="esign-body__single__title" style="color: ${((data?.data)?.field)?.fontColor};font-size: ${((data?.data)?.field)?.fontSize}px;">${
+          (thisClass.isFrontend && !(data?.enableSign) && (data?.field??'') == 'sign')?(
+            ((data?.data)?.field)?.user_name??'Pending Sign'
+          ):(args?.title??'eSignature')}</div>
+        ${(thisClass.isFrontend)?``:`
+        <button type="button" class="btn btn-default btn-xs remove">
+          <span class="dashicons-before dashicons-trash"></span>
+        </button>
+        `}
+      `;
+      if (thisClass.isFrontend) {
+        const currentDate = new Date();
+        if ((data?.field??'') == 'date') {
+          const dateFormate = ((((data?.data??{})?.field??{})?.format??'') == '')?'M d, Y':(((data?.data??{})?.field??{})?.format??'');
+          addedElement.innerHTML = thisClass.date_formate(currentDate, dateFormate);
+        } else if ((data?.field??'') == 'time') {
+          const dateFormate = ((((data?.data??{})?.field??{})?.format??'') == '')?'H:i:s':(((data?.data??{})?.field??{})?.format??'');
+          addedElement.innerHTML = thisClass.date_formate(currentDate, dateFormate);
+        } else {}
+      }
+      if (!thisClass.isFrontend) {
+        eSign.init_dragging(addedElement);
+      }
+      addedElement.addEventListener('click', (event) => {
+        eSign.launch_signature_operation({
+          event: event, element: addedElement
+        }, data, thisClass);
       });
-    });
-    // Append the added element to the canvas container
-    document.querySelector('#signature-builder').appendChild(addedElement);
-    if (!thisClass.isFrontend) {setTimeout(() => {addedElement.click();}, 800);}
- }
+      addedElement.querySelectorAll('.remove').forEach((trash) => {
+        trash.addEventListener('click', (event) => {
+          event.preventDefault();
+          var rusure = thisClass.i18n?.rusure??'Are you sure?';
+          if (confirm(rusure)) {
+            trash.parentElement.remove();
+            document.querySelector('.pdf_builder__fields')?.classList.remove('settings_enabled');
+            if (data && data?.settingsEL) {data.settingsEL.remove();}
+        }
+        });
+      });
+      // Append the added element to the canvas container
+      document.querySelector('#signature-builder').appendChild(addedElement);
+      if (!thisClass.isFrontend) {setTimeout(() => {addedElement.click();}, 800);}
+    }
+  }
   init_dragging(el) {
     interact(el)
     .resizable({
@@ -623,14 +624,14 @@ class PDFUtils extends canvasPdf {
           target.setAttribute('data-y', y);
      },
     })
- }
+  }
   str_replace(str) {
     const searchNeedles = {'product.name': ''};
     Object.keys(searchNeedles).forEach((needle) =>  {
         str = str.replaceAll(`{{${needle}}}`, searchNeedles[needle]);
     });
     return str;
- }
+  }
   async previewPDFile(file, thisClass) {
     const eSign = this;
     if (!file) {return;}
@@ -643,7 +644,7 @@ class PDFUtils extends canvasPdf {
         const typedArray = event.target.result; // new Uint8Array(this.result);
         
         // reset pdf previous session objects
-        await eSign.canvasPdf_reset();
+        if (eSign.oneCanvas) {await eSign.canvasPdf_reset();}
         // Load the PDF file using PDF.js
         pdfjsLib.getDocument(typedArray).promise.then(async (pdf) => {
           await eSign.renderPages(pdf.numPages, pdf, thisClass);
@@ -652,6 +653,7 @@ class PDFUtils extends canvasPdf {
           if (eSign.oneCanvas) {
             return await eSign.canvasPdf_load_pdf();
          }
+         return data;
         }).then(async (data) => {
           // start implementing events
           if (eSign.oneCanvas) {
@@ -668,7 +670,7 @@ class PDFUtils extends canvasPdf {
    };
   
     fileReader.readAsArrayBuffer(file);
- }
+  }
   dragFromRight2Left(thisClass) {
     const eSign = this;
     interact('.esign-fields__single').draggable({
@@ -687,23 +689,24 @@ class PDFUtils extends canvasPdf {
         eSign.addElementToPDF(target, dropPosition, thisClass);
      },
     });
- }
+  }
   loadPreviousFields(thisClass) {
     const eSign = this;
     const custom_fields = eSign.data.custom_fields;
     const fields = custom_fields.fields;const canvas = custom_fields?.canvas;
-    fields.forEach((row) => {
-      // if (row.enableSign) {
-        row.canvas = (canvas && canvas[0])?canvas[0]:false;// console.log(row);
-        var fieldRow = thisClass.fields.find((rowf) => rowf.id==row.field);
+    fields.forEach(widget => {
+      // if (widget.enableSign) {
+        widget.canvas = (canvas && canvas[0])?canvas[0]:false;// console.log(widget);
+        var fieldwidget = thisClass.fields.find((widgetf) => widgetf.id==widget.field);
         var field = document.createElement('div');field.classList.add('esign-fields__single');
         var handle = document.createElement('div');handle.classList.add('esign-fields__handle');
-        handle.dataset.config = JSON.stringify({id: fieldRow?.id??'', title: fieldRow?.title??''});
-        field.appendChild(handle);var position = row;eSign.addElementToPDF(field, position, thisClass, row);
+        handle.dataset.config = JSON.stringify({id: fieldwidget?.id??'', title: fieldwidget?.title??''});
+        field.appendChild(handle);var position = widget;widget.fieldNode = field;
+        eSign.addElementToPDF(field, position, thisClass, widget);
       //}
     });
- }
-  async init_eSignature(addedElement, thisClass) {
+  }
+  async init_eSignature(widget, thisClass) {
     const eSign = this;
     // Implement signature capturing using signature_pad
     var signatureCanvas = document.getElementById('signatureCanvas');
@@ -712,30 +715,30 @@ class PDFUtils extends canvasPdf {
         thisClass.signaturePadEl.querySelector('canvas'), signatureCanvas
       );
       signatureCanvas.remove();signatureCanvas = document.getElementById('signatureCanvas');
-   } else {
-      thisClass.signaturePad = new thisClass.SignaturePad(signatureCanvas, {
-        // backgroundColor: 'rgb(255, 255, 255)',
-        // penWidth: 2, minWidth: 2, maxWidth: 4
-      });
-      // thisClass.signaturePad.penWidth = 2; // Example pen width
-      // thisClass.signaturePad.minWidth = 2; // Example min width
-      // thisClass.signaturePad.maxWidth = 4; // Example max width
+    } else {
+      thisClass.Pad = new Pad(
+        thisClass, 
+        new thisClass.SignaturePad(signatureCanvas, {
+          // backgroundColor: 'rgb(255, 255, 255)',
+          // penWidth: 2, minWidth: 2, maxWidth: 4
+        })
+      );
+      // thisClass.Pad.signPad.penWidth = 2; // Example pen width
+      // thisClass.Pad.signPad.minWidth = 2; // Example min width
+      // thisClass.Pad.signPad.maxWidth = 4; // Example max width
     
-      // thisClass.signaturePad.resizeCanvas({
+      // thisClass.Pad.signPad.resizeCanvas({
       //   width: 500, // Your desired width
       //   height: 300, // Your desired height
       //});
     
-   }
-    // 
-    thisClass.Pad = new Pad(thisClass);
-    // 
+    }
     document.querySelectorAll('[data-esign-popup-proceed]').forEach((el) => {
       el.addEventListener('click', (event) => {
-        eSign.importSignature2Element(thisClass, addedElement);
+        eSign.importSignature2Element(thisClass, widget);
       });
     });
- }
+  }
   async addSignatureToPDF(pdfBytes, signatureDataUrl) {
     const eSign = this;
     const pdfDoc = await PDFDocument.load(pdfBytes);
@@ -758,7 +761,7 @@ class PDFUtils extends canvasPdf {
     // Serialize the PDF with the signature added
     const modifiedPdfBytes = await pdfDoc.save();
     return modifiedPdfBytes;
- }
+  }
   async upload_esignature(thisClass) {
     const eSign = this;
     // <input type="file" id="signatureInput" accept="image/*">
@@ -791,28 +794,242 @@ class PDFUtils extends canvasPdf {
      }
     });
     
- }
-  async importSignature2Element(thisClass, addedElement) {
+  }
+  async importSignature2Element(thisClass, widget) {
     const eSign = this;
-    if (thisClass.signaturePad.isEmpty()) {
+    if (thisClass.Pad.signPad.isEmpty()) {
       var text = thisClass.i18n?.plsdosign??'Please provide a signature.';
       thisClass.toastify({text: text,className: "warning", duration: 3000, stopOnFocus: true, style: {background: "linear-gradient(to right, rgb(255 200 153), rgb(255 166 33))"}}).showToast();
    } else {
-      thisClass.signatureDataUrl = thisClass.signaturePad.toDataURL('image/png');
+      thisClass.signatureDataUrl = thisClass.Pad.signPad.toDataURL('image/png');
       // console.log(thisClass.signatureDataUrl);
       // const originalPdfBytes = '...'; // Load your original PDF bytes here
       // const modifiedPdfBytes = await eSign.addSignatureToPDF(originalPdfBytes, thisClass.signatureDataUrl);
   
-      addedElement.querySelectorAll('img').forEach((img) => {img.remove();});
-      const sign_image = document.createElement('img');
-      sign_image.src = thisClass.signatureDataUrl;
-      addedElement.classList.add('esign-body__single__signpreview');
-      addedElement.appendChild(sign_image);
-      thisClass.signatureFieldEl = addedElement;
+      thisClass.signatureFieldEl = widget;
+      if (widget?.nodeType) {
+        widget.querySelectorAll('img').forEach((img) => {img.remove();});
+        const sign_image = document.createElement('img');
+        sign_image.src = thisClass.signatureDataUrl;
+        widget.classList.add('esign-body__single__signpreview');
+        widget.appendChild(sign_image);
+      } else {
+        eSign.frame_signature(widget, thisClass).then(prevCanvas => {
+          const ctx = widget.args.ctx;
+          const canvas = ctx.canvas;
+          widget.args.isPreview = {
+            type:   'canvas', // 'image', // image: thisClass.signatureDataUrl,
+            canvas:  prevCanvas
+          };
+          eSign.addElementToPDF(widget?.fieldNode, widget, thisClass, widget);
+        }).catch(err => {
+          console.error(err);
+        });
+      }
       thisClass.signaturePadEl = document.createElement('div');
-      thisClass.signaturePadEl.appendChild(thisClass.signaturePad.canvas);
+      thisClass.signaturePadEl.appendChild(thisClass.Pad.canvas);
       thisClass.vex.close(thisClass.eSignVex);
    }
- }
+  }
+  launch_signature_operation(event, widget, thisClass) {
+    const eSign = this;const data = widget;
+    const addedElement = event?.element;
+    if (thisClass.isFrontend) {
+      if ((data?.field??'') == 'sign' && data?.enableSign && !(data?.signDone)) {
+        // alert('Signature poup is under development');
+        thisClass.eSignVex = thisClass.vex.dialog.open({
+          showCloseButton: true,
+          escapeButtonCloses: false,
+          overlayClosesOnClick: false,
+          unsafeMessage: `
+          <!-- <div class="modal micromodal-slide is-open" id="modal-esignature" aria-hidden="true">
+            <div class="modal__overlay" tabindex="-1"> -->
+              <!-- Removed data-micromodal-close attribute from the overlay to disable closing on outside click -->
+              <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
+              <div class="modal__header">
+                <h2 class="modal__title" id="modal-1-title">E-Signature Pad.</h2>
+              </div>
+              <div class="modal__content" id="modal-1-content">
+                <div class="modal__content__wrap">
+                  
+                  <div id="signature-pad" class="signature-pad">
+                    <div class="signature-pad__header">
+                      <div class="signature-pad__actions">
+
+                        <span class="dashicons dashicons-color-picker" data-content="Change pen color">
+                          <input type="color" class="button" data-action="change-color" title="Change color" data-title="Color">
+                        </span>
+                        <span class="dashicons dashicons-admin-appearance" data-content="Change background color">
+                          <input type="color" class="button" data-action="change-background-color" title="Change background color" data-title="BG">
+                        </span>
+                        <span class="dashicons dashicons-align-wide" data-content="Change width">
+                          <button type="button" class="button" data-action="change-width">Change width</button>
+                        </span>
+                        <span class="dashicons dashicons-upload" data-content="Upload Signature">
+                          <input type="file" class="button" data-action="change-uploaded" title="Upload Signature" data-title="Upload" accept="image/*">
+                        </span>
+                        <span class="dashicons dashicons-trash" data-content="Clear">
+                          <button type="button" class="button clear" data-action="clear">Clear</button>
+                        </span>
+                        <span class="dashicons dashicons-undo" data-content="Undo">
+                          <button type="button" class="button" data-action="undo">Undo</button>
+                        </span>
+                        <span class="dashicons dashicons-paperclip" data-content="Attachments">
+                          <button type="button" class="button" data-action="attachments">Attachments</button>
+                        </span>
+                          
+                      </div>
+                    </div>
+                    <div class="signature-pad__body">
+                      <canvas class="modal__content__canvas" id="signatureCanvas"></canvas>
+                      <div class="modal__content__attachments">
+                        ${eSign?.dropZoneHTML??''}
+                      </div>
+                    </div>
+                    <div class="signature-pad__footer">
+                      <div class="description">Sign above</div>
+                      <div class="signature-pad__actions">
+                        <div class="column disabled">
+                          <button type="button" class="button save" data-action="save-png">Save as PNG</button>
+                          <button type="button" class="button save" data-action="save-jpg">Save as JPG</button>
+                          <button type="button" class="button save" data-action="save-svg">Save as SVG</button>
+                          <button type="button" class="button save" data-action="save-svg-with-background">Save as SVG with background</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+              <div class="modal__footer">
+                <button class="modal__btn modal__btn-primary" data-esign-popup-proceed="true">Continue</button>
+                <button class="modal__btn" data-esign-popup-close="true" aria-label="Close this dialog window">Close</button>
+              </div>
+              </div>
+            <!-- </div>
+          </div> -->
+          `,
+          buttons: [
+            {
+              text: 'OK',
+              type: 'button',
+              className: 'vex-dialog-button-primary',
+              click: function () {
+                eSign.importSignature2Element(thisClass, widget);
+              },
+            },
+            {
+              text: 'Cancel',
+              type: 'button',
+              className: 'vex-dialog-button-secondary',
+              click: function () {
+                thisClass.vex.close(thisClass.eSignVex);
+              },
+            },
+          ],
+          afterOpen: () => {
+            document.querySelectorAll('.signature-pad__actions .dashicons[data-content]:not([data-tippyhandled])').forEach(elem => {
+              elem.dataset.tippyhandled = true;
+              thisClass.tippy(elem, {arrow: true, content: elem.dataset.content});
+            });
+            setTimeout(() => {
+              eSign.init_eSignature(widget, thisClass);
+              document.querySelectorAll('[data-esign-popup-close]').forEach((el) => {
+                el.addEventListener('click', (e) => {thisClass.vex.close(thisClass.eSignVex);});
+              });
+            }, 500);
+          }
+        });
+      } else {}
+    } else {
+      const eSignBuilder = document.querySelector('.pdf_builder__fields');
+      if (!eSignBuilder) {return;}eSignBuilder.classList.add('settings_enabled');
+      const stored = (thisClass?.fieldsData??[]).find((row) => row.unique == parseInt(addedElement.dataset?.storedOn??0));
+      // 
+      // console.log([addedElement, eSign, stored, thisClass.fieldsData]);
+      // 
+      const field = (thisClass?.fields??[]).find((row) => row.id == stored.id);
+      const esitingData = (data?.data??{})?.field??{};
+
+      var body, wrap, fieldHTML;
+      body = document.querySelector('.pdf_builder__fields__settings__body');
+      wrap = stored?.html??false;
+      if (!wrap) {
+        wrap = document.createElement('form');wrap.classList.add('pdf_fields');
+        (field?.fields??[]).forEach((field) => {
+          fieldHTML = eSign.do_field(field, false, esitingData, thisClass);
+          wrap.appendChild(fieldHTML);
+        });
+        stored.html = wrap;
+        if (data) {data.settingsEL = wrap;}
+        
+        wrap.querySelectorAll('[data-field-id]').forEach((inputEl) => {
+          switch(inputEl.dataset.fieldId) {
+            case 'format':
+              break;
+            case 'fontColor':
+              inputEl.addEventListener('change', (event) => {
+                if (!data) {return;}
+                var title = data.fieldEL?.firstElementChild;
+                if (!title || !(title?.style)) {return;}
+                title.style.color = event.target.value;
+              });
+              break;
+            case 'fontSize':
+              inputEl.addEventListener('change', (event) => {
+                if (!data) {return;}
+                var title = data.fieldEL?.firstElementChild;
+                if (!title || !(title?.style)) {return;}
+                title.style.fontSize = event.target.value + 'px';
+              });
+              break;
+            default:
+              break;
+          }
+        });
+      }
+      // Push it on FIELD BODY
+      body.innerHTML = '';body.appendChild(stored.html);
+    }
+  }
+  frame_signature(widget, thisClass) {
+    return new Promise(function (resolve, reject) {
+      var canvas = document.createElement('canvas');
+      canvas.width = widget?.width??200;
+      canvas.height = widget?.height??100;
+      var ctx = canvas.getContext('2d');
+      var ctxRatio = {
+        width: canvas.width / 1,
+        height: canvas.height / 1
+      };
+      ctx.beginPath();
+      // ctx.moveTo(0, ctxRatio.height * 0.15);
+      // ctx.lineTo(ctxRatio.height * 0.40, ctxRatio.height * 0.15);
+      // ctx.lineTo(ctxRatio.height * 0.40, 0);
+      // ctx.arcTo(ctxRatio.height * 0.40, 0, 0, 0, ctxRatio.height * 0.10);
+      // Draw the black background
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, ctxRatio.width * 0.35, ctxRatio.height * 0.15);
+      ctx.closePath();
+      ctx.fill();
+      // Draw the image
+      var img = new Image();
+      img.onload = function() {
+        var imgRatio = {
+          width: canvas.width / img.width,
+          height: canvas.height / img.height
+        };
+        // ctx.drawImage(img, 0, 0, 200, 100);
+        ctx.drawImage(img, 0, 0, img.width * imgRatio.width, img.height * imgRatio.height);
+        resolve(canvas);
+      };
+      img.src = thisClass.signatureDataUrl;
+      // Draw the text
+      ctx.font = `${ctxRatio.width * 0.05}px Arial`;
+      ctx.fillStyle = "#fff";
+      ctx.fillText("Signature", ctxRatio.width * 0.07, ctxRatio.height * 0.15 * 0.666);
+      // return canvas;
+    });
+  }
 }
 export default PDFUtils;

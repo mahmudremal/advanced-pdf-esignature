@@ -9,7 +9,7 @@
 import './modules/date_formate';
 
 // Styles
-import '../sass/main.scss';
+// import '../sass/main.scss';
 
 // Images.
 // import '../img/cats.jpg';

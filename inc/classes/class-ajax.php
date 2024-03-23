@@ -69,13 +69,14 @@ class Ajax {
 		$users = get_users([
 			// 'role__in' => ['author', 'subscriber']
 		]);
-		$blogusers = [];
+		$_blogusers = [];
 		foreach($users as $usr) {
-			$blogusers[] = [
+			$_blogusers[] = [
 				'label' => sprintf(__('%s (id %d)', 'esignbinding'), $usr->data->display_name, $usr->ID),
 				'value' => $usr->ID
 			];
 		}
+		$args['users'] = $_blogusers;
 		$args['fields'] = [
 			[
 				'id' => 'sign',
@@ -93,7 +94,7 @@ class Ajax {
 						'tooltip' => 'Select an user as signer for this field. This is required.',
 						'placeholder' => '',
 						'required' => true,
-						'options' => $blogusers
+						'options' => 'users'
 					],
 					[
 						'fieldID' => 'order',
@@ -125,7 +126,7 @@ class Ajax {
 						'tooltip' => 'Select an user as signer for this field. This is required.',
 						'placeholder' => '',
 						'required' => true,
-						'options' => $blogusers
+						'options' => 'users'
 					],
 					[
 						'fieldID' => 'format',
@@ -187,7 +188,7 @@ class Ajax {
 						'tooltip' => 'Select an user as signer for this field. This is required.',
 						'placeholder' => '',
 						'required' => true,
-						'options' => $blogusers
+						'options' => 'users'
 					],
 					[
 						'fieldID'		=> 'format',
@@ -234,7 +235,7 @@ class Ajax {
 			],
 		];
 		$args['hooks'] = ['custom_fields_getting_done'];
-		wp_send_json_success($args, 200);
+		wp_send_json_success($args);
 	}
 	public function update_template() {
 		$args = ['message' => __('Something went wrong. Failed to update Signature template.', 'esignbinding'), 'hooks' => ['template_update_failed']];
@@ -242,7 +243,8 @@ class Ajax {
 			$dataset = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', stripslashes(html_entity_decode($_POST['dataset']))), true);
 			
 			if(isset($_FILES['pdf'])) {
-				$result = $this->upload_pdf_to_custom_directory('pdf');
+				// $result = $this->upload_pdf_to_custom_directory('pdf');
+				$result = $_POST['lastUploaded'] || true;
 				if(is_wp_error($result)) {
 					$args['message'] = $result->get_error_message();
 					wp_send_json_error($args);
@@ -324,6 +326,7 @@ class Ajax {
 		if (empty($_FILES[$file_key])) {
 			return new \WP_Error('missing_file', 'No file found in the uploaded data.', ['status' => 400]);
 		}
+		// wp_send_json_success($_FILES[$file_key]);
 
 		$file = $_FILES[$file_key];
 
@@ -369,22 +372,7 @@ class Ajax {
 		return $file_url;
 	}
 
-	public function get_all_users_for_this_sign($post_id) {
-		global $wpdb;
-		$_all_metas = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT meta_key as _user, meta_value as _order FROM $wpdb->postmeta WHERE post_id = %d AND meta_key LIKE %s",
-				$post_id, '%' . $wpdb->esc_like('__esign_signer_') . '%'
-			)
-		);
-		foreach($_all_metas as $i => $_meta) {
-			$_meta->_user = (int) str_replace(['__esign_signer_'], [''], $_meta->_user);
-		}
-		usort($_all_metas, function($a, $b) {
-			return $a->_order - $b->_order;
-		});
-		return $_all_metas;
-	}
+	
 	
 	public function update_all_users_for_this_sign($post_id, $data) {
 		global $wpdb;
@@ -400,10 +388,11 @@ class Ajax {
 	}
 
 	public function send_notification_to_next_user($post_id) {
+		global $eSign_Esign;
 		$_noti_sent = get_post_meta($post_id, '_notification_sent', true);
 		$_sign_done = get_post_meta($post_id, '_signature_done', true);
 		// $_last_sent = get_post_meta($post_id, '_notilast_sent', true);
-		$_all_signer = $this->get_all_users_for_this_sign($post_id);
+		$_all_signer = $eSign_Esign->get_all_users_for_this_sign($post_id);
 		$the_notifier = false;
 		$_noti_sent = ($_noti_sent && !is_wp_error($_noti_sent))?$_noti_sent:[];
 		$_sign_done = ($_sign_done && !is_wp_error($_sign_done))?$_sign_done:[];

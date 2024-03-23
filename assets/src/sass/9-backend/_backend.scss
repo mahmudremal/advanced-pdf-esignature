@@ -117,7 +117,6 @@ body {
   }
 }
 
-
 .pdf_builder__container {
   .upload-pdf {
     border: 1px solid #ddd;
@@ -129,21 +128,19 @@ body {
     }
   }
   #signature-builder {
+    margin: 0;
     padding: 0;
     z-index: 0;
     overflow: auto;
+    background: none;
     min-height: 100px;
     position: relative;
-    background: none;
-    margin-bottom: 20px;
-    border-radius: 10px;
+    // border-radius: 10px;
     canvas {
       margin: 0;
-      // margin-bottom: 20px;
-      // margin-left: 5px;
-      // margin-right: 5px;
+      padding: 0;
+      display: block;
       border: 1px solid #ddd;
-      // box-shadow: 0 0 10px #333;
       &.canvas {
         &__frontend {
           max-width: 100%;
@@ -174,7 +171,6 @@ body {
   }
 }
 
-
 .pdf-dropzone {
   height: 400px;
   display: flex;
@@ -194,8 +190,6 @@ body {
   &__container {
     width: 100%;
     margin: 5rem auto;
-    // max-width: 1150px;
-    max-width: calc(1320px + 1.5rem * 2);
   }
   &__row {
     display: flex;
@@ -244,6 +238,7 @@ body {
         width: 200px;
         height: 40px;
         display: flex;
+        overflow: hidden;
         padding: 3px 10px;
         position: absolute;
         line-height: unset;
@@ -284,6 +279,11 @@ body {
             + img {
               height: 100%;
               width: 100%;
+            }
+            @include mq($until: mobile) {
+              padding: 0 3px;
+              font-size: 6px;
+              line-height: 8px;
             }
           }
         }
@@ -333,6 +333,7 @@ body {
     }
     .update_esign_signature {
       color: #fff;
+      margin-top: 20px;
       background: $secondaryColor;
     }
   }
@@ -427,7 +428,19 @@ body {
             &__fieldset {
               margin-bottom: 10px;
               label {
+                display: flex;
+                align-items: center;
                 margin-bottom: 10px;
+                justify-content: space-between;
+                span[tooltip] {
+                  display: flex;
+                  padding: 2px 6px;
+                  line-height: 17px;
+                  border-radius: 100%;
+                  align-items: center;
+                  justify-content: center;
+                  border: 1px solid #ddd;
+                }
               }
             }
           }
@@ -463,4 +476,20 @@ body {
       }
     }
   }
+}
+
+.fwp__esign {
+  &__body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: auto;
+  }
+  #preview_contract {
+    min-width: 100%;
+    max-width: 100%;
+  }
+}
+button.launch-esignature {
+  display: none;
 }

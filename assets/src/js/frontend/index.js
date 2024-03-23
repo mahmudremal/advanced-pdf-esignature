@@ -12,11 +12,13 @@ import eSignature from '../modules/eSignature';
 // import DataTable from 'datatables.net';
 // import tippy from "tippy.js";
 // import "regenerator-runtime/runtime";
+
 // const vex = require('vex-js');
 // const vexDialog = require('vex-dialog');
 // vex.registerPlugin(vexDialog);
 // vex.defaultOptions.className = 'vex-theme-os'; // Choose a theme for the modal appearance
 // vex.defaultOptions.overlayClosesOnClick = false; // Disable closing on outside click
+
 import CanvasLoader from "../modules/loader";
 import Assets from "../modules/assets";
 
@@ -59,58 +61,86 @@ import Assets from "../modules/assets";
 				// console.log(eSign, thisClass.eSignature);
 				eSign = thisClass.eSignature;
 				eSign.signatureExists = false;
+				eSign.config = {id: thisClass.config.template_id};
 				eSign.data = thisClass.lastJson.signature;
+				eSign.fields = eSign.data.custom_fields.fields;
 				// 
 				eSign.fix_pdf_schema(thisClass);
 				template = await eSign.get_template(thisClass);
 				var div = document.createElement('div');div.classList.add('dynamic_popup');
 				html = document.createElement('div');html.appendChild(div);
 				// && json.header.signature_photo
-				if (thisClass.Swal && thisClass.Swal.isVisible()) {
-					thisClass.Swal.update({html: html.innerHTML});
-					eSign.fix_pdf_schema(thisClass);
-					setTimeout(() => {
-						var popup = document.querySelector('.dynamic_popup');
-						if (popup) {popup.appendChild(template);}
-						// 
-						setTimeout(async () => {
-							thisClass.isPreventClose = true;
-							if (eSign.data.custom_fields?.pdf??false) {
-								const uploadPDF = document.querySelector('.upload-pdf');
-								if (uploadPDF) {uploadPDF.style.display = 'none';}
-								// 
-								// await eSign.drawLoadingSpinner(thisClass);
-								// 
-								var pdFile = eSign.data.custom_fields.pdf;
-								var filename = pdFile.split('/').pop().split('#')[0].split('?')[0];
-								let response = await fetch(pdFile, {cache: "no-store"});
-								let data = await response.blob();
-								let metadata = {type: 'image/jpeg'};
-								let file = new File([data], filename, metadata);
-								eSign.currentPDFBlob = data;
-								thisClass.lastUploaded = pdFile;
-								eSign.currentPDF = file;
-								// 
-								await eSign.loadAndPreviewPDF(file, thisClass);
-								// eSign.initDragAndDrop(thisClass);
-								eSign.loadPreviousFields(thisClass);
-							}
+				if (eSign?.isCanvasNode) {
+					var preview = document.querySelector('#preview_contract');
+					var previewParent = preview.parentElement;
+					setTimeout(async () => {
+						var contractCanvas = template.querySelector('#contractCanvas');
+						// template.querySelector('#signature-builder').appendChild(preview);
+						preview.remove();
+						previewParent.appendChild(template);
+						// thisClass.isPreventClose = true;
+						if (eSign.data.custom_fields?.pdf??false) {
+							const uploadPDF = document.querySelector('.upload-pdf');
+							if (uploadPDF) {uploadPDF.style.display = 'none';}
 							// 
-							eSign.prompts_events(thisClass);
-						}, 300);
+							// await eSign.drawLoadingSpinner(thisClass);
+							// 
+							var pdFile = eSign.data.custom_fields.pdf;
+							var filename = pdFile.split('/').pop().split('#')[0].split('?')[0];
+							let response = await fetch(pdFile, {cache: "no-store"});
+							let data = await response.blob();
+							let metadata = {type: 'image/jpeg'};
+							let file = new File([data], filename, metadata);
+							eSign.currentPDFBlob = data;
+							thisClass.lastUploaded = pdFile;
+							eSign.currentPDF = file;
+							// 
+							await eSign.loadAndPreviewPDF(file, thisClass);
+							// eSign.initDragAndDrop(thisClass);
+							// eSign.loadPreviousFields(thisClass);
+						}
+						// 
+						eSign.prompts_events(thisClass);
 					}, 300);
+				} else {
+					if (thisClass.Swal && thisClass.Swal.isVisible()) {
+						thisClass.Swal.update({html: html.innerHTML});
+						eSign.fix_pdf_schema(thisClass);
+						setTimeout(() => {
+							var popup = document.querySelector('.dynamic_popup');
+							if (popup) {popup.appendChild(template);}
+							// 
+							setTimeout(async () => {
+								thisClass.isPreventClose = true;
+								if (eSign.data.custom_fields?.pdf??false) {
+									const uploadPDF = document.querySelector('.upload-pdf');
+									if (uploadPDF) {uploadPDF.style.display = 'none';}
+									// 
+									// await eSign.drawLoadingSpinner(thisClass);
+									// 
+									var pdFile = eSign.data.custom_fields.pdf;
+									var filename = pdFile.split('/').pop().split('#')[0].split('?')[0];
+									let response = await fetch(pdFile, {cache: "no-store"});
+									let data = await response.blob();
+									let metadata = {type: 'image/jpeg'};
+									let file = new File([data], filename, metadata);
+									eSign.currentPDFBlob = data;
+									thisClass.lastUploaded = pdFile;
+									eSign.currentPDF = file;
+									// 
+									await eSign.loadAndPreviewPDF(file, thisClass);
+								}
+								// 
+								eSign.prompts_events(thisClass);
+							}, 300);
+						}, 300);
+					}
 				}
 			});
 			document.body.addEventListener('popup_submitting_done', async (event) => {
 				var submit = document.querySelector('.popup_foot .button[data-react="continue"]');
 				if (submit) {submit.removeAttribute('disabled');}
 				if (thisClass.lastJson.redirectedTo) {location.href = thisClass.lastJson.redirectedTo;}
-			});
-			document.body.addEventListener('custom_fields_getting_done', async (event) => {
-				if (thisClass.lastJson?.fields??false) {
-					thisClass.fields = thisClass.lastJson.fields;
-					eSign.init_popup(thisClass);
-				}
 			});
 			document.body.addEventListener('template_update_success', (event) => {
 				if ((thisClass.lastJson?.lastUploaded??false)) {
@@ -334,7 +364,9 @@ import Assets from "../modules/assets";
 			if(window.do_datatable) {
 				window.do_datatable.forEach(table => {
 					var [id, rows] = table;
-					document.querySelectorAll(id).forEach(tablEl => {
+					document.querySelectorAll(`${id}:not([data-handled])`).forEach(tablEl => {
+						tablEl.dataset.handled = true;
+						console.log('datatable', tablEl)
 						var table = new thisClass.DataTable(id, rows);
 						// table.on('init', () => {
 						// 	console.log('init.dt');
@@ -389,7 +421,7 @@ import Assets from "../modules/assets";
 							// onClose: () => {thisClass.isPreventClose = false;},
 							didOpen: async () => {
 								config = JSON.parse(el.dataset?.config??'{}');
-								eSign.currentEsignConfig = config;
+								eSign.config = config;
 								var formdata = new FormData();
 								formdata.append('action', 'esign/project/ajax/template/data');
 								formdata.append('template', config?.id??'');
@@ -412,12 +444,17 @@ import Assets from "../modules/assets";
 			thisClass.esings = [];
 			// document
 			document.querySelectorAll('#preview_contract').forEach(canvas => {
-				
-				thisClass.esings.push({
+				// 
+				const canvasArgs = {
 					element: canvas,
 					assets: canvas.dataset.contract,
-					object: new CanvasLoader(canvas, {})
-				});
+					object: new CanvasLoader(canvas, {
+						pdfPreview: (blob) => {
+							thisClass.eSignature = new eSignature(this, canvas, false);
+						},
+					})
+				};
+				thisClass.esings.push(canvasArgs);
 			});
 		}
 

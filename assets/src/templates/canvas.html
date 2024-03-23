@@ -1,187 +1,52 @@
-
 <!DOCTYPE html>
 <html>
-
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Demo Canvas 015</title>
-  <link href="css/normalize.css" rel="stylesheet" />
-  <link href="css/tests.css" rel="stylesheet" />
+  <title>Canvas Example</title>
+  <style>
+    canvas {
+      border: 1px solid #000;
+    }
+  </style>
 </head>
-
 <body>
-  <h1><a href="index.html">Scrawl-canvas v8</a> - Canvas test 015</h1>
-  <h2>Phrase entity (make, clone, method, multiline)</h2>
+  <canvas id="myCanvas" width="600" height="300"></canvas>
 
-  <canvas 
-    id="mycanvas" 
-    width="650" 
-    height="300"
-    data-scrawl-canvas
-    data-base-background-color="aliceblue"
-  ></canvas>
+  <script>
+    var canvas = document.getElementById('myCanvas');
+    var ctx = canvas.getContext('2d');
+    var ctxRatio = {
+        width: canvas.width / 1,
+        height: canvas.height / 1
+    };
 
-  <p id="reportmessage"></p>
-
-  <div class="testinfo">
-    <h4>Test purpose</h4>
-    <ul>
-      <li>Create a phrase entity</li>
-      <li>Clone a phrase</li>
-      <li>Position the phrase on the canvas</li>
-      <li>Change the state of a subset of phrases sharing the same state object</li>
-      <li>Check the various drawing methods available to the phrase</li>
-    </ul>
-    <ul>
-      <li>Kill and resurrect several entitys to make sure they remove themselves entirely from the Scrawl-canvas system, and cleanly recreate themselves from saved packets</li>
-    </ul>
-
-    <p><b>Note 1:</b> this Demo will appear differently on webkit-based (for example: Safari) and other browsers because webkit engines have difficulty understanding font strings that include a bold keyword. To achieve boldness in these browsers, use a font face that already has boldness applied to it.</p>
-
-    <p><b>Note 2: <i>known Firefox issue - demo render speeds will severely degrade when applying shadows (in particular: shadowBlur) to canvas text</i></b>. See the following Bugzilla issues <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=527386">527386 Canvas text functions are too slow</a> (opened in 2009) and <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1579513">1579513 Drawing text in Canvas 2D is slow</a> (opened in 2019).</p>
-    
-    <p><b>Touch test:</b> should work as expected - though flicking a text may lead to it moving beyond the canvas border and out of sight!</p>
-
-    <p><a href="../docs/demo/canvas-015.html">Annotated code</a></p>
-  </div>
-    <script type="module">
-        import * as scrawl from "https://unpkg.com/scrawl-canvas@8.12.0";
-    </script>
-<script>
-
-const L = scrawl.library
-// #### Scene setup
-// Get a handle to the Canvas wrapper
-const canvas = L.artefact.mycanvas;
+    ctx.beginPath();
+    // ctx.moveTo(0, ctxRatio.height * 0.15);
+    // ctx.lineTo(ctxRatio.height * 0.40, ctxRatio.height * 0.15);
+    // ctx.lineTo(ctxRatio.height * 0.40, 0);
+    // ctx.arcTo(ctxRatio.height * 0.40, 0, 0, 0, ctxRatio.height * 0.10);
+    // Draw the black background
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, ctxRatio.width * 0.35, ctxRatio.height * 0.15);
+    ctx.closePath();
+    ctx.fill();
 
 
-// Namespacing boilerplate
-const namespace = 'demo';
-const name = (n) => `${namespace}-${n}`;
+    // Draw the image
+    var img = new Image();
+    img.onload = function() {
+        var imgRatio = {
+            width: canvas.width / img.width,
+            height: canvas.height / img.height
+        };
+    //   ctx.drawImage(img, 0, 0, 200, 100);
+      ctx.drawImage(img, 0, 0, img.width * imgRatio.width, img.height * imgRatio.height);
+    };
+    img.src = 'data:image/png;base64,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';
 
-
-// Create and clone Phrase entitys
-makePhrase({
-    name: name('myphrase_fill'),
-
-    text: 'H&epsilon;lj&ouml;!',
-    font: 'bold 40px Garamond, serif',
-
-    startX: '14%',
-    startY: '28%',
-    handleX: 'center',
-    handleY: 'center',
-
-    fillStyle: 'green',
-    strokeStyle: 'gold',
-
-    lineWidth: 2,
-    lineJoin: 'round',
-    shadowOffsetX: 2,
-    shadowOffsetY: 2,
-    shadowBlur: 2,
-    shadowColor: 'black',
-
-    showBoundingBox: true,
-    boundingBoxColor: 'red',
-
-}).clone({
-    name: name('myphrase_draw'),
-    startX: '38%',
-    method: 'draw',
-
-}).clone({
-    name: name('myphrase_drawAndFill'),
-    startX: '84%',
-    method: 'drawAndFill',
-
-}).clone({
-    name: name('myphrase_fillAndDraw'),
-    startX: '62%',
-    method: 'fillAndDraw',
-    sharedState: true
-
-}).clone({
-    name: name('myphrase_drawThenFill'),
-    startX: '14%',
-    startY: '67%',
-    method: 'drawThenFill'
-
-}).clone({
-    name: name('myphrase_fillThenDraw'),
-    startX: '38%',
-    method: 'fillThenDraw',
-
-}).clone({
-    name: name('myphrase_clear'),
-    startX: '62%',
-    method: 'clear'
-
-}).clone({
-    name: name('myphrase_multiline'),
-
-    text: 'Lorem ipsum har varit standard ðŸ˜€ Ã¤nda sedan 1500-talet, nÃ¤r-en-okÃ¤nd-boksÃ¤ttare-tog att antal ðŸ¤– bokstÃ¤ver och blandade dem fÃ¶r att gÃ¶ra ett ðŸŽ» provexemplar av en bok.',
-
-    width: 120,
-    justify: 'center',
-
-    size: '12px',
-    weight: 'normal',
-
-    startX: '84%',
-    method: 'fill',
-
-    shadowOffsetX: 0,
-    shadowOffsetY: 0,
-    shadowBlur: 0,
-});
-
-
-// Change the fill and stroke styles on one of the phrase entitys, and any entity sharing that phrase's state
-L.artefact[name('myphrase_fillAndDraw')].set({
-    fillStyle: 'blue',
-    strokeStyle: 'coral'
-});
-
-
-// #### User interaction
-// Create the drag-and-drop zone
-const current = makeDragZone({
-
-    zone: canvas,
-    endOn: ['up', 'leave'],
-    exposeCurrentArtefact: true,
-    preventTouchDefaultWhenDragging: true,
-});
-
-
-// #### Scene animation
-// Function to display frames-per-second data, and other information relevant to the demo
-const report = reportSpeed('#reportmessage', function () {
-    const dragging = current();
-    return `Currently dragging: ${(typeof dragging !== 'boolean' && dragging) ? dragging.artefact.name : 'nothing'}`;
-});
-
-
-// Create the Display cycle animation
-makeRender({
-
-    name: name('animation'),
-    target: canvas,
-    afterShow: report,
-});
-
-
-// #### Development and testing
-console.log(L);
-
-console.log('Performing tests ...');
-killArtefact(canvas, name('myphrase_fill'), 4000);
-killArtefact(canvas, name('myphrase_fillAndDraw'), 5000);
-killArtefact(canvas, name('myphrase_multiline'), 6000);
-
-</script>
+    // Draw the text
+    ctx.font = `${ctxRatio.width * 0.05}px Arial`;
+    ctx.fillStyle = "#fff";
+    ctx.fillText("Signature", ctxRatio.width * 0.07, ctxRatio.height * 0.15 * 0.666);
+  </script>
 </body>
 </html>

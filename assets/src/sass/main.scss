@@ -9,32 +9,13 @@
 @import "3-utilities/creditcard";
 @import "3-utilities/toastify";
 
-// Generic
-// @import "2-generic/generic";
-// @import "2-generic/gutenberg";
-// @import "2-generic/slick-carousel";
-// @import "2-generic/search-results";
-
-// Layouts.
-// @import "4-layouts/posts/meta";
-// @import "4-layouts/posts/post-card";
-// @import "4-layouts/posts/pagination";
-// @import "4-layouts/header/nav/navigation";
-// @import "4-layouts/search-form";
-
-// Utilities
-// @import "3-utilities/form-wizard";
-// @import "3-utilities/popup";
-
-
 // Components
 @import "modules/micromodal";
 @import "9-backend/backend";
 @import "8-frontend/frontend";
-@import '../../node_modules/sass-math/math';
+@import "../../node_modules/sass-math/math";
 
-@import "modules/dropzone"
-
+@import "modules/dropzone";
+@import '~tippy.js/dist/tippy.css';
 
 // @import "../library/css/icons.css";
-// @import '~tippy.js/dist/tippy.css';

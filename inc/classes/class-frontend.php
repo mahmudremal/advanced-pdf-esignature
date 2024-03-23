@@ -45,36 +45,7 @@ class Frontend {
 	}
 	public function woocommerce_account_esignature_endpoint() {
 		global $wpdb;global $eSign_Ajax;global $eSign_Esign;
-		$signings = [];
-
-		$_all_posts = get_posts([
-			'fields'			=> 'ids',
-			'posts_per_page'	=> -1,
-			'post_type'			=> 'esignatures',
-			'post_status'		=> 'publish',
-			'order'				=> 'DESC'
-		]);
-		foreach($_all_posts as $_post_id) {
-			$signers = $eSign_Ajax->get_all_users_for_this_sign($_post_id);
-			// $signers = array_map(function($signer) {return (array) $signer;}, $signers);
-			// $signer_exists = array_search(get_current_user_id(), array_column($signers, '_user'));
-			$signer_exists = false;
-			foreach($signers as $signer) {
-				if($signer->_user == get_current_user_id()) {
-					$signer_exists = true;
-				}
-			}
-			
-			if($signer_exists) {$signings[] = $_post_id;}
-		}
-		$signings = implode(',', $signings);
-		$lists = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT ID, post_title, post_date FROM $wpdb->posts WHERE post_status=%s AND post_type=%s AND ID IN ($signings) ORDER BY ID DESC LIMIT 0, 100;",
-				'publish', 'esignatures'
-			)
-		);
-		// print_r($lists);
+		$lists = $eSign_Esign->get_user_contracts();
 		$eSign_Esign->print_assets();
 		?>
 		

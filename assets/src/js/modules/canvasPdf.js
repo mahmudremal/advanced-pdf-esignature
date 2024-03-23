@@ -75,7 +75,7 @@ class canvasPdf {
         };
         eSign.canvasArgs = args;
 
-        console.log(eSign)
+        // console.log(eSign)
         
         eSign.canvas.set({
             width: args.width,
@@ -94,7 +94,7 @@ class canvasPdf {
                     viewport: page.getViewport({scale: 1}),
                 });
                 await renderTask.promise.then(async () => {
-                    await canvas.toBlob(async (blob) => {
+                    return await canvas.toBlob(async (blob) => {
                         const blobUrl = await URL.createObjectURL(blob);
                         // const screenshot = canvas.toDataURL('image/png');
                         const cellArgs = {

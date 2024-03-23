@@ -4,10 +4,10 @@
 
 body {
     .vex-overlay {
-        z-index: 999999;
+        z-index: 1;
     }
     .vex.vex-theme-os {
-        z-index: 999999;
+        z-index: 1;
         .vex-content {
             .vex-dialog-form {
                 .vex-dialog-input {

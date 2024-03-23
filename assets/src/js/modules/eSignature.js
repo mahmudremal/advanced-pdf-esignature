@@ -19,6 +19,9 @@ class eSignature extends PROMPTS {
         if (oneCanvas) {
             this.oneCanvas = true;
         }
+        if (element.nodeName === 'CANVAS') {
+            this.isCanvasNode = true;
+        }
         this.init_events(thisClass);
         this.init_fields(thisClass);
         // this.init_popup(this);
@@ -30,11 +33,24 @@ class eSignature extends PROMPTS {
         thisClass.sendToServer(formdata);
     }
     init_events(thisClass) {
-        // 
+        const eSign = this;eSign.database = {};
+        document.body.addEventListener('custom_fields_getting_done', async (event) => {
+            if (thisClass.lastJson?.fields??false) {
+                thisClass.fields = thisClass.lastJson.fields;
+                eSign.database.users = thisClass.lastJson.users;
+                if (eSign) {eSign.init_popup(thisClass);}
+            }
+        });
+        if (eSign?.isCanvasNode) {
+            var formdata = new FormData();
+            formdata.append('action', 'esign/project/ajax/template/data');
+            formdata.append('template', thisClass.config?.template_id??'');
+            formdata.append('_nonce', thisClass.ajaxNonce);
+            thisClass.sendToServer(formdata);
+        }
     }
     init_popup(thisClass) {
-        var form, html, config, json;const eSign = this;
-        // 
+        const eSign = this;
     }
     fix_pdf_schema(thisClass) {
         const eSign = this;

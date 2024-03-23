@@ -17,6 +17,7 @@ class Project {
 		global $eSign_Esign;$eSign_Esign				= Esign::get_instance();
 		global $eSign_Mailer;$eSign_Mailer				= Mailer::get_instance();
 		global $eSign_Assets;$eSign_Assets				= Assets::get_instance();
+		global $eSign_Option;$eSign_Option				= Option::get_instance();
 		global $eSign_Restapi;$eSign_Restapi			= Restapi::get_instance();
 		global $eSign_Rewrite;$eSign_Rewrite			= Rewrite::get_instance();
 		global $eSign_Install;$eSign_Install			= Install::get_instance();
@@ -25,9 +26,12 @@ class Project {
 		global $eSign_Post_Types;$eSign_Post_Types		= Post_Types::get_instance();
 		global $eSign_Meta_Boxes;$eSign_Meta_Boxes		= Meta_Boxes::get_instance();
 
-		// $this->setup_hooks();
+		$this->setup_hooks();
 	}
 	protected function setup_hooks() {
-		// Some additional functionalities can be added here.
+		add_filter('esign/project/system/getoption', [$this, 'getoption'], 1, 2);
+	}
+	public function getoption($key, $default = false) {
+		return isset(ESIGNBINDING_ADDONS_OPTIONS[$key])?ESIGNBINDING_ADDONS_OPTIONS[$key]:$default;
 	}
 }

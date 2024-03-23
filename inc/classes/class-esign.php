@@ -55,4 +55,60 @@ class Esign {
 		<!-- <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script> -->
 		<?php
 	}
+	public function get_user_contracts($user_id = false) {
+		global $wpdb;global $eSign_Ajax;global $eSign_Esign;
+		if (!$user_id) {$user_id = get_current_user_id();}
+		$signings = [];
+
+		$_all_posts = get_posts([
+			'fields'			=> 'ids',
+			'posts_per_page'	=> -1,
+			'post_type'			=> 'esignatures',
+			'post_status'		=> 'publish',
+			'order'				=> 'DESC'
+		]);
+		foreach($_all_posts as $_post_id) {
+			if($this->is_authorized_signer($_post_id, $user_id)) {$signings[] = $_post_id;}
+		}
+		$signings = implode(',', $signings);
+		$lists = $this->signing_list_by_ids($signings);
+		return $lists;
+	}
+	public function is_authorized_signer($_post_id, $user_id = false) {
+		if (is_user_logged_in()) {
+			if (!$user_id) {$user_id = get_current_user_id();}
+			$signers = $this->get_all_users_for_this_sign($_post_id);
+			foreach($signers as $signer) {
+				if($signer->_user == $user_id) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	public function get_all_users_for_this_sign($post_id) {
+		global $wpdb;
+		$_all_metas = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT meta_key as _user, meta_value as _order FROM $wpdb->postmeta WHERE post_id = %d AND meta_key LIKE %s",
+				$post_id, '%' . $wpdb->esc_like('__esign_signer_') . '%'
+			)
+		);
+		foreach($_all_metas as $i => $_meta) {
+			$_meta->_user = (int) str_replace(['__esign_signer_'], [''], $_meta->_user);
+		}
+		usort($_all_metas, function($a, $b) {
+			return $a->_order - $b->_order;
+		});
+		return $_all_metas;
+	}
+	public function signing_list_by_ids($signings) {
+		global $wpdb;
+		return $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT ID, post_title, post_date FROM $wpdb->posts WHERE post_status=%s AND post_type=%s AND ID IN ($signings) ORDER BY ID DESC LIMIT 0, 100;",
+				'publish', 'esignatures'
+			)
+		);
+	}
 }

@@ -30,17 +30,22 @@ get_header(); ?>
 						the_post();
 
 						// get_template_part('partials/page/layout');
-                        $eSing = get_post_meta(get_the_ID(), '__esign_builder', true);
-                        // print_r($eSing);
-                        if (!$eSing || !isset($eSing['pdf']) || empty($eSing['pdf'])) {continue;}
-						if (isset($eSing['pdf'])) {
-							$eSing['pdf'] = preg_replace("/^http:/i", "https:", $eSing['pdf']);
-						}
-						$eSign_Esign->print_assets();
-                        ?>
-                        <canvas id="preview_contract" data-contract="<?php echo esc_url($eSing['pdf']); ?>" width="800" height="1200"></canvas>
-                        <?php
 
+						if ($eSign_Esign->is_authorized_signer(get_the_ID())) :
+							
+							$eSing = get_post_meta(get_the_ID(), '__esign_builder', true);
+							if (!$eSing || !isset($eSing['pdf']) || empty($eSing['pdf'])) {continue;}
+							if (isset($eSing['pdf'])) {
+								$eSing['pdf'] = preg_replace("/^http:/i", "https:", $eSing['pdf']);
+							}
+							$eSign_Esign->print_assets();
+							// $eSing['pdf'] = 'https://sci-bono.org/wp-content/uploads/2024/03/How-to-Make-People-like-You-in-90-Seconds-or-Less.pdf';
+							?>
+							<canvas id="preview_contract" data-contract="<?php echo esc_url($eSing['pdf']); ?>" width="800" height="1200"></canvas>
+							<?php
+						else :
+							echo do_shortcode(apply_filters('esign/project/system/getoption', 'signature-unauthorized', '[esign_unauthorized]'));
+						endif;
 					endwhile;
 
 				}

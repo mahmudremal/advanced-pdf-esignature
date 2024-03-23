@@ -4,8 +4,9 @@
  * @package ESignBindingAddons
  */
 class Pad {
-    constructor(thisClass) {
-        // thisClass.Pad = this;
+    constructor(thisClass, signPad) {
+        this.signPad = signPad;
+        thisClass.Pad = this;
         this.setup_hooks(thisClass);
     }
     setup_hooks(thisClass) {
@@ -18,7 +19,6 @@ class Pad {
     }
     get_fields(thisClass) {
         const Pad = this;Pad.attachments = [];
-        this.signaturePad = thisClass.signaturePad;
         this.wrapper = document.getElementById("signature-pad");
         this.actions = document.querySelectorAll(".signature-pad__actions > .dashicons");
         this.clearButton = this.wrapper.querySelector("[data-action=clear]");
@@ -43,13 +43,13 @@ class Pad {
             });
         });
         Pad.clearButton.addEventListener("click", (event) => {
-            Pad.signaturePad.clear();
+            Pad.signPad.clear();
         });
         Pad.undoButton.addEventListener("click", (event) => {
-            const data = Pad.signaturePad.toData();
+            const data = Pad.signPad.toData();
             if (data) {
                 data.pop(); // remove the last dot or line
-                Pad.signaturePad.fromData(data);
+                Pad.signPad.fromData(data);
             }
         });
         Pad.attachButton.addEventListener("click", (event) => {
@@ -61,59 +61,59 @@ class Pad {
         Pad.changeBackgroundColorButton.addEventListener("input", (event) => {
             const color = event.target?.value??false;
             if(!color) {return;}
-            Pad.signaturePad.backgroundColor = color;
-            const data = Pad.signaturePad.toData();
-            Pad.signaturePad.clear();
-            Pad.signaturePad.fromData(data);
+            Pad.signPad.backgroundColor = color;
+            const data = Pad.signPad.toData();
+            Pad.signPad.clear();
+            Pad.signPad.fromData(data);
         });
         Pad.changeColorButton.addEventListener("input", (event) => {
             const color = event.target?.value??false;
             if(!color) {return;}
-            Pad.signaturePad.penColor = color;
+            Pad.signPad.penColor = color;
         });
     
         Pad.changeWidthButton.addEventListener("click", (event) => {
             const min = Math.round(Math.random() * 100) / 10;
             const max = Math.round(Math.random() * 100) / 10;
     
-            Pad.signaturePad.minWidth = Math.min(min, max);
-            Pad.signaturePad.maxWidth = Math.max(min, max);
+            Pad.signPad.minWidth = Math.min(min, max);
+            Pad.signPad.maxWidth = Math.max(min, max);
         });
         Pad.changeuploadedButton.addEventListener("change", (event) => {
             if(event.target.files[0]) {
-                Pad.loadSignatureImage(event.target.files[0], Pad.signaturePad);
+                Pad.loadSignatureImage(event.target.files[0], Pad.signPad);
             }
         });
     
         Pad.savePNGButton.addEventListener("click", (event) => {
-            if (Pad.signaturePad.isEmpty()) {
+            if (Pad.signPad.isEmpty()) {
                 alert("Please provide a signature first.");
             } else {
-                const dataURL = Pad.signaturePad.toDataURL();
+                const dataURL = Pad.signPad.toDataURL();
                 Pad.download(dataURL, "signature.png");
             }
         });
         Pad.saveJPGButton.addEventListener("click", (event) => {
-            if (Pad.signaturePad.isEmpty()) {
+            if (Pad.signPad.isEmpty()) {
                 alert("Please provide a signature first.");
             } else {
-                const dataURL = Pad.signaturePad.toDataURL("image/jpeg");
+                const dataURL = Pad.signPad.toDataURL("image/jpeg");
                 Pad.download(dataURL, "signature.jpg");
             }
         });
         Pad.saveSVGButton.addEventListener("click", (event) => {
-            if (Pad.signaturePad.isEmpty()) {
+            if (Pad.signPad.isEmpty()) {
                 alert("Please provide a signature first.");
             } else {
-                const dataURL = Pad.signaturePad.toDataURL('image/svg+xml');
+                const dataURL = Pad.signPad.toDataURL('image/svg+xml');
                 Pad.download(dataURL, "signature.svg");
             }
         });
         Pad.saveSVGWithBackgroundButton.addEventListener("click", (event) => {
-            if (Pad.signaturePad.isEmpty()) {
+            if (Pad.signPad.isEmpty()) {
                 alert("Please provide a signature first.");
             } else {
-                const dataURL = Pad.signaturePad.toDataURL('image/svg+xml', {includeBackgroundColor: true});
+                const dataURL = Pad.signPad.toDataURL('image/svg+xml', {includeBackgroundColor: true});
                 Pad.download(dataURL, "signature.svg");
             }
         });
@@ -152,7 +152,7 @@ class Pad {
             Pad.canvas.width = Pad.canvas.offsetWidth * ratio;
             Pad.canvas.height = Pad.canvas.offsetHeight * ratio;
             Pad.canvas.getContext("2d").scale(ratio, ratio);
-            Pad.signaturePad.fromData(Pad.signaturePad.toData());
+            Pad.signPad.fromData(Pad.signPad.toData());
         } else {
             console.log('Resizing failed due to offsetWidth method not found.', Pad.canvas)
         }
@@ -162,9 +162,9 @@ class Pad {
         const reader = new FileReader();
         reader.onload = function (event) {
             const base64Signature = event.target.result.split(',')[1];
-            Pad.signaturePad.fromDataURL('data:image/png;base64,' + base64Signature);
-            // const data = Pad.signaturePad.toData();
-            // Pad.signaturePad.fromData(data);
+            Pad.signPad.fromDataURL('data:image/png;base64,' + base64Signature);
+            // const data = Pad.signPad.toData();
+            // Pad.signPad.fromData(data);
         };
         reader.readAsDataURL(file);
     }

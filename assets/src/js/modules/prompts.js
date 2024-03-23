@@ -4,7 +4,7 @@
 // import { PDFDocument, rgb, degrees, SVGPath, drawSvgPath, StandardFonts } from 'pdf-lib';
 // import PDFJSExpress from "@pdftron/pdfjs-express";
 // import { PDFDocument, rgb, values } from 'pdf-lib';
-// import {loadPreviousFields, addElementToPDF, init_dragging, dragFromRight2Left, previewPDFile, init_eSignature} from './pdfUtils';
+
 import PDFUtils from './pdfUtils';
 // import interact from 'interactjs';
 class PROMPTS extends PDFUtils {
@@ -126,6 +126,10 @@ class PROMPTS extends PDFUtils {
                 document.querySelector('.pdf_builder__fields').classList.remove('settings_enabled');
             });
         });
+        document.querySelectorAll('.pdf_fields__group__fieldset select.form-control[data-select2-handled]').forEach(select => {
+            select.dataset.select2Handled = true;
+            jQuery(select).select2();
+        });
         window.addEventListener('beforeunload', function (event) {
             if(thisClass?.isPreventClose) {
                 if(thisClass.isFrontend && !(eSign?.signatureExists)) {
@@ -161,8 +165,8 @@ class PROMPTS extends PDFUtils {
                 formdata.append('_nonce', thisClass.ajaxNonce);
                 if((thisClass?.lastUploaded??false)) {
                     formdata.append('lastUploaded', thisClass.lastUploaded);
-                    formData.pdf = thisClass.lastUploaded;
-                    formData.canvas = [];
+                    formData.pdf = thisClass.lastUploaded;formData.canvas = [];
+                    // 
                     document.querySelectorAll('.pdf_builder__container #signature-builder canvas').forEach((el, i) => {
                         formData.canvas.push({width: el.width, height: el.height, serial: i});
                     });
@@ -187,12 +191,13 @@ class PROMPTS extends PDFUtils {
 
                             eSign.toEsign = eSign?.toEsign??{};
                             eSign.toEsign.pdfBlob = eSign.currentPDF;
-                            const fieldsToProcess = eSign.data.custom_fields.fields.filter(field =>
+                            const fieldsToProcess = eSign.fields.filter(field =>
                                 field?.enableSign && !field?.signDone
                             );
                             // console.log(fieldsToProcess);
                             const result = await eSign.attachImageTextToPDF(thisClass, fieldsToProcess);
-                            // window.open(eSign.toEsign.pdfURL);
+
+                            window.open(eSign.toEsign.pdfURL);
                             // 
                             if(false) {
                                 thisClass.vex.dialog.confirm({
@@ -209,10 +214,10 @@ class PROMPTS extends PDFUtils {
                             /**
                              * Submit Contract with signatures
                              */
-                            if(agree) {
+                            if(agree && false) {
                                 var formdata = new FormData();
                                 formdata.append('pdf', eSign.toEsign.pdfBlob, eSign.currentPDF.name);
-                                formdata.append('template', eSign.currentEsignConfig.id);
+                                formdata.append('template', eSign.config.id);
                                 formdata.append('action', 'esign/project/ajax/signing/confirm');
                                 (eSign.attachments??[]).forEach(file => {
                                     formdata.append('attach', file.name, file);
@@ -475,18 +480,18 @@ class PROMPTS extends PDFUtils {
                     const index = await eSign.get_field_page_index(field, thisClass);
                     const pdfSelectedPage = pdfDoc.getPages()[index];
                     const canvas = eSign.data.custom_fields.canvas[index];
+                    console.log(index, field)
                     // Calculate image position and size
                     const canvasWidth = canvas.width;
                     const canvasHeight = canvas.height;
                     // const posY = ;
-                    const posY = eSign?.indexedPosY??parseFloat(field.fieldEL.dataset.y);
+                    const posY = eSign?.indexedPosY??parseFloat(field.dy);
                     // console.log(posY, [canvasWidth, canvasHeight])
                     const position = {
-                        x: parseFloat(field.fieldEL.dataset.x) / canvasWidth * pdfSelectedPage.getWidth(),
+                        x: parseFloat(field.dx) / canvasWidth * pdfSelectedPage.getWidth(),
                         y: pdfSelectedPage.getHeight() - posY / canvasHeight * pdfSelectedPage.getHeight(),
-                        // y(pdfSelectedPage.getHeight() - posY),
-                        width: (parseFloat(field.fieldEL.dataset.width) / canvasWidth) * pdfSelectedPage.getWidth(),
-                        height: (parseFloat(field.fieldEL.dataset.height) / canvasHeight) * pdfSelectedPage.getHeight(),
+                        width: (parseFloat(field.width) / canvasWidth) * pdfSelectedPage.getWidth(),
+                        height: (parseFloat(field.height) / canvasHeight) * pdfSelectedPage.getHeight(),
                     };
                     // 
                     position.height--;position.width--;
@@ -500,16 +505,19 @@ class PROMPTS extends PDFUtils {
                             const imageBytes = await fetch(imagePath).then((response) => response.arrayBuffer());
                             const image = await pdfDoc.embedPng(imageBytes);
                             const drawArgs = {
-                                x: position.x,
-                                y: position.y,
+                                // 
+                                x: position.x * thisClass.eSignature.canvas.ratio.width,
+                                // / thisClass.eSignature.canvas.ratio.height
+                                y: position.y * thisClass.eSignature.canvas.ratio.height,
                                 width: position.width,
                                 height: position.height
                             };
                             
                             if (Object.values(drawArgs).includes(NaN)) {
                                 console.log(drawArgs, position);
-                                throw new Error('One r more of the Parameter is not a number!');
+                                throw new Error('One or more of the Parameter is not a number!');
                             }
+                            console.log(image, drawArgs)
                             await pdfSelectedPage.drawImage(image, drawArgs);
                             return true;
                             break;
