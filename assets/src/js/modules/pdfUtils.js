@@ -17,7 +17,6 @@ class PDFUtils extends Events {
     this.oneCanvas = false;
     this.uploadedPDF = false;
     this.signatureExists = false;
-    // thisClass.date_formate = date_formate;
     this.STOREDATA = {i18n: {}};
     // 
     this.setup_i18n(thisClass);
@@ -56,178 +55,122 @@ class PDFUtils extends Events {
    }
     
     switch (field.type) {
-        case 'textarea':
-            input = document.createElement('textarea');input.classList.add('form-control');
-            input.name = 'field.'+field.fieldID;
-            input.placeholder = eSign.str_replace(field?.placeholder??'');
-            input.id = `field_${field?.fieldID??i}`;
-            input.innerHTML = esitingData[field.fieldID];
-            Object.keys(field?.attr??{}).forEach((key) => {input.setAttribute(key, field.attr[key])});
-            // if (field?.dataset??false) {input.dataset = field.dataset;}
-            input.dataset.fieldId = field.fieldID;
-            break;
-        case 'input':case 'text':case 'number':case 'date':case 'time':case 'local':case 'color':case 'range':
-            input = document.createElement('input');input.classList.add('form-control');
-            input.name = 'field.'+field.fieldID;input.id = `field_${field?.fieldID??i}`;
-            input.setAttribute('value', esitingData?.[field.fieldID]??(field?.default??''));
-            input.placeholder = eSign.str_replace(field?.placeholder??'');
-            input.type = (field.type=='input')?'text':field.type;
-            Object.keys(field?.attr??{}).forEach((key) => {input.setAttribute(key, field.attr[key])});
-            // if (field?.dataset??false) {input.dataset = field.dataset;}
-            input.dataset.fieldId = field.fieldID;// input.value = field?.value??'';
-            if (label) {fieldset.appendChild( label );}
-            if (input) {fieldset.appendChild( input );}
-            if (input || label) {div.appendChild(fieldset);}
-            break;
-        case 'select':
-            input = document.createElement('select');input.classList.add('form-control');
-            input.name = 'field.'+field.fieldID;input.id = `field_${field?.fieldID??i}`;
-            // if (field?.dataset??false) {input.dataset = field.dataset;}
-            input.dataset.fieldId = field.fieldID;
-            Object.keys(field?.attr??{}).forEach((key) => {input.setAttribute(key, field.attr[key])});
-            if (field?.options && field.options == 'users') {field.options = eSign.database.users;}
-            (field?.options??[]).forEach((opt,i) =>  {
-                option = document.createElement('option');option.value=opt?.value??'';option.innerHTML=opt?.label??'';option.dataset.index = i;
-                if (esitingData[field.fieldID] == option.value) {
-                  option.setAttribute('selected', true);
-               }
-                input.appendChild(option);
-            });
-            if (label) {fieldset.appendChild( label );}
-            if (input) {fieldset.appendChild( input );}
-            if (input || label) {div.appendChild(fieldset);}
-            break;
-        case 'doll':case 'radio':case 'checkbox':
-            input = document.createElement('div');input.classList.add('form-wrap');
-            field.options = (field.options)?field.options:[];
-            field.type = (field.type == 'doll')?'radio':field.type;
-            // field.options = field.options.reverse();
-            Object.values(field.options).forEach((opt, optI) =>  {
-                if (opt && opt.label) {
-                    label = document.createElement('label');label.classList.add('form-control-label', 'form-control-'+field.type);
-                    // label.setAttribute('for', `field_${field?.fieldID??i}_${optI}`);
-                    if (opt.input) {label.classList.add('form-flexs');}
-                    span = document.createElement('span');
-                    if (opt.imageUrl) {
-                        image = document.createElement('img');image.src = opt.imageUrl;
-                        image.alt = opt.label;label.appendChild(image);
-                        label.classList.add('form-control-'+field.type+'__image');
-                        input.classList.add('form-wrap__image');
-                        if ((opt?.thumbUrl??false) && opt.thumbUrl != '') {
-                            image.src = opt.thumbUrl;image.dataset.outfit = opt.imageUrl;
-                       }
-                   }
-                    if (!opt.input) {
-                        span.innerHTML = opt.label+(
-                            (opt?.cost??false)?(
-                            ' <strong>'+(thisClass.config?.currencySign??'$')+''+ parseFloat(opt.cost).toFixed(2)+'</strong>'
-                            ):''
-                        );
-                   } else {
-                        others = document.createElement('input');others.type='text';
-                        others.name='field.'+field.fieldID+'.others';others.placeholder=opt.label;
-                        others.dataset.fieldId = field.fieldID;others.dataset.index = optI;
-                        span.appendChild(others);
-                   }
-                    option = document.createElement('input');option.value=opt.label;
-                    option.name='field.'+field.fieldID+'.option'+((field.type == 'checkbox')?'.' + optI:'');
-                    if (option.value == esitingData[field.fieldID]) {option.setAttribute('checked', true);}
-                    option.dataset.index = optI;option.dataset.fieldId = field.fieldID;
-                    option.id=`field_${field?.fieldID??i}_${optI}`;option.type=field.type;
-                    if (field?.layer??false) {option.dataset.layer=field.layer;}
-                    if ((opt?.cost??'') == '') {opt.cost = '0';}option.dataset.cost=opt.cost;
-                    if (child) {option.dataset.preview=child;}
-                    label.appendChild(option);label.appendChild(span);input.appendChild(label);
-                    fieldset.appendChild(input);div.appendChild(fieldset);
-               }
-            });
-            break;
-        case 'password':
-            group = document.createElement('div');group.classList.add('input-group', 'mb-3');
-            input = document.createElement('input');input.classList.add('form-control');
-            input.name = 'field.'+field.fieldID;
-            input.setAttribute('value', esitingData?.[field.fieldID]??(field?.default??''));
-            input.placeholder = eSign.str_replace(field?.placeholder??'');
-            input.id = `field_${field?.fieldID??i}`;input.type = (field.type=='input')?'text':field.type;
-            Object.keys(field?.attr??{}).forEach((key) => {input.setAttribute(key, field.attr[key])});
-            // if (field?.dataset??false) {input.dataset = field.dataset;}
-            input.dataset.fieldId = field.fieldID;
-            var eye = document.createElement('div');
-            eye.classList.add('input-group-append', 'toggle-password');
-            eye.innerHTML = '<i class="fa fa-eye"></i>';
-            group.appendChild(input);group.appendChild(eye);
-            if (label) {fieldset.appendChild(label);}
-            if (input) {fieldset.appendChild(group);}
-            if (input || label) {div.appendChild(fieldset);}
-            break;
-        case 'confirm':
-            input = document.createElement('div');input.classList.add('the-success-icon');
-            input.innerHTML = field?.icon??'';
+      case 'textarea':
+        input = document.createElement('textarea');input.classList.add('form-control');
+        input.name = 'field.'+field.fieldID;
+        input.placeholder = eSign.str_replace(field?.placeholder??'');
+        input.id = `field_${field?.fieldID??i}`;
+        input.innerHTML = esitingData[field.fieldID];
+        Object.keys(field?.attr??{}).forEach((key) => {input.setAttribute(key, field.attr[key])});
+        // if (field?.dataset??false) {input.dataset = field.dataset;}
+        input.dataset.fieldId = field.fieldID;
+        break;
+      case 'input':case 'text':case 'number':case 'date':case 'time':case 'local':case 'color':case 'range':
+        input = document.createElement('input');input.classList.add('form-control');
+        input.name = 'field.'+field.fieldID;input.id = `field_${field?.fieldID??i}`;
+        input.setAttribute('value', esitingData?.[field.fieldID]??(field?.default??''));
+        input.placeholder = eSign.str_replace(field?.placeholder??'');
+        input.type = (field.type=='input')?'text':field.type;
+        Object.keys(field?.attr??{}).forEach((key) => {input.setAttribute(key, field.attr[key])});
+        // if (field?.dataset??false) {input.dataset = field.dataset;}
+        input.dataset.fieldId = field.fieldID;// input.value = field?.value??'';
+        if (label) {fieldset.appendChild( label );}
+        if (input) {fieldset.appendChild( input );}
+        if (input || label) {div.appendChild(fieldset);}
+        break;
+      case 'select':
+        input = document.createElement('select');input.classList.add('form-control');
+        input.name = 'field.'+field.fieldID;input.id = `field_${field?.fieldID??i}`;
+        // if (field?.dataset??false) {input.dataset = field.dataset;}
+        input.dataset.fieldId = field.fieldID;
+        Object.keys(field?.attr??{}).forEach((key) => {input.setAttribute(key, field.attr[key])});
+        if (field?.options && field.options == 'users') {field.options = eSign.database.users;}
+        (field?.options??[]).forEach((opt,i) =>  {
+          option = document.createElement('option');option.value=opt?.value??'';option.innerHTML=opt?.label??'';option.dataset.index = i;
+          if (esitingData[field.fieldID] == option.value) {
+            option.setAttribute('selected', true);
+          }
+          input.appendChild(option);
+        });
+        if (label) {fieldset.appendChild( label );}
+        if (input) {fieldset.appendChild( input );}
+        if (input || label) {div.appendChild(fieldset);}
+        break;
+      case 'radio':case 'checkbox':
+        var group = document.createElement('div');group.classList.add('form-area');
+        var title = document.createElement('span');title.classList.add('field_title');
+        var tooltip = document.createElement('span');tooltip.classList.add('field_title');
+        title.innerHTML = field?.label??'';
+        tooltip.setAttribute('tooltip', field.tooltip);tooltip.innerHTML = '?';
+        group.appendChild(title);group.appendChild(tooltip);fieldset.appendChild(group);
+        // <label for="field_user">Signer<span tabindex="1" tooltip="Select an user as signer for this field. This is required." flow="up">?</span></label>
+        input = document.createElement('div');input.classList.add('form-wrap', 'form-wrap__'+field.type);
+        field.options = (field.options)?field.options:[];
+        // field.options = field.options.reverse();
+        Object.values(field.options).forEach((opt, optI) =>  {
+          if (opt && opt.label) {
+            label = document.createElement('label');label.classList.add('form-control-label', 'form-control-'+field.type);
+            // label.setAttribute('for', `field_${field?.fieldID??i}_${optI}`);
+            if (opt.input) {label.classList.add('form-flexs');}
+            span = document.createElement('span');
+            if (opt.imageUrl) {
+              image = document.createElement('img');image.src = opt.imageUrl;
+              image.alt = opt.label;label.appendChild(image);
+              label.classList.add('form-control-'+field.type+'__image');
+              input.classList.add('form-wrap__image');
+              if ((opt?.thumbUrl??false) && opt.thumbUrl != '') {
+                image.src = opt.thumbUrl;image.dataset.outfit = opt.imageUrl;
+              }
+            }
+            if (!opt.input) {
+              span.innerHTML = opt.label;
+            } else {
+              others = document.createElement('input');others.type='text';
+              others.name='field.'+field.fieldID+'.others';others.placeholder=opt.label;
+              others.dataset.fieldId = field.fieldID;others.dataset.index = optI;
+              span.appendChild(others);
+            }
+            option = document.createElement('input');option.value=opt.label;
+            option.name='field.'+field.fieldID+'.option'+((field.type == 'checkbox')?'.' + optI:'');
+            if (option.value == esitingData[field.fieldID]) {option.setAttribute('checked', true);}
+            option.dataset.index = optI;option.dataset.fieldId = field.fieldID;
+            option.id=`field_${field?.fieldID??i}_${optI}`;option.type=field.type;
+            if (field?.layer??false) {option.dataset.layer=field.layer;}
+            if ((opt?.cost??'') == '') {opt.cost = '0';}option.dataset.cost=opt.cost;
+            if (child) {option.dataset.preview=child;}
+            label.appendChild(option);label.appendChild(span);input.appendChild(label);
             fieldset.appendChild(input);div.appendChild(fieldset);
-            break;
-        case 'voice':
-            input = document.createElement('div');input.classList.add('do_recorder');
-            // if (field?.dataset??false) {input.dataset = field.dataset;}
-            input.innerHTML = field?.icon??'';input.dataset.cost = field?.cost??0;
-            fieldset.appendChild(input);div.appendChild(fieldset);
-            break;
-        case 'outfit':
-            fields = document.createElement('div');fields.classList.add('form-fields', 'form-pdf_fields__group', 'form-pdf_fields__group__'+(field.type).replaceAll(' ', ''));
-            (field?.groups??[]).forEach((group, groupI) =>  {
-                group.fieldID = (field?.fieldID??0)+'.'+(group?.fieldID??groupI);
-                fields.appendChild(
-                  eSign.do_field(group, true, {}, thisClass)
-                );
-            });
-            fieldset.appendChild(fields);div.appendChild(fieldset);
-            break;
-        case 'info':
-            fields = document.createElement('div');fields.classList.add('form-fields', 'form-pdf_fields__group', 'form-pdf_fields__group__'+(field.type).replaceAll(' ', ''));
-            // field.groups = field.groups.reverse();
-            var inputsArgs = {}, inputs = {
-                teddy_name: {
-                    type: 'text',
-                    // label: STOREDATA.i18n?.teddyname??'DubiDo\'s Name',
-                    placeholder: STOREDATA.i18n?.teddyfullname??'Teddy full Name',
-                    dataset: {title: STOREDATA.i18n?.teddyfullname??'Teddy full Name'}
-               },
-                teddy_birth: {
-                    type: 'date', // default: new Date().toLocaleDateString('en-US'),
-                    // label: STOREDATA.i18n?.teddybirth??'DubiDo\'s Birthday',
-                    placeholder: STOREDATA.i18n?.teddybirth??'Birth date',
-                    dataset: {title: STOREDATA.i18n?.teddybirth??'Birth date'}
-               },
-                teddy_sender: {
-                    type: 'text',
-                    // label: STOREDATA.i18n?.sendersname??'Sender\'s Name',
-                    placeholder: STOREDATA.i18n?.sendersname??'Sender\'s Name',
-                    dataset: {title: STOREDATA.i18n?.sendersname??'Sender\'s Name'}
-               },
-                teddy_reciever: {
-                    type: 'text',
-                    // label: STOREDATA.i18n?.recieversname??'Reciever\'s Name',
-                    placeholder: STOREDATA.i18n?.recieversname??'Reciever\'s Name',
-                    dataset: {title: STOREDATA.i18n?.recieversname??'Reciever\'s Name'}
-               }
-           };
-            Object.keys(inputs).forEach((type, typeI) => {
-                inputsArgs = {
-                    fieldID: (field?.fieldID??0)+'.'+(type?.fieldID??typeI),
-                    ...inputs[type]
-               };
-                if (field[type] == 'on') {
-                  fields.appendChild(
-                    eSign.do_field(inputsArgs, true, {}, thisClass)
-                  );
-                }
-            });
-            fieldset.appendChild(fields);div.appendChild(fieldset);
-            break;
-        default:
-            // console.log('Failed implimenting '+field.type);
-            input = label = false;
-            break;
-   }
+          }
+        });
+        break;
+      case 'password':
+        group = document.createElement('div');group.classList.add('input-group', 'mb-3');
+        input = document.createElement('input');input.classList.add('form-control');
+        input.name = 'field.'+field.fieldID;
+        input.setAttribute('value', esitingData?.[field.fieldID]??(field?.default??''));
+        input.placeholder = eSign.str_replace(field?.placeholder??'');
+        input.id = `field_${field?.fieldID??i}`;input.type = (field.type=='input')?'text':field.type;
+        Object.keys(field?.attr??{}).forEach((key) => {input.setAttribute(key, field.attr[key])});
+        // if (field?.dataset??false) {input.dataset = field.dataset;}
+        input.dataset.fieldId = field.fieldID;
+        var eye = document.createElement('div');
+        eye.classList.add('input-group-append', 'toggle-password');
+        eye.innerHTML = '<i class="fa fa-eye"></i>';
+        group.appendChild(input);group.appendChild(eye);
+        if (label) {fieldset.appendChild(label);}
+        if (input) {fieldset.appendChild(group);}
+        if (input || label) {div.appendChild(fieldset);}
+        break;
+      case 'confirm':
+        input = document.createElement('div');input.classList.add('the-success-icon');
+        input.innerHTML = field?.icon??'';
+        fieldset.appendChild(input);div.appendChild(fieldset);
+        break;
+      default:
+        // console.log('Failed implimenting '+field.type);
+        input = label = false;
+        break;
+    }
     i++;
     if ((field?.extra_fields??false)) {
       field.extra_fields.forEach((extra) => {
@@ -417,9 +360,32 @@ class PDFUtils extends Events {
         ...widget.args,
         ctx: ctx
       };
+      // if (!(widget?.enableSign)) {widget.args.isPreview = true;}
+      const currentDate = new Date();
+      switch (widget?.field) {
+        case 'sign':
+          if (widget?.enableSign && ((widget?.data)?.field)?.user_name) {} else {
+            widget.args.boxTitle = widget.data.field.user_name;
+          }
+          break;
+        case 'date':
+          var format = ((((data?.data??{})?.field??{})?.format??'') == '')?'M d, Y':(((data?.data??{})?.field??{})?.format??'');
+          widget.args.boxTitle = thisClass.date_formate(currentDate, format);
+          break;
+        case 'time':
+          var format = ((((data?.data??{})?.field??{})?.format??'') == '')?'H:i:s':(((data?.data??{})?.field??{})?.format??'');
+          widget.args.boxTitle = thisClass.date_formate(currentDate, format);
+          break;
+        case 'name':
+          widget.args.boxTitle = widget.data.field.user_name;
+          break;
+        default:
+          break;
+      }
+      // 
       eSign.widgets.push(widget);
       // Set background color
-      ctx.fillStyle = 'lightblue';
+      ctx.fillStyle = (widget?.enableSign)?'lightblue':'white';
       ctx.fillRect(widget.dx, widget.dy, widget.width, widget.height);
       // Set border color and draw the border
       ctx.strokeStyle = widget.args.borderColor;
@@ -435,11 +401,22 @@ class PDFUtils extends Events {
       // Set the text
       ctx.font = `${widget.args.fontSize}px ${widget.args.fontFamily}`;
       ctx.fillStyle = '#000';
-      ctx.fillText(
+      eSign.wrapText(
+        ctx,
         widget.args.boxTitle,
-        widget.dx + (widget.width / 5),
-        widget.dy + (widget.height / 1.5)
+        widget.dx + 10, // (widget.width / 10) margin-left is 10px
+        widget.dy + (widget.height / 1.5),
+        widget.width,
+        widget.height,
+        widget.args.fontSize + 3,
+        widget.args.fontSize,
+        widget.args.fontFamily
       );
+      // ctx.fillText(
+      //   widget.args.boxTitle,
+      //   widget.dx + 10, // (widget.width / 10) margin-left is 10px
+      //   widget.dy + (widget.height / 1.5)
+      // );
       if (widget.args?.isPreview) {
         switch (widget.args.isPreview.type) {
           case 'image':
@@ -470,7 +447,7 @@ class PDFUtils extends Events {
         addedElement.classList.add('esign-body__single__enabled', 
           thisClass.isFrontend?'esign-body__single__front':'esign-body__single__back'
         );
-    }
+      }
       addedElement.dataset.type = data?.field??'';
       addedElement.dataset.storedOn = args.unique;
 
@@ -508,7 +485,7 @@ class PDFUtils extends Events {
       if (thisClass.isFrontend && !(data?.enableSign) && (data?.field??'') == 'sign') {
         addedElement.classList.add('esign-body__pattern');
         addedElement.title = thisClass.i18n?.notsignedyet??'User not signed yet!';
-    }
+      }
       addedElement.innerHTML = `
         <div class="esign-body__single__title" style="color: ${((data?.data)?.field)?.fontColor};font-size: ${((data?.data)?.field)?.fontSize}px;">${
           (thisClass.isFrontend && !(data?.enableSign) && (data?.field??'') == 'sign')?(
@@ -522,16 +499,24 @@ class PDFUtils extends Events {
       `;
       if (thisClass.isFrontend) {
         const currentDate = new Date();
-        if ((data?.field??'') == 'date') {
-          const dateFormate = ((((data?.data??{})?.field??{})?.format??'') == '')?'M d, Y':(((data?.data??{})?.field??{})?.format??'');
-          addedElement.innerHTML = thisClass.date_formate(currentDate, dateFormate);
-        } else if ((data?.field??'') == 'time') {
-          const dateFormate = ((((data?.data??{})?.field??{})?.format??'') == '')?'H:i:s':(((data?.data??{})?.field??{})?.format??'');
-          addedElement.innerHTML = thisClass.date_formate(currentDate, dateFormate);
-        } else {}
+        switch (data?.field) {
+          case 'date':
+            var dateFormate = ((((data?.data??{})?.field??{})?.format??'') == '')?'M d, Y':(((data?.data??{})?.field??{})?.format??'');
+            addedElement.innerHTML = thisClass.date_formate(currentDate, dateFormate);
+            break;
+          case 'time':
+            var dateFormate = ((((data?.data??{})?.field??{})?.format??'') == '')?'H:i:s':(((data?.data??{})?.field??{})?.format??'');
+            addedElement.innerHTML = thisClass.date_formate(currentDate, dateFormate);
+            break;
+          case 'name':
+            addedElement.innerHTML = data.data.field.user_name;
+            break;
+          default:
+            break;
+        }
       }
       if (!thisClass.isFrontend) {
-        eSign.init_dragging(addedElement);
+        eSign.init_dragging(addedElement, thisClass);
       }
       addedElement.addEventListener('click', (event) => {
         eSign.launch_signature_operation({
@@ -554,8 +539,8 @@ class PDFUtils extends Events {
       if (!thisClass.isFrontend) {setTimeout(() => {addedElement.click();}, 800);}
     }
   }
-  init_dragging(el) {
-    interact(el)
+  init_dragging(el, thisClass) {
+    thisClass.interact(el)
     .resizable({
       // resize from all edges and corners
       edges: {left: true, right: true, bottom: true, top: true},
@@ -673,7 +658,7 @@ class PDFUtils extends Events {
   }
   dragFromRight2Left(thisClass) {
     const eSign = this;
-    interact('.esign-fields__single').draggable({
+    thisClass.interact('.esign-fields__single').draggable({
       inertia: true, autoScroll: true,
       restrict: {
         restriction: 'parent', endOnly: true,
@@ -799,7 +784,7 @@ class PDFUtils extends Events {
     const eSign = this;
     if (thisClass.Pad.signPad.isEmpty()) {
       var text = thisClass.i18n?.plsdosign??'Please provide a signature.';
-      thisClass.toastify({text: text,className: "warning", duration: 3000, stopOnFocus: true, style: {background: "linear-gradient(to right, rgb(255 200 153), rgb(255 166 33))"}}).showToast();
+      thisClass.toastify({text: text, className: "warning", duration: 3000, stopOnFocus: true, style: {background: "linear-gradient(to right, rgb(255 200 153), rgb(255 166 33))"}}).showToast();
    } else {
       thisClass.signatureDataUrl = thisClass.Pad.signPad.toDataURL('image/png');
       // console.log(thisClass.signatureDataUrl);
@@ -999,8 +984,8 @@ class PDFUtils extends Events {
       canvas.height = widget?.height??100;
       var ctx = canvas.getContext('2d');
       var ctxRatio = {
-        width: canvas.width / 1,
-        height: canvas.height / 1
+        width: canvas.width,
+        height: canvas.height
       };
       ctx.beginPath();
       // ctx.moveTo(0, ctxRatio.height * 0.15);
@@ -1009,7 +994,7 @@ class PDFUtils extends Events {
       // ctx.arcTo(ctxRatio.height * 0.40, 0, 0, 0, ctxRatio.height * 0.10);
       // Draw the black background
       ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, ctxRatio.width * 0.35, ctxRatio.height * 0.15);
+      ctx.fillRect(0, 0, ctxRatio.width * 0.35, ctxRatio.height * 0.25);
       ctx.closePath();
       ctx.fill();
       // Draw the image
@@ -1021,15 +1006,47 @@ class PDFUtils extends Events {
         };
         // ctx.drawImage(img, 0, 0, 200, 100);
         ctx.drawImage(img, 0, 0, img.width * imgRatio.width, img.height * imgRatio.height);
+        // Draw the text
+        ctx.font = `${ctxRatio.width * 0.05}px Arial`;
+        ctx.fillStyle = "#fff";
+        ctx.fillText("Signature", ctxRatio.width * 0.07, ctxRatio.height * 0.25 * 0.666);
+        // return the result
         resolve(canvas);
       };
       img.src = thisClass.signatureDataUrl;
-      // Draw the text
-      ctx.font = `${ctxRatio.width * 0.05}px Arial`;
-      ctx.fillStyle = "#fff";
-      ctx.fillText("Signature", ctxRatio.width * 0.07, ctxRatio.height * 0.15 * 0.666);
       // return canvas;
     });
+  }
+  wrapText(ctx, text, x, y, maxWidth, maxHeight, lineHeight, fontSize, fontFace) {
+    ctx.font = fontSize + ' ' + fontFace; // Set the font size and font face
+    var words = text.split(' ');
+    var line = '';
+    var lines = [];
+  
+    for (var i = 0; i < words.length; i++) {
+      var testLine = line + words[i] + ' ';
+      var metrics = ctx.measureText(testLine);
+      console.log(text, [metrics, maxWidth])
+      var testWidth = metrics.width;
+      if (testWidth > maxWidth && i > 0) {
+        lines.push({ text: line, x, y });
+        line = words[i] + ' ';
+        y += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+    lines.push({ text: line, x, y });
+  
+    if (lines.length * lineHeight > maxHeight) {
+      var lastLine = lines.pop();
+      var truncatedText = lastLine.text.slice(0, -4) + '...'; // Ellipsis for truncated text
+      lines.push({ text: truncatedText, x: lastLine.x, y: lastLine.y });
+    }
+  
+    for (var j = 0; j < lines.length; j++) {
+      ctx.fillText(lines[j].text, lines[j].x, lines[j].y);
+    }
   }
 }
 export default PDFUtils;

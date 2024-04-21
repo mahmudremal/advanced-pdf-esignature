@@ -242,7 +242,7 @@ class PROMPTS extends PDFUtils {
                 eSign.canvasPointer = event;
             });
         });
-        
+        // 
         // eSign.init_drag_n_drop(thisClass);
         eSign.init_pdf_dropzone(thisClass);
         eSign.dragFromRight2Left(thisClass);
@@ -262,78 +262,78 @@ class PROMPTS extends PDFUtils {
     get_custom_fields(thisClass) {
         const eSign = this;
         thisClass.fields = (thisClass?.fields??false)?thisClass.fields:[
-            {
-                id: 'sign',
-                title: thisClass.i18n?.signature??'Signature',
-                tip: thisClass.i18n?.signature_desc??'E-Signature field with defining a user will be sent mail to signer according to their order.',
-                icon: thisClass.config.buildPath+'/icons/signature.svg',
-                fields: [
-                    {
-                        fieldID: 4,
-                        type: "text",
-                        label: 'Signer ID',
-                        headerbg: false,
-                        heading: '',
-                        subtitle: '',
-                        tooltip: 'Select a user as signer for this field. This is required.',
-                        placeholder: '',
-                        required: true
-                    },
-                    {
-                        fieldID: 4,
-                        type: "select",
-                        label: 'Signer',
-                        headerbg: false,
-                        heading: '',
-                        subtitle: '',
-                        tooltip: 'Select a user as signer for this field. This is required.',
-                        placeholder: '',
-                        required: true,
-                        options: [
-                            {label: 'Remal Mahmud', value: 'remal'},
-                            {label: 'Nathalia', value: 'nathalia'},
-                        ]
-                    }
-                ]
-            },
-            {
-                id: 'date',
-                title: thisClass.i18n?.date??'Date',
-                tip: thisClass.i18n?.date_desc??'Pick this date that will replace with Sining time or date.',
-                icon: thisClass.config.buildPath+'/icons/date.svg',
-                fields: [
-                    {
-                        fieldID: 4,
-                        type: "text",
-                        label: 'Date format',
-                        headerbg: false,
-                        heading: 'Bears Birth',
-                        subtitle: '',
-                        tooltip: 'Give here a date format for signing. EG: "M d, Y H:i:s"',
-                        placeholder: '',
-                        default: 'M d, Y H:i',
-                        required: true
-                    }
-                ]
-            },
-            {
-                id: 'time',
-                title: thisClass.i18n?.time??'Time',
-                tip: thisClass.i18n?.time_desc??'Time field with defining a user will be sent mail to signer according to their order.',
-                icon: thisClass.config.buildPath+'/icons/time.svg',
-                fields: [
-                    {
-                        fieldID: 4,
-                        type: "text",
-                        label: 'Signer ID',
-                        headerbg: false,
-                        heading: 'Bears Birth',
-                        subtitle: 'Select a user as signer for this field. This is required.',
-                        placeholder: '',
-                        required: true
-                    }
-                ]
-            }
+            // {
+            //     id: 'sign',
+            //     title: thisClass.i18n?.signature??'Signature',
+            //     tip: thisClass.i18n?.signature_desc??'E-Signature field with defining a user will be sent mail to signer according to their order.',
+            //     icon: thisClass.config.buildPath+'/icons/signature.svg',
+            //     fields: [
+            //         {
+            //             fieldID: 4,
+            //             type: "text",
+            //             label: 'Signer ID',
+            //             headerbg: false,
+            //             heading: '',
+            //             subtitle: '',
+            //             tooltip: 'Select a user as signer for this field. This is required.',
+            //             placeholder: '',
+            //             required: true
+            //         },
+            //         {
+            //             fieldID: 4,
+            //             type: "select",
+            //             label: 'Signer',
+            //             headerbg: false,
+            //             heading: '',
+            //             subtitle: '',
+            //             tooltip: 'Select a user as signer for this field. This is required.',
+            //             placeholder: '',
+            //             required: true,
+            //             options: [
+            //                 {label: 'Remal Mahmud', value: 'remal'},
+            //                 {label: 'Nathalia', value: 'nathalia'},
+            //             ]
+            //         }
+            //     ]
+            // },
+            // {
+            //     id: 'date',
+            //     title: thisClass.i18n?.date??'Date',
+            //     tip: thisClass.i18n?.date_desc??'Pick this date that will replace with Sining time or date.',
+            //     icon: thisClass.config.buildPath+'/icons/date.svg',
+            //     fields: [
+            //         {
+            //             fieldID: 4,
+            //             type: "text",
+            //             label: 'Date format',
+            //             headerbg: false,
+            //             heading: 'Bears Birth',
+            //             subtitle: '',
+            //             tooltip: 'Give here a date format for signing. EG: "M d, Y H:i:s"',
+            //             placeholder: '',
+            //             default: 'M d, Y H:i',
+            //             required: true
+            //         }
+            //     ]
+            // },
+            // {
+            //     id: 'time',
+            //     title: thisClass.i18n?.time??'Time',
+            //     tip: thisClass.i18n?.time_desc??'Time field with defining a user will be sent mail to signer according to their order.',
+            //     icon: thisClass.config.buildPath+'/icons/time.svg',
+            //     fields: [
+            //         {
+            //             fieldID: 4,
+            //             type: "text",
+            //             label: 'Signer ID',
+            //             headerbg: false,
+            //             heading: 'Bears Birth',
+            //             subtitle: 'Select a user as signer for this field. This is required.',
+            //             placeholder: '',
+            //             required: true
+            //         }
+            //     ]
+            // }
         ];
         return (thisClass.fields);
     }
@@ -410,6 +410,7 @@ class PROMPTS extends PDFUtils {
     }
     
     init_pdf_dropzone(thisClass) {
+        console.log(thisClass);
         const eSign = this;
         document.querySelectorAll('.upload-pdf .pdf-dropzone:not([data-handled])').forEach(el => {
             el.dataset.handled = true;
@@ -506,9 +507,9 @@ class PROMPTS extends PDFUtils {
                             const image = await pdfDoc.embedPng(imageBytes);
                             const drawArgs = {
                                 // 
-                                x: position.x * thisClass.eSignature.canvas.ratio.width,
+                                x: position.x, // * thisClass.eSignature.canvas.ratio.width,
                                 // / thisClass.eSignature.canvas.ratio.height
-                                y: position.y * thisClass.eSignature.canvas.ratio.height,
+                                y: position.y, // * thisClass.eSignature.canvas.ratio.height,
                                 width: position.width,
                                 height: position.height
                             };
@@ -517,12 +518,13 @@ class PROMPTS extends PDFUtils {
                                 console.log(drawArgs, position);
                                 throw new Error('One or more of the Parameter is not a number!');
                             }
-                            console.log(image, drawArgs)
+                            // console.log(image, drawArgs)
                             await pdfSelectedPage.drawImage(image, drawArgs);
                             return true;
                             break;
                         case 'date':
                         case 'time':
+                        case 'name':
                             var currentDate = new Date();
                             var fontSize, fontColor = [0, 0, 0];
                             var dateFormate = ((field?.data)?.field)?.format;
@@ -530,7 +532,19 @@ class PROMPTS extends PDFUtils {
                             fontSize = (fontSize >= 1)?fontSize:12;
                             fontColor = ((field?.data)?.field)?.fontColor;
                             fontColor = eSign.hexToRgb(fontColor, false);
-                            var text = thisClass.date_formate(currentDate, dateFormate);
+                            switch (field.field) {
+                                case 'date':
+                                case 'time':
+                                    var text = thisClass.date_formate(currentDate, dateFormate);
+                                    break;
+                                case 'name':
+                                    var text = field.data.field.user_name;
+                                    break;
+                                default:
+                                    var text = '';
+                                    break;
+                            }
+                            
                             pdfSelectedPage.drawText(text, {
                                 x: position.x,
                                 y: position.y,

@@ -1,6 +1,7 @@
 // import {format as date_formate} from 'date-fns';
 // window.date_formate = date_formate;
 // const moment = require('moment');
+// window.moment = moment;
 // window.date_formate = moment().format;
 import SignaturePad from 'signature_pad';
 import tippy from "tippy.js";

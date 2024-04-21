@@ -4,6 +4,7 @@
  * @package ESignBindingAddons
  */
 import PROMPTS from "./prompts";
+// import moment from "moment";
 class eSignature extends PROMPTS {
     /**
      * Constructor

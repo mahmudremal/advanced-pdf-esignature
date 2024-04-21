@@ -47,6 +47,7 @@ class Assets {
         src     : 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.3/moment.min.js',
         callback: () => {
           thisClass.moment = window.moment;
+          thisClass.date_formate = (time, format) => moment(time).format(format);
         }
       },
       {
@@ -112,7 +113,7 @@ class Assets {
       {
         src     : `${thisClass.config.buildPath}/js/date_formate.js?v=2`,
         callback: () => {
-          thisClass.date_formate = window.date_formate;
+          // thisClass.date_formate = window.date_formate;
           thisClass.vex = window.vex;
           thisClass.tippy = window.tippy;
           thisClass.SignaturePad = window.SignaturePad;

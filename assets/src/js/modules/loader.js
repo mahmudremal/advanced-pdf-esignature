@@ -220,48 +220,48 @@ class CanvasLoader {
       responseType: 'arraybuffer',
       ...args
     };
-      if (onprogress === false) {
-          onprogress = (progress) => {};
+    if (onprogress === false) {
+      onprogress = (progress) => {};
+    }
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      let notifiedNotComputable = false;
+
+      xhr.open(args.method, imageUrl, true);
+      if (args?.responseType) {
+        xhr.responseType = 'arraybuffer';
       }
-      return new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          let notifiedNotComputable = false;
-  
-          xhr.open(args.method, imageUrl, true);
-          if (args?.responseType) {
-            xhr.responseType = 'arraybuffer';
+      if (args?.noCache) {
+        xhr.setRequestHeader("Cache-Control", args.noCache);
+        xhr.setRequestHeader('Pragma', 'no-cache');
+      }
+      
+      xhr.onprogress = function(ev) {
+          const args = {
+              loaded: ev?.loaded,
+              total: ev?.total,
+              ratio: false,
+          };
+          args.total = args.total / 1000;
+          args.loaded = args.loaded / 1000;
+          if (ev.lengthComputable) {
+              args.ratio = parseInt((ev.loaded / ev.total) * 100);
           }
-          if (args?.noCache) {
-            xhr.setRequestHeader("Cache-Control", args.noCache);
-            xhr.setRequestHeader('Pragma', 'no-cache');
-          }
-          
-          xhr.onprogress = function(ev) {
-              const args = {
-                  loaded: ev?.loaded,
-                  total: ev?.total,
-                  ratio: false,
-              };
-              args.total = args.total / 1000;
-              args.loaded = args.loaded / 1000;
-              if (ev.lengthComputable) {
-                  args.ratio = parseInt((ev.loaded / ev.total) * 100);
-              }
-              onprogress(args);
-          }
-          xhr.onloadend = function() {
-              if (!xhr.status.toString().match(/^2/)) {
-                  reject(xhr);return;
-              }
-              const options = {}
-              const headers = xhr.getAllResponseHeaders();
-              const m = headers.match(/^Content-Type\:\s*(.*?)$/mi);
-              if (m && m[1]) {options.type = m[1];}
-              resolve(
-                new Blob([this.response], options)
-              );
-          }
-          xhr.send();
+          onprogress(args);
+      }
+      xhr.onloadend = function() {
+        if (!xhr.status.toString().match(/^2/)) {
+          reject(xhr);return;
+        }
+        const options = {}
+        const headers = xhr.getAllResponseHeaders();
+        const m = headers.match(/^Content-Type\:\s*(.*?)$/mi);
+        if (m && m[1]) {options.type = m[1];}
+        resolve(
+          new Blob([this.response], options)
+        );
+      }
+      xhr.send();
     });
   }
 

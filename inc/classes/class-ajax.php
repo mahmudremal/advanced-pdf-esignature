@@ -107,7 +107,29 @@ class Ajax {
 						'placeholder' => '1',
 						'required' => false,
 						'attr' => ['pattern' => '[0-9]+']
-					]
+					],
+					// [
+					// 	'fieldID' => 'erase',
+					// 	'type' => 'radio',
+					// 	'label' => 'Erage Widget',
+					// 	'headerbg' => false,
+					// 	'heading' => '',
+					// 	'subtitle' => '',
+					// 	'tooltip' => 'Erage signature area before replace signature preview after confirming signature.',
+					// 	'placeholder' => '1',
+					// 	'required' => false,
+					// 	// 'attr' => ['pattern' => '[0-9]+'],
+					// 	'options'	=> [
+					// 		[
+					// 			'label' => __('Enable', 'domain'),
+					// 			'value' => true
+					// 		],
+					// 		[
+					// 			'label' => __('Disable', 'domain'),
+					// 			'value' => false
+					// 		],
+					// 	]
+					// ]
 				]
 			],
 			[
@@ -233,6 +255,52 @@ class Ajax {
 					]
 				]
 			],
+			[
+				'id' => 'name',
+				'title' => 'Name',
+				'tip' => 'Name field with defining a user will preview the signer display name on contract.',
+				'icon' => ESIGNBINDING_ADDONS_BUILD_URI.'/icons/name.svg',
+				'fields' => [
+					[
+						'fieldID' => 'user',
+						'type' => 'select',
+						'label' => 'Signer',
+						'headerbg' => false,
+						'heading' => '',
+						'subtitle' => '',
+						'tooltip' => 'Select an user as signer for this field. This is required.',
+						'placeholder' => '',
+						'required' => true,
+						'options' => 'users'
+					],
+					[
+						'fieldID' => 'fontSize',
+						'type' => 'number',
+						'label' => 'Font size',
+						'headerbg' => false,
+						'heading' => false,
+						'subtitle' => '',
+						'tooltip' => 'Give here a font size in numeric value. like 10, 12, etc.',
+						'placeholder' => '',
+						'default' => 12,
+						'required' => true,
+						'attr'			=> []
+					],
+					[
+						'fieldID' => 'fontColor',
+						'type' => 'color',
+						'label' => 'Text color',
+						'headerbg' => false,
+						'heading' => false,
+						'subtitle' => '',
+						'tooltip' => 'Select a text/font color.',
+						'placeholder' => '',
+						'default' => '#333',
+						'required' => true,
+						'attr'			=> []
+					]
+				]
+			],
 		];
 		$args['hooks'] = ['custom_fields_getting_done'];
 		wp_send_json_success($args);
@@ -243,8 +311,8 @@ class Ajax {
 			$dataset = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', stripslashes(html_entity_decode($_POST['dataset']))), true);
 			
 			if(isset($_FILES['pdf'])) {
-				// $result = $this->upload_pdf_to_custom_directory('pdf');
-				$result = $_POST['lastUploaded'] || true;
+				$result = $this->upload_pdf_to_custom_directory('pdf');
+				// $result = $_POST['lastUploaded'] || true;
 				if(is_wp_error($result)) {
 					$args['message'] = $result->get_error_message();
 					wp_send_json_error($args);

@@ -427,6 +427,23 @@ body {
             position: relative;
             &__fieldset {
               margin-bottom: 10px;
+              .form-wrap {
+                &__radio, &__checkbox {
+                  gap: 10px;
+                  width: 100%;
+                  display: flex;
+                  flex-wrap: wrap;
+                  align-items: center;
+                  align-content: center;
+                  justify-content: space-between;
+                  & > label {
+                    gap: 5px;
+                    margin-bottom: 0;
+                    line-height: 20px;
+                    align-items: center;
+                  }
+                }
+              }
               label {
                 display: flex;
                 align-items: center;
